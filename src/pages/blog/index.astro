@@ -1,0 +1,44 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import Container from "../../components/Container.astro";
+
+const posts = (await getCollection("blog"))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+const fmt = (date: Date) => date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const [featured, ...rest] = posts;
+---
+<Base title="Blog, job search, automation & getting hired" description="Practical guides on auto-applying to jobs, AI resumes and cover letters, and landing interviews faster with Scout.">
+  <Container>
+    <section class="py-16 sm:py-20">
+      <div class="max-w-2xl">
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">Scout Blog</p>
+        <h1 class="mt-2 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Get hired faster.</h1>
+        <p class="mt-4 text-lg text-ink-soft">Guides on automating your job search, tailoring resumes and cover letters, and applying smarter, not just more.</p>
+      </div>
+
+      {posts.length === 0 && <p class="mt-12 text-ink-soft">New articles coming soon.</p>}
+
+      {featured && (
+        <a href={`/blog/${featured.id}`} class="mt-12 block rounded-3xl border border-black/5 bg-gradient-to-b from-white to-surface-soft p-8 shadow-card transition-shadow hover:shadow-lift sm:p-10">
+          {featured.data.pillar && <span class="text-xs font-semibold uppercase tracking-wide text-brand-600">{featured.data.pillar}</span>}
+          <h2 class="mt-2 font-display text-2xl font-bold sm:text-3xl">{featured.data.title}</h2>
+          <p class="mt-3 max-w-2xl text-ink-soft">{featured.data.description}</p>
+          <p class="mt-4 text-sm text-ink-muted">{fmt(featured.data.pubDate)}</p>
+        </a>
+      )}
+
+      <div class="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {rest.map((p) => (
+          <a href={`/blog/${p.id}`} class="flex flex-col rounded-3xl border border-black/5 bg-white p-7 shadow-card transition-shadow hover:shadow-lift">
+            {p.data.pillar && <span class="text-xs font-semibold uppercase tracking-wide text-brand-600">{p.data.pillar}</span>}
+            <h3 class="mt-2 text-lg font-bold leading-snug">{p.data.title}</h3>
+            <p class="mt-2 flex-1 text-sm text-ink-soft">{p.data.description}</p>
+            <p class="mt-4 text-xs text-ink-muted">{fmt(p.data.pubDate)}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  </Container>
+</Base>

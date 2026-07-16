@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand: #7fc92b;
+    --brand-400: #9dde47;
+    --signal: #1f9d6a;
+    --human: #d88a24;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-surface text-ink antialiased font-sans;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01";
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight text-ink;
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  p { text-wrap: pretty; }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  ::selection { background: rgba(127, 201, 43, 0.28); }
+}
+
+@layer components {
+  /* Soft dotted backdrop, masked so it fades out, restraint, not noise. */
+  .bg-grid {
+    background-image: radial-gradient(rgba(16, 33, 13, 0.10) 1px, transparent 1px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 35%, transparent 74%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 35%, transparent 74%);
+  }
+
+  .glow-brand {
+    background: radial-gradient(55% 55% at 50% 40%, rgba(157, 222, 71, 0.48), transparent 70%);
+  }
+
+  .paper-noise {
+    background-image: radial-gradient(rgba(16, 33, 13, 0.08) 0.8px, transparent 0.8px);
+    background-size: 18px 18px;
+  }
+
+  .soft-blob {
+    border-radius: 38% 62% 54% 46% / 46% 42% 58% 54%;
+  }
+
+  .desk-grid {
+    background-image:
+      linear-gradient(rgba(13, 27, 42, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(13, 27, 42, 0.055) 1px, transparent 1px);
+    background-size: 34px 34px;
+  }
+
+  .queue-card {
+    box-shadow: 0 1px 2px rgba(13,27,42,0.04), 0 18px 48px -28px rgba(13,27,42,0.32);
+  }
+
+  /* Phone frame for the live app preview. */
+  .device {
+    border-radius: 2.6rem;
+    background: #0b2638;
+    padding: 0.55rem;
+    box-shadow: 0 1px 2px rgba(13,27,42,0.06), 0 40px 80px -32px rgba(18,107,163,0.45), inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .device-screen {
+    border-radius: 2.1rem;
+    background: linear-gradient(180deg, #f7f9fc, #eef2f8);
+    overflow: hidden;
+  }
+}
+
+@layer utilities {
+  /* Scroll reveal: only hides when JS is active (html.js). Without JS, content is always visible. */
+  html.js .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+  html.js .reveal.is-visible { opacity: 1; transform: none; }
+}
+
+/* Respect reduced motion everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; }
+}
+
+
+
+
+.assistant-switcher {
+  display: grid;
+}
+
+.assistant-word {
+  grid-area: 1 / 1;
+  display: block;
+  will-change: opacity, transform;
+}
+
+.assistant-word-human {
+  animation: assistant-human 6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.assistant-word-ai {
+  animation: assistant-ai 6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes assistant-human {
+  0%, 42%, 100% { opacity: 1; transform: translateY(0); }
+  50%, 92% { opacity: 0; transform: translateY(-0.2em); }
+}
+
+@keyframes assistant-ai {
+  0%, 42%, 100% { opacity: 0; transform: translateY(0.2em); }
+  50%, 92% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-word { animation: none !important; }
+  .assistant-word-human { opacity: 1; }
+  .assistant-word-ai { display: none; }
+}

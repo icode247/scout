@@ -1,0 +1,108 @@
+---
+import Base from "../layouts/Base.astro";
+import Container from "../components/Container.astro";
+import Button from "../components/Button.astro";
+import FAQ from "../components/FAQ.astro";
+import ProductScreenshot from "../components/ProductScreenshot.astro";
+import { SITE } from "../config/site";
+
+const faqs = [
+  { q: "Can I pay someone to apply to jobs for me?", a: "Yes. Scout assigns a Human Assistant who applies on your behalf, or you can choose a lower-cost AI Assistant. You set the roles, locations, salary preferences, exclusions, and resume rules before applications begin." },
+  { q: "Is Scout a reverse recruiting service?", a: "Scout provides the application-operations part of reverse recruiting: finding suitable roles, preparing tailored materials, submitting applications, and tracking the work. Scout does not claim to represent employers or guarantee interviews or job offers." },
+  { q: "What is the difference between the Human and AI assistants?", a: "Human Assistant members work with a dedicated person in WhatsApp and receive detailed evidence of important application answers. AI Assistant members pay less and see the job, status, and resume used, but do not receive form-answer screenshots." },
+  { q: "Can I choose which jobs Scout applies to?", a: "Yes. Create multiple job profiles, add jobs from the dashboard or Chrome extension, choose the profile to use, and control whether Scout tailors a resume or uses your original." },
+  { q: "Does Scout tailor every resume?", a: "Scout can tailor a copy of your resume to the job description while preserving your original. You can also tell your assistant to use a specific resume without tailoring." },
+];
+const serviceLd = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Scout job application service",
+  serviceType: "Done-for-you job application service",
+  provider: { "@id": new URL("/#organization", SITE.url).href },
+  areaServed: "Worldwide",
+  description: "Human and AI assistants find suitable jobs, prepare tailored application materials, submit applications on a job seeker's behalf, and record the completed work.",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Job application assistant plans",
+    itemListElement: [
+      { "@type": "Offer", name: "AI Job Application Assistant", price: "39", priceCurrency: "USD", url: new URL("/ai-job-application-assistant", SITE.url).href },
+      { "@type": "Offer", name: "Human Job Application Service", price: "299", priceCurrency: "USD", url: new URL("/human-job-application-service", SITE.url).href },
+    ],
+  },
+};
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Scout", item: SITE.url },
+    { "@type": "ListItem", position: 2, name: "Job application service", item: new URL("/job-application-service", SITE.url).href },
+  ],
+};
+---
+<Base title="Job Application Service That Applies for You" description="Too busy or exhausted to apply? Scout's Human and AI job application assistants find roles, tailor resumes, apply on your behalf, and track every submission.">
+  <section class="bg-brand-950 py-20 text-white sm:py-28">
+    <Container>
+      <div class="grid items-center gap-12 lg:grid-cols-[.86fr_1.14fr]">
+        <div>
+          <p class="text-lg font-bold text-brand-300">Done-for-you job applications</p>
+          <h1 class="mt-4 font-display text-5xl font-extrabold leading-[.98] tracking-[-.035em] text-white sm:text-7xl">A job application service that applies for you.</h1>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-white/75">If work, family, or application fatigue has taken over your search, Scout can run the repetitive work. Choose a dedicated Human Assistant or a lower-cost AI Assistant.</p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row"><Button href="/book-call" size="lg" class="rounded-full bg-brand-300 text-ink">Book a human strategy call</Button><Button href="/login?intent=ai" size="lg" variant="ghost" class="rounded-full text-white hover:bg-white/10">Start with AI</Button></div>
+        </div>
+        <ProductScreenshot variant="queue" />
+      </div>
+    </Container>
+  </section>
+
+  <section class="bg-white py-20 sm:py-28">
+    <Container>
+      <div class="mx-auto max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold sm:text-6xl">You keep the decisions. We handle the forms.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">Scout is built for people who are too busy to apply consistently, have already tried doing it alone, or are exhausted by repeating the same information across job sites.</p></div>
+      <div class="mt-12 grid gap-5 lg:grid-cols-3">
+        <article class="rounded-xl bg-surface p-6"><h3 class="text-xl font-extrabold">Set the search once</h3><p class="mt-3 leading-relaxed text-ink-soft">Choose target roles, locations, salary range, dealbreakers, sponsorship needs, and resume preferences.</p></article>
+        <article class="rounded-xl bg-brand-200 p-6"><h3 class="text-xl font-extrabold">Applications keep moving</h3><p class="mt-3 leading-relaxed text-ink-soft">Your assistant finds matching openings, prepares the right materials, and completes applications on your behalf.</p></article>
+        <article class="rounded-xl bg-human-50 p-6"><h3 class="text-xl font-extrabold">Inspect the completed work</h3><p class="mt-3 leading-relaxed text-ink-soft">See every job, status, profile, and resume used. Human plans also include evidence of important form answers.</p></article>
+      </div>
+    </Container>
+  </section>
+
+  <section class="bg-surface py-20 sm:py-28">
+    <Container>
+      <div class="grid gap-6 lg:grid-cols-2">
+        <article class="rounded-xl bg-brand-950 p-7 text-white sm:p-9">
+          <p class="font-bold text-human-500">Human job application service</p>
+          <h2 class="mt-3 font-display text-4xl font-extrabold text-white">Hire a person to apply on your behalf.</h2>
+          <p class="mt-5 leading-relaxed text-white/72">Start with a strategy call. Scout learns your targets, assigns an assistant, and opens a dedicated WhatsApp group. Your assistant handles nuance and saves detailed evidence.</p>
+          <ul class="mt-6 space-y-3 text-sm font-semibold text-white/75"><li>✓ Dedicated Human Assistant</li><li>✓ WhatsApp communication</li><li>✓ Multiple job profiles</li><li>✓ Resume and answer evidence</li></ul>
+          <a href="/human-job-application-service" class="mt-7 inline-flex font-extrabold text-brand-300">Explore Human Assistant service →</a>
+        </article>
+        <article class="rounded-xl bg-brand-200 p-7 sm:p-9">
+          <p class="font-bold text-brand-800">AI job application assistant</p>
+          <h2 class="mt-3 font-display text-4xl font-extrabold">Start immediately at a lower monthly price.</h2>
+          <p class="mt-5 leading-relaxed text-ink-soft">Create an account, upload your resume, review the data Scout extracts, and open your prepared dashboard. The AI Assistant applies and records the job, status, and resume used.</p>
+          <ul class="mt-6 space-y-3 text-sm font-semibold text-ink-soft"><li>✓ Guided resume import</li><li>✓ Tailored application materials</li><li>✓ Safe application pacing</li><li>✓ Visible submission tracker</li></ul>
+          <a href="/ai-job-application-assistant" class="mt-7 inline-flex font-extrabold text-brand-800">Explore AI Assistant service →</a>
+        </article>
+      </div>
+    </Container>
+  </section>
+
+  <section class="bg-white py-20 sm:py-28">
+    <Container>
+      <div class="grid items-start gap-12 lg:grid-cols-[.75fr_1.25fr]">
+        <div><h2 class="font-display text-4xl font-extrabold sm:text-6xl">What “apply for me” actually includes.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">The service covers the application workflow, not just autofilling a few fields.</p></div>
+        <ol class="divide-y divide-ink/10 border-y border-ink/10">
+          <li class="grid gap-3 py-6 sm:grid-cols-[2rem_1fr]"><strong>1</strong><div><h3 class="font-extrabold">Create job profiles</h3><p class="mt-1 text-ink-soft">Separate searches for different roles, locations, and resume strategies.</p></div></li>
+          <li class="grid gap-3 py-6 sm:grid-cols-[2rem_1fr]"><strong>2</strong><div><h3 class="font-extrabold">Find or add suitable jobs</h3><p class="mt-1 text-ink-soft">Use Scout's match queue or send any opening from the dashboard and Chrome extension.</p></div></li>
+          <li class="grid gap-3 py-6 sm:grid-cols-[2rem_1fr]"><strong>3</strong><div><h3 class="font-extrabold">Prepare and submit</h3><p class="mt-1 text-ink-soft">Use the approved resume behavior, answer known questions, and escalate uncertainty.</p></div></li>
+          <li class="grid gap-3 py-6 sm:grid-cols-[2rem_1fr]"><strong>4</strong><div><h3 class="font-extrabold">Track every application</h3><p class="mt-1 text-ink-soft">Review the role, company, submission status, resume used, and available evidence.</p></div></li>
+        </ol>
+      </div>
+      <nav class="mt-12 flex flex-wrap gap-x-7 gap-y-3 text-sm font-extrabold" aria-label="Related job application guides"><a href="/how-it-works" class="text-brand-700">How Scout works →</a><a href="/pricing" class="text-brand-700">Compare pricing →</a><a href="/safety" class="text-brand-700">Application safety →</a><a href="/auto-apply" class="text-brand-700">Supported job sites →</a></nav>
+    </Container>
+  </section>
+
+  <section class="bg-surface py-20 sm:py-28"><Container><div class="mx-auto max-w-3xl"><FAQ items={faqs} /></div></Container></section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(serviceLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+</Base>

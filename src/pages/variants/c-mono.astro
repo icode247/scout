@@ -1,0 +1,318 @@
+---
+import Shell from "../../layouts/Shell.astro";
+import Container from "../../components/Container.astro";
+import Button from "../../components/Button.astro";
+import AppStoreBadges from "../../components/AppStoreBadges.astro";
+import DownloadQR from "../../components/DownloadQR.astro";
+import SwipeHero from "../../components/islands/SwipeHero.tsx";
+import { SITE, TIERS } from "../../config/site";
+
+const platforms = ["Workday", "Greenhouse", "Lever", "LinkedIn", "Indeed", "Glassdoor"];
+
+const nav = [
+  { label: "How it works", href: "#how" },
+  { label: "Modes", href: "#modes" },
+  { label: "Safety", href: "#safety" },
+  { label: "Pricing", href: "#pricing" },
+];
+
+const steps = [
+  {
+    n: "01",
+    title: "Upload your resume once",
+    body: "Scout reads your experience, skills, and what you actually want. You never re-type it into another form again.",
+  },
+  {
+    n: "02",
+    title: "It finds every match",
+    body: "Scout scans the boards and company systems around the clock, then ranks roles by how well they fit you.",
+  },
+  {
+    n: "03",
+    title: "You swipe, it applies",
+    body: "Each application goes out with a resume and cover letter tailored to that exact job. You just swipe right.",
+  },
+];
+
+const safety = [
+  { title: "You approve every application", body: "Nothing goes out under your name unless you swipe right on it." },
+  { title: "Human-like rate limits", body: "Applications are paced to protect your LinkedIn, email, and ATS accounts from being flagged." },
+  { title: "Tailored, never templated", body: "A unique resume and cover letter per job. The opposite of the spam recruiters filter out." },
+];
+---
+<Shell
+  title="Scout: Get a job while you sleep"
+  description="Scout finds every job matching your resume and applies for you with a tailored resume and cover letter. Just swipe."
+>
+  <div class="min-h-screen bg-zinc-950 font-sans text-zinc-300 antialiased">
+    <!-- ============ TOP NAV (Optimus minimal) ============ -->
+    <header class="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur">
+      <Container class="flex h-16 items-center justify-between">
+        <a href="#top" class="flex items-center gap-2.5">
+          <span class="grid h-7 w-7 place-items-center rounded-md border border-zinc-700 bg-zinc-900">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-300" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </span>
+          <span class="font-display text-[1.05rem] font-medium tracking-tight text-white">Scout</span>
+        </a>
+        <nav class="hidden items-center gap-8 md:flex" aria-label="Primary">
+          {nav.map((item) => (
+            <a href={item.href} class="text-sm text-zinc-400 transition-colors hover:text-white">{item.label}</a>
+          ))}
+        </nav>
+        <div class="flex items-center gap-3">
+          <a href="#how" class="hidden text-sm text-zinc-400 transition-colors hover:text-white sm:inline">Sign in</a>
+          <a
+            href="/download"
+            class="inline-flex h-9 items-center rounded-lg border border-zinc-700 bg-zinc-100 px-4 text-sm font-medium text-zinc-950 transition-colors hover:bg-white"
+          >Download</a>
+        </div>
+      </Container>
+    </header>
+
+    <main id="top">
+      <!-- ============ 01 · HERO (asymmetric split) ============ -->
+      <section class="relative overflow-hidden border-b border-zinc-800/80">
+        <div
+          class="pointer-events-none absolute -top-40 left-1/2 -z-0 h-[420px] w-[820px] -translate-x-1/2 rounded-full opacity-60 blur-[120px]"
+          style="background: radial-gradient(closest-side, rgba(82,82,91,0.35), transparent);"
+          aria-hidden="true"
+        ></div>
+        <Container class="relative grid items-center gap-14 pb-24 pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:pb-32 lg:pt-28">
+          <div class="reveal">
+            <span class="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1 text-xs font-medium tracking-wide text-zinc-400">
+              <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+              Live on iOS and Android
+            </span>
+            <h1 class="mt-7 font-display text-[3.1rem] font-light leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-[4.4rem]">
+              Get a job while you <span class="font-normal text-zinc-100">sleep<span class="text-brand-500">.</span></span>
+            </h1>
+            <p class="mt-7 max-w-md text-lg leading-relaxed text-zinc-400">
+              Scout finds every job matching your resume and applies for you with a tailored resume and cover letter. Just swipe.
+            </p>
+            <div class="mt-10 flex flex-col items-start gap-6">
+              <div class="flex flex-wrap items-center gap-3">
+                <a
+                  href="/download"
+                  class="inline-flex h-13 items-center justify-center rounded-xl bg-zinc-100 px-7 text-base font-medium text-zinc-950 transition-colors hover:bg-white"
+                >Start</a>
+                <a href="#how" class="inline-flex h-13 items-center justify-center rounded-xl border border-zinc-800 px-6 text-base font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white">
+                  How it works
+                </a>
+              </div>
+              <AppStoreBadges size="md" />
+            </div>
+          </div>
+
+          <!-- Live app preview in a dark zinc phone frame -->
+          <div class="reveal relative mx-auto w-full max-w-[380px]" style="--reveal-delay:120ms">
+            <div
+              class="pointer-events-none absolute -inset-10 -z-10 rounded-full opacity-70 blur-3xl"
+              style="background: radial-gradient(50% 50% at 50% 40%, rgba(113,113,122,0.30), transparent 70%);"
+              aria-hidden="true"
+            ></div>
+            <div class="rounded-[2.6rem] border border-zinc-800 bg-zinc-900 p-2.5 shadow-2xl ring-1 ring-zinc-950/40">
+              <div class="overflow-hidden rounded-[2.1rem] border border-zinc-800 bg-zinc-950 px-4 pb-6 pt-5">
+                <div class="mb-4 flex items-center justify-between px-1">
+                  <span class="font-display text-sm font-medium text-white">Scout</span>
+                  <span class="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[0.7rem] font-medium text-zinc-400">128 matches</span>
+                </div>
+                <SwipeHero client:load />
+              </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      <!-- ============ PLATFORM STRIP (logo wall) ============ -->
+      <section class="border-b border-zinc-800/80">
+        <Container class="py-10">
+          <p class="text-center text-xs uppercase tracking-[0.2em] text-zinc-600">Applies across every major board and ATS</p>
+          <div class="mt-7 flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
+            {platforms.map((p) => (
+              <span class="text-base font-medium tracking-tight text-zinc-500 transition-colors hover:text-zinc-300">{p}</span>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      <!-- ============ 01 · HOW IT WORKS (numbered editorial rows) ============ -->
+      <section id="how" class="border-b border-zinc-800/80">
+        <Container class="py-24 sm:py-32">
+          <div class="reveal flex items-end justify-between gap-8">
+            <div>
+              <p class="font-display text-sm font-medium tracking-tight text-zinc-600">01 / How it works</p>
+              <h2 class="mt-4 max-w-xl font-display text-3xl font-light leading-tight tracking-tight text-white sm:text-[2.6rem]">
+                Set it up once. Then it runs itself.
+              </h2>
+            </div>
+            <a href="/how-it-works" class="hidden shrink-0 items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-white sm:inline-flex">
+              Learn more
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+          <div class="mt-16 grid gap-px overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-800 md:grid-cols-3">
+            {steps.map((s, i) => (
+              <div class="reveal flex flex-col bg-zinc-950 p-8 sm:p-10" style={`--reveal-delay:${i * 90}ms`}>
+                <span class="font-display text-sm font-medium tracking-tight text-zinc-600">{s.n}</span>
+                <h3 class="mt-8 font-display text-xl font-normal tracking-tight text-white">{s.title}</h3>
+                <p class="mt-3 text-[0.95rem] leading-relaxed text-zinc-400">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      <!-- ============ 02 · TWO MODES (feature duo) ============ -->
+      <section id="modes" class="border-b border-zinc-800/80">
+        <Container class="py-24 sm:py-32">
+          <div class="reveal">
+            <p class="font-display text-sm font-medium tracking-tight text-zinc-600">02 / Two modes</p>
+            <h2 class="mt-4 max-w-xl font-display text-3xl font-light leading-tight tracking-tight text-white sm:text-[2.6rem]">
+              Two ways to apply, built for how you actually job-hunt.
+            </h2>
+          </div>
+          <div class="mt-14 grid gap-6 md:grid-cols-2">
+            <div class="reveal flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 sm:p-10">
+              <span class="grid h-11 w-11 place-items-center rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-300">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h13l-3-3M21 17H8l3 3"/></svg>
+              </span>
+              <h3 class="mt-7 font-display text-2xl font-normal tracking-tight text-white">Swipe Apply</h3>
+              <p class="mt-3 text-[0.95rem] leading-relaxed text-zinc-400">
+                Review ranked matches like a deck of cards. Swipe right and Scout applies with tailored documents. A week of applications in minutes.
+              </p>
+              <a href="/human-job-application-service" class="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-300 transition-colors hover:text-white">
+                Explore Swipe Apply
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
+            </div>
+            <div class="reveal flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 sm:p-10" style="--reveal-delay:90ms">
+              <span class="grid h-11 w-11 place-items-center rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-300">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+              </span>
+              <h3 class="mt-7 font-display text-2xl font-normal tracking-tight text-white">First Apply</h3>
+              <p class="mt-3 text-[0.95rem] leading-relaxed text-zinc-400">
+                Scout watches for new postings and applies within minutes, around the clock. Early applicants get far more interviews.
+              </p>
+              <span class="mt-6 inline-flex w-fit items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs font-medium text-zinc-400">
+                <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+                Applied 3 minutes after posting
+              </span>
+              <a href="/ai-job-application-assistant" class="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-300 transition-colors hover:text-white">
+                Explore First Apply
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      <!-- ============ 03 · SAFETY (asymmetric split + checklist) ============ -->
+      <section id="safety" class="border-b border-zinc-800/80">
+        <Container class="py-24 sm:py-32">
+          <div class="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+            <div class="reveal lg:sticky lg:top-28 lg:self-start">
+              <p class="font-display text-sm font-medium tracking-tight text-zinc-600">03 / Safety</p>
+              <h2 class="mt-4 font-display text-3xl font-light leading-tight tracking-tight text-white sm:text-[2.6rem]">
+                Automation you can trust with your name.
+              </h2>
+              <p class="mt-6 max-w-md text-lg leading-relaxed text-zinc-400">
+                The real fear with auto-apply tools is getting flagged or spamming recruiters. Scout is engineered to do the opposite.
+              </p>
+              <a href="/safety" class="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-300 transition-colors hover:text-white">
+                Read about our safety approach
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
+            </div>
+            <ul class="divide-y divide-zinc-800 border-y border-zinc-800">
+              {safety.map((s, i) => (
+                <li class="reveal flex items-start gap-5 py-7" style={`--reveal-delay:${i * 90}ms`}>
+                  <span class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                  </span>
+                  <div>
+                    <h3 class="font-display text-lg font-normal tracking-tight text-white">{s.title}</h3>
+                    <p class="mt-1.5 text-[0.95rem] leading-relaxed text-zinc-400">{s.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Container>
+      </section>
+
+      <!-- ============ 04 · PRICING CTA BAND ============ -->
+      <section id="pricing" class="border-b border-zinc-800/80">
+        <Container class="py-24 sm:py-32">
+          <div class="reveal flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+            <div>
+              <p class="font-display text-sm font-medium tracking-tight text-zinc-600">04 / Pricing</p>
+              <h2 class="mt-4 max-w-lg font-display text-3xl font-light leading-tight tracking-tight text-white sm:text-[2.6rem]">
+                Start free. Upgrade when it is landing you interviews.
+              </h2>
+            </div>
+            <Button href="/pricing" variant="ghost" class="text-zinc-300 hover:bg-zinc-900 hover:text-white">See all plans</Button>
+          </div>
+          <div class="mt-14 grid gap-px overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-800 md:grid-cols-3">
+            {TIERS.map((t, i) => (
+              <div class={`reveal flex flex-col p-8 sm:p-10 ${t.featured ? "bg-zinc-900" : "bg-zinc-950"}`} style={`--reveal-delay:${i * 90}ms`}>
+                <div class="flex items-center justify-between">
+                  <span class="font-display text-lg font-normal tracking-tight text-white">{t.name}</span>
+                  {t.featured && (
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-950 px-2.5 py-0.5 text-[0.68rem] font-medium text-zinc-300">
+                      <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>Popular
+                    </span>
+                  )}
+                </div>
+                <div class="mt-6 flex items-baseline gap-1">
+                  <span class="font-display text-4xl font-light tracking-tight text-white">{t.priceMonthly === 0 ? "Free" : `$${t.priceMonthly}`}</span>
+                  {t.priceMonthly !== 0 && <span class="text-sm text-zinc-500">/mo</span>}
+                </div>
+                <p class="mt-4 text-sm leading-relaxed text-zinc-400">{t.blurb}</p>
+                <a
+                  href="/download"
+                  class={`mt-8 inline-flex h-11 items-center justify-center rounded-lg px-5 text-sm font-medium transition-colors ${
+                    t.featured
+                      ? "bg-zinc-100 text-zinc-950 hover:bg-white"
+                      : "border border-zinc-800 text-zinc-200 hover:border-zinc-600 hover:text-white"
+                  }`}
+                >{t.cta}</a>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      <!-- ============ FINAL DOWNLOAD CTA ============ -->
+      <section class="border-b border-zinc-800/80">
+        <Container class="py-24 text-center sm:py-32">
+          <div class="reveal mx-auto max-w-2xl">
+            <h2 class="mx-auto font-display text-4xl font-light leading-[1.05] tracking-tight text-white sm:text-5xl">
+              Your next job is already out there.
+            </h2>
+            <p class="mx-auto mt-6 max-w-md text-lg leading-relaxed text-zinc-400">
+              Let Scout find it and apply while you get on with your life.
+            </p>
+            <div class="mt-10 flex flex-col items-center gap-8 sm:flex-row sm:justify-center">
+              <AppStoreBadges size="lg" class="justify-center" />
+              <DownloadQR label="Scan to install" class="border-zinc-800 bg-zinc-900" />
+            </div>
+          </div>
+        </Container>
+      </section>
+    </main>
+
+    <!-- ============ FOOTER (minimal) ============ -->
+    <footer>
+      <Container class="flex flex-col items-center justify-between gap-4 py-10 sm:flex-row">
+        <div class="flex items-center gap-2.5">
+          <span class="grid h-6 w-6 place-items-center rounded-md border border-zinc-800 bg-zinc-900">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-400" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </span>
+          <span class="font-display text-sm font-medium tracking-tight text-zinc-300">Scout</span>
+          <span class="text-sm text-zinc-600">{SITE.tagline}</span>
+        </div>
+        <p class="text-xs text-zinc-600">Powered by the FastApply engine.</p>
+      </Container>
+    </footer>
+  </div>
+</Shell>

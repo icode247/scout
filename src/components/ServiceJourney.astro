@@ -1,0 +1,96 @@
+---
+import Button from "./Button.astro";
+import Container from "./Container.astro";
+import ProductScreenshot from "./ProductScreenshot.astro";
+---
+
+<section class="bg-white py-14 sm:py-16">
+  <Container>
+    <div class="grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
+      <h2 class="max-w-xl font-display text-4xl font-extrabold leading-tight sm:text-5xl">You have already spent enough time applying.</h2>
+      <div class="grid gap-5 sm:grid-cols-3">
+        <div class="border-t-2 border-ink pt-4"><strong class="text-sm">No time</strong><p class="mt-2 text-sm leading-relaxed text-ink-soft">Applications are happening after work, between meetings, or late at night.</p></div>
+        <div class="border-t-2 border-ink pt-4"><strong class="text-sm">Application fatigue</strong><p class="mt-2 text-sm leading-relaxed text-ink-soft">You tried doing it alone and the repeated forms became exhausting.</p></div>
+        <div class="border-t-2 border-ink pt-4"><strong class="text-sm">Inconsistent progress</strong><p class="mt-2 text-sm leading-relaxed text-ink-soft">You need the search moving without losing control of your story.</p></div>
+      </div>
+    </div>
+  </Container>
+</section>
+
+<section class="bg-surface py-20 sm:py-28">
+  <Container>
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="font-display text-4xl font-extrabold leading-tight sm:text-6xl">Choose who runs your application desk.</h2>
+      <p class="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">Both assistants apply for you. The difference is how the work is handled, how you communicate, and how much evidence you receive.</p>
+    </div>
+
+    <div class="mt-14 grid gap-6 lg:grid-cols-2">
+      <article class="overflow-hidden rounded-2xl bg-brand-950 text-white">
+        <div class="p-7 sm:p-9">
+          <div class="flex items-center justify-between gap-4"><span class="rounded-full bg-human-500 px-3 py-1.5 text-sm font-extrabold">Human Assistant</span><span class="text-sm font-bold text-white/60">Start with a call</span></div>
+          <h3 class="mt-8 font-display text-4xl font-extrabold text-white">A person learns your search, then applies for you.</h3>
+          <ol class="mt-8 space-y-6">
+            <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold text-ink">1</span><div><strong class="text-white">Book a free strategy call</strong><p class="mt-1 text-sm leading-relaxed text-white/65">We understand your roles, locations, goals, resume preferences, and dealbreakers.</p></div></li>
+            <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold text-ink">2</span><div><strong class="text-white">Meet your assigned assistant</strong><p class="mt-1 text-sm leading-relaxed text-white/65">Your dedicated WhatsApp group keeps questions, feedback, and requests close.</p></div></li>
+            <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold text-ink">3</span><div><strong class="text-white">See every application and its evidence</strong><p class="mt-1 text-sm leading-relaxed text-white/65">Open a job to see the resume used and screenshots of what was entered.</p></div></li>
+          </ol>
+          <Button href="/book-call" size="lg" class="mt-9 w-full rounded-full bg-brand-300 font-extrabold text-ink hover:bg-brand-200">Book my free strategy call</Button>
+          <p class="mt-3 text-center text-xs font-semibold text-white/55">15 minutes · No commitment · Leave with a search plan</p>
+        </div>
+        <div class="grid grid-cols-[0.9fr_1.1fr] border-t border-white/10 bg-white/5 p-5">
+          <div class="border-r border-white/10 pr-4"><p class="text-xs text-white/45">WhatsApp</p><p class="mt-2 text-sm font-bold text-white">Scout · Taylor · You</p><p class="mt-3 rounded-lg bg-white/10 p-3 text-xs leading-relaxed text-white/70">I added the role you sent. I’ll use your Product profile and send the evidence here.</p></div>
+          <div class="pl-4"><p class="text-xs text-white/45">Application evidence</p><div class="mt-3 rounded-lg bg-white p-3 text-ink"><div class="flex justify-between text-xs"><strong>Northstar Health</strong><span class="text-signal-700">Submitted</span></div><div class="mt-3 h-20 rounded bg-surface p-2"><div class="h-2 w-4/5 rounded bg-ink/10"></div><div class="mt-2 h-2 w-full rounded bg-ink/10"></div><div class="mt-2 h-2 w-2/3 rounded bg-ink/10"></div></div><p class="mt-2 text-[0.65rem] font-bold">3 answer screenshots saved</p></div></div>
+        </div>
+      </article>
+
+      <article class="overflow-hidden rounded-2xl bg-brand-200 text-ink">
+        <div class="p-7 sm:p-9">
+          <div class="flex items-center justify-between gap-4"><span class="rounded-full bg-brand-950 px-3 py-1.5 text-sm font-extrabold text-white">AI Assistant</span><span class="text-sm font-bold text-ink-soft">Start immediately</span></div>
+          <h3 class="mt-8 font-display text-4xl font-extrabold">Upload your resume. Scout prepares the desk.</h3>
+          <ol class="mt-8 space-y-6">
+            <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold">1</span><div><strong>Create your account</strong><p class="mt-1 text-sm leading-relaxed text-ink-soft">Use Google or email, then choose the AI Assistant lane.</p></div></li>
+            <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold">2</span><div><strong>Watch Scout build your profile</strong><p class="mt-1 text-sm leading-relaxed text-ink-soft">Review experience, education, skills, and application answers as they are extracted.</p></div></li>
+            <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold">3</span><div><strong>Track jobs and resumes used</strong><p class="mt-1 text-sm leading-relaxed text-ink-soft">See every application and tailored resume. Form-answer screenshots are reserved for Human Assistant plans.</p></div></li>
+          </ol>
+          <Button href="/login?intent=ai" size="lg" class="mt-9 w-full rounded-full bg-ink font-extrabold text-white hover:bg-brand-950">Start with AI Assistant</Button>
+          <p class="mt-3 text-center text-xs font-semibold text-ink-muted">No call required · Guided resume import · Lower-cost plan</p>
+        </div>
+        <div class="border-t border-ink/10 bg-white/35 p-5">
+          <p class="text-xs font-bold text-ink-muted">Preparing your dashboard</p>
+          <div class="mt-4 space-y-3"><div class="flex items-center justify-between rounded-lg bg-white p-3 text-sm"><span>✓ Experience extracted</span><strong>4 roles</strong></div><div class="flex items-center justify-between rounded-lg bg-white p-3 text-sm"><span>✓ Skills organized</span><strong>18 skills</strong></div><div class="flex items-center justify-between rounded-lg bg-white p-3 text-sm"><span>Job profile ready</span><strong class="text-signal-700">Product roles</strong></div></div>
+        </div>
+      </article>
+    </div>
+  </Container>
+</section>
+
+<section class="bg-white py-20 sm:py-28">
+  <Container>
+    <div class="grid gap-12 lg:grid-cols-[0.76fr_1.24fr] lg:items-center">
+      <div>
+        <h2 class="font-display text-4xl font-extrabold leading-tight sm:text-6xl">One dashboard for every version of your search.</h2>
+        <p class="mt-6 text-lg leading-relaxed text-ink-soft">Applying to product and operations roles? Remote and local? Create separate job profiles so every delegated job uses the right target, resume, and rules.</p>
+        <div class="mt-8 space-y-4">
+          <div class="flex gap-4"><span class="text-signal-700">✓</span><p><strong>Multiple job profiles</strong><br><span class="text-sm text-ink-soft">Separate roles, locations, salary targets, and resumes.</span></p></div>
+          <div class="flex gap-4"><span class="text-signal-700">✓</span><p><strong>Add any job you find</strong><br><span class="text-sm text-ink-soft">Paste it in Scout or capture it from the browser extension.</span></p></div>
+          <div class="flex gap-4"><span class="text-signal-700">✓</span><p><strong>Choose how the resume is handled</strong><br><span class="text-sm text-ink-soft">Use your original resume or let Scout tailor one for the role.</span></p></div>
+        </div>
+      </div>
+      <ProductScreenshot variant="profiles" />
+    </div>
+  </Container>
+</section>
+
+<section class="bg-brand-950 py-20 text-white sm:py-28">
+  <Container>
+    <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+      <ProductScreenshot variant="queue" class="order-2 lg:order-1" />
+      <div class="order-1 lg:order-2">
+        <p class="text-lg font-bold text-brand-300">Found a role anywhere?</p>
+        <h2 class="mt-4 font-display text-4xl font-extrabold leading-tight text-white sm:text-6xl">Send it to your assistant without leaving the job page.</h2>
+        <p class="mt-6 max-w-xl text-lg leading-relaxed text-white/70">The Scout extension detects the job, asks which profile to use, and adds it directly to the same application queue.</p>
+        <a href="/download" class="mt-8 inline-flex rounded-full bg-white px-7 py-3.5 font-extrabold text-ink">Add Scout to Chrome</a>
+      </div>
+    </div>
+  </Container>
+</section>

@@ -1,0 +1,104 @@
+---
+import { SEO } from "astro-seo";
+import { SITE } from "../config/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: "website" | "article";
+  noindex?: boolean;
+  canonical?: string;
+}
+
+const {
+  title,
+  description = SITE.description,
+  image = "/og/default.png",
+  type = "website",
+  noindex = false,
+  canonical,
+} = Astro.props;
+
+const fullTitle = title ? `${title} | ${SITE.name}` : `${SITE.name}, ${SITE.tagline}`;
+const canonicalURL = canonical ?? new URL(Astro.url.pathname, SITE.url).href;
+const ogImage = new URL(image, SITE.url).href;
+const plausibleDomain = SITE.url.replace(/^https?:\/\//, "");
+
+const orgLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": new URL("/#organization", SITE.url).href,
+  name: SITE.name,
+  alternateName: "Scout Job Application Service",
+  url: SITE.url,
+  logo: { "@type": "ImageObject", url: new URL("/scout-mark-512.png", SITE.url).href, width: 512, height: 512 },
+  description: SITE.description,
+};
+const siteLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": new URL("/#website", SITE.url).href,
+  name: SITE.name,
+  alternateName: "Scout Job Application Assistant",
+  url: SITE.url,
+  inLanguage: "en-US",
+  publisher: { "@id": new URL("/#organization", SITE.url).href },
+};
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<meta name="theme-color" content={SITE.themeColor} />
+<meta name="generator" content={Astro.generator} />
+<meta name="author" content={SITE.name} />
+<meta name="googlebot" content={noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"} />
+
+<SEO
+  title={fullTitle}
+  description={description}
+  canonical={canonicalURL}
+  noindex={noindex}
+  nofollow={noindex}
+  openGraph={{
+    basic: { title: fullTitle, type, image: ogImage, url: canonicalURL },
+    optional: { siteName: SITE.name, description },
+  }}
+  twitter={{ card: "summary_large_image", site: SITE.twitter, creator: SITE.twitter }}
+/>
+<meta property="og:locale" content={SITE.locale} />
+<link rel="alternate" hreflang="en" href={canonicalURL} />
+<link rel="alternate" hreflang="x-default" href={canonicalURL} />
+
+<!-- Fonts: preconnect + display=swap for fast first paint -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+/>
+
+<link rel="sitemap" href="/sitemap-index.xml" />
+<link rel="alternate" type="application/rss+xml" title={`${SITE.name} Blog`} href="/rss.xml" />
+
+<script type="application/ld+json" set:html={JSON.stringify(orgLd)} />
+<script type="application/ld+json" set:html={JSON.stringify(siteLd)} />
+
+<!--
+  Privacy-friendly analytics, deferred (no perf cost). Set PUBLIC_PLAUSIBLE_DOMAIN to enable.
+  SECURITY: No Subresource Integrity hash here on purpose, Plausible serves script.js
+  unversioned and updates it in place, so a pinned integrity= would break on their next
+  release. Recommended hardening before launch: first-party proxy this via /js/script.js
+  on getscout.app (Plausible "proxy" guide), which also defeats ad-blockers. Same applies
+  to the Google Fonts stylesheet above; self-host with @fontsource to fully pin assets.
+-->
+{plausibleDomain && (
+  <script
+    is:inline
+    defer
+    data-domain={plausibleDomain}
+    src="https://plausible.io/js/script.js"
+  />
+)}

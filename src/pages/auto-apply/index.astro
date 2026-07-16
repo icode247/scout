@@ -1,0 +1,13 @@
+---
+import { ATS_PAGES } from "../../data/ats";
+import Base from "../../layouts/Base.astro";
+import Container from "../../components/Container.astro";
+import ProductScreenshot from "../../components/ProductScreenshot.astro";
+import MarketingCTA from "../../components/MarketingCTA.astro";
+---
+<Base title="Auto-apply across job boards and ATS platforms" description="Scout prepares, submits, and tracks tailored applications across Workday, Greenhouse, Lever, LinkedIn, Indeed, and more.">
+  <section class="bg-brand-100 py-20 sm:py-28"><Container><div class="grid items-center gap-12 lg:grid-cols-2"><div><p class="text-lg font-bold text-brand-700">One application desk across the job market.</p><h1 class="mt-4 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.035em] sm:text-7xl">The jobs live everywhere. Your queue lives in one place.</h1><p class="mt-6 text-lg text-ink-soft">Your selected Human or AI Assistant can work from the same profiles across major job boards and applicant-tracking systems. Add any role from the dashboard or Chrome extension.</p></div><ProductScreenshot variant="tracker" /></div></Container></section>
+  <section class="bg-white py-20 sm:py-28"><Container><div class="mx-auto max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold sm:text-6xl">Coverage where applications actually happen.</h2><p class="mt-5 text-lg text-ink-soft">Each platform has different forms. Scout keeps the product experience consistent.</p></div><div class="mt-12 flex flex-wrap justify-center gap-3">{ATS_PAGES.map(p=><a href={"/auto-apply/" + p.slug} class="rounded-full bg-surface px-5 py-3 font-bold text-ink hover:bg-brand-200">{p.name} <span class="text-ink-muted">· {p.kind}</span></a>)}</div></Container></section>
+  <section class="bg-surface py-20 sm:py-28"><Container><div class="grid gap-10 lg:grid-cols-2"><div><h2 class="font-display text-4xl font-extrabold sm:text-6xl">A different form does not need a different workflow.</h2><p class="mt-5 text-lg text-ink-soft">The same profile, packet, assistant routing, and receipt follow the job wherever it was found.</p></div><div class="space-y-3">{["Match against your target","Prepare role-specific materials","Complete the platform form","Save confirmation and status"].map((x,i)=><div class="flex items-center gap-4 rounded-xl bg-white p-4"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-950 font-bold text-white">{i+1}</span><strong>{x}</strong></div>)}</div></div></Container></section>
+  <MarketingCTA />
+</Base>

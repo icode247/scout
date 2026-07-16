@@ -1,0 +1,30 @@
+---
+interface QA { q: string; a: string; }
+interface Props { items: QA[]; heading?: string; class?: string; }
+const { items, heading = "Frequently asked questions", class: cls = "" } = Astro.props;
+
+const ld = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: items.map((i) => ({
+    "@type": "Question",
+    name: i.q,
+    acceptedAnswer: { "@type": "Answer", text: i.a },
+  })),
+};
+---
+<section class={cls}>
+  {heading && <h2 class="text-3xl font-bold sm:text-4xl">{heading}</h2>}
+  <div class="mt-8 divide-y divide-black/5 border-y border-black/5">
+    {items.map((i) => (
+      <details class="group py-5">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-medium text-ink [&::-webkit-details-marker]:hidden">
+          {i.q}
+          <svg class="shrink-0 text-ink-muted transition-transform duration-200 group-open:rotate-45" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </summary>
+        <p class="mt-3 max-w-prose text-[0.95rem] leading-relaxed text-ink-soft">{i.a}</p>
+      </details>
+    ))}
+  </div>
+  <script type="application/ld+json" set:html={JSON.stringify(ld)} />
+</section>

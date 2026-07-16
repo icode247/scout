@@ -1,0 +1,30 @@
+---
+import Auth from "../layouts/Auth.astro";
+import Logo from "../components/Logo.astro";
+export const prerender = false;
+const intent = Astro.url.searchParams.get("intent");
+const next = Astro.url.searchParams.get("next") || "/onboarding";
+const sent = Astro.url.searchParams.get("sent");
+const error = Astro.url.searchParams.get("error");
+const heading = intent === "ai" ? "Start with your AI Assistant" : intent === "human" ? "Continue with Human Assistant" : "Welcome to Scout";
+const errors: Record<string,string> = { email: "Enter a valid email address.", send: "We could not send that link. Try again.", oauth: "Google sign-in could not start.", callback: "That login link is invalid or expired.", configuration: "Authentication is not configured yet." };
+---
+<Auth title="Sign in to Scout" description="Sign in to Scout with Google or a secure email link.">
+  <section class="min-h-[calc(100dvh-5rem)] bg-brand-950 p-4 sm:p-8">
+    <div class="mx-auto grid min-h-[calc(100dvh-9rem)] max-w-6xl overflow-hidden rounded-2xl bg-white lg:grid-cols-[0.88fr_1.12fr]">
+      <div class="flex flex-col justify-center p-7 sm:p-12">
+        <div class="lg:hidden"><Logo /></div>
+        <p class="mt-8 text-sm font-extrabold text-brand-700 lg:mt-0">{intent ? "YOUR SELECTED PATH" : "YOUR APPLICATION DESK"}</p>
+        <h1 class="mt-3 font-display text-4xl font-extrabold sm:text-5xl">{heading}</h1>
+        <p class="mt-4 max-w-md leading-relaxed text-ink-soft">Sign in once. Then choose your assistant, upload your resume, and watch Scout prepare your first job profile.</p>
+        {error && <p class="mt-6 rounded-xl bg-red-50 p-4 text-sm font-bold text-red-800" role="alert">{errors[error] || "Sign-in failed. Please try again."}</p>}
+        {sent ? <div class="mt-8 rounded-xl border border-signal-700/15 bg-signal-50 p-5" role="status"><div class="flex gap-3"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-signal-700 font-bold text-white">✓</span><div><h2 class="font-extrabold">Check your email</h2><p class="mt-1 text-sm leading-relaxed text-ink-soft">We sent a secure login link to <strong>{sent}</strong>.</p><a href={`/login?next=${encodeURIComponent(next)}`} class="mt-3 inline-block text-sm font-extrabold text-brand-800 underline">Use another email</a></div></div></div> : <>
+          <a href={`/api/auth/google?next=${encodeURIComponent(next)}`} class="mt-8 flex items-center justify-center gap-3 rounded-full border border-ink/15 bg-white px-5 py-3.5 font-extrabold hover:bg-surface"><span class="text-lg">G</span>Continue with Google</a>
+          <div class="my-6 flex items-center gap-3 text-xs font-bold text-ink-muted"><span class="h-px flex-1 bg-ink/10"></span>OR USE EMAIL<span class="h-px flex-1 bg-ink/10"></span></div>
+          <form action="/api/auth/email" method="post" class="space-y-4"><input type="hidden" name="next" value={next}/><label class="block text-sm font-bold" for="email">Email address</label><input id="email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@example.com" class="w-full rounded-xl border border-ink/15 bg-white px-4 py-3.5 text-base outline-none transition focus:border-brand-600 focus:ring-4 focus:ring-brand-100" /><button type="submit" class="w-full rounded-full bg-ink px-5 py-3.5 font-extrabold text-white transition hover:bg-brand-950 focus:outline-none focus:ring-4 focus:ring-brand-200">Email me a login link</button><p class="text-center text-sm leading-relaxed text-ink-muted">No password needed. We’ll send you a secure link that signs you in.</p></form>
+        </>}
+      </div>
+      <aside class="relative hidden overflow-hidden bg-brand-200 p-12 lg:flex lg:flex-col lg:justify-between"><div><Logo /><h2 class="mt-16 max-w-lg font-display text-5xl font-extrabold leading-tight">Your next application does not have to be another evening lost.</h2><p class="mt-5 max-w-md text-lg leading-relaxed text-ink-soft">Scout turns your resume into an application desk you can inspect from day one.</p></div><div class="rounded-2xl bg-white p-6 shadow-card"><div class="flex justify-between"><strong>What happens next</strong><span class="text-signal-700">About 5 minutes</span></div><ol class="mt-5 space-y-4 text-sm"><li class="flex gap-3"><span class="font-bold">1</span>Choose Human or AI Assistant</li><li class="flex gap-3"><span class="font-bold">2</span>Upload and review your resume data</li><li class="flex gap-3"><span class="font-bold">3</span>Open your prepared dashboard</li></ol></div></aside>
+    </div>
+  </section>
+</Auth>

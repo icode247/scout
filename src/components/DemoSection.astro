@@ -1,0 +1,16 @@
+---
+import Button from "./Button.astro";
+import ProductScreenshot from "./ProductScreenshot.astro";
+---
+<section class="bg-surface py-20 sm:py-28">
+  <div class="mx-auto max-w-container px-5 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold leading-tight sm:text-6xl">How it works in two minutes.</h2><p class="mx-auto mt-5 max-w-xl text-lg text-ink-soft">A quick tour from target profile to completed application receipt.</p></div>
+    <div class="relative mx-auto mt-12 max-w-5xl overflow-hidden rounded-2xl bg-brand-950 p-4 sm:p-8">
+      <ProductScreenshot variant="tracker" />
+      <a href="/how-it-works" class="absolute inset-0 grid place-items-center bg-brand-950/10" aria-label="Open the two-minute Scout workflow">
+        <span class="grid h-20 w-20 place-items-center rounded-full bg-brand-300 text-3xl text-ink shadow-card transition-transform duration-200 hover:scale-105">▶</span>
+      </a>
+    </div>
+    <div class="mt-8 text-center"><Button href="/how-it-works" variant="secondary" class="rounded-full bg-white px-7">Explore every step →</Button></div>
+  </div>
+</section>

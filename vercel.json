@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/first-apply",
+      "destination": "/ai-job-application-assistant",
+      "permanent": true
+    },
+    {
+      "source": "/swipe-apply",
+      "destination": "/human-job-application-service",
+      "permanent": true
+    }
+  ]
+}

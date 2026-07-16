@@ -1,0 +1,50 @@
+---
+import Base from "../layouts/Base.astro";
+import Container from "../components/Container.astro";
+import Button from "../components/Button.astro";
+import FAQ from "../components/FAQ.astro";
+import MarketingCTA from "../components/MarketingCTA.astro";
+
+const humanPlans = [
+  { name:"Focused Search", price:"$299", applications:"250 applications", blurb:"A dedicated person runs one clearly defined job search.", featured:false, features:["1 Human Assistant","1 active job profile","Dedicated WhatsApp group","Dashboard tracking","Resume used for every job","Screenshots of important form answers"] },
+  { name:"Full Search", price:"$499", applications:"500 applications", blurb:"The complete Human Assistant service for an active search.", featured:true, features:["1 dedicated Human Assistant","Up to 2 active job profiles","Dedicated WhatsApp group","Tailored resume for each job","Detailed answer screenshots","Jobs added from dashboard or Chrome"] },
+  { name:"Career Campaign", price:"$999", applications:"1,000 applications", blurb:"More capacity and coordination for a broad or multi-role search.", featured:false, features:["2 Human Assistants","Up to 4 active job profiles","Priority WhatsApp support","Tailored resumes and cover notes","Detailed answer screenshots","Weekly campaign review"] },
+];
+
+const aiPlans = [
+  { name:"AI Essential", price:"$39", applications:"75 applications / month", blurb:"A lower-cost assistant for one focused search.", features:["1 active job profile","Tailored resume per job","Job and status tracking","Resume-used record","Add jobs from Chrome","No form-answer screenshots"] },
+  { name:"AI Plus", price:"$79", applications:"200 applications / month", blurb:"More profiles and volume for an active multi-role search.", features:["Up to 3 active job profiles","Tailored resumes and cover notes","Priority AI queue","Job and status tracking","Resume-used record","No form-answer screenshots"] },
+];
+
+const faqs=[
+ {q:"Why are Human and AI priced differently?",a:"Human service includes labor, a dedicated WhatsApp relationship, judgment on application questions, and detailed evidence. AI uses automated fulfillment and is priced monthly at a lower cost."},
+ {q:"Does a Human bundle expire?",a:"The application allowance is a campaign bundle rather than a monthly software subscription. Confirm the final campaign window and rollover policy before launch."},
+ {q:"Can I start without booking a call?",a:"Yes. Create an account, choose Human or AI, and import your resume. Human members can schedule the kickoff call during onboarding."},
+ {q:"What evidence do I receive?",a:"Both lanes show the job, status, and resume used. Human Assistant bundles also include screenshots or records of important form answers."},
+ {q:"Can I use different profiles for different roles?",a:"Yes. Plan limits determine how many job profiles can be active at the same time."},
+];
+---
+<Base title="Scout pricing: Human and AI job application assistants" description="Compare dedicated Human Assistant application bundles with lower-cost monthly AI Assistant plans.">
+  <section class="bg-brand-950 py-20 text-white sm:py-28">
+    <Container><div class="mx-auto max-w-4xl text-center"><p class="text-lg font-bold text-brand-300">Two services. Two honest pricing models.</p><h1 class="mt-4 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.035em] text-white sm:text-7xl">Pay a person for service. Pay monthly for AI throughput.</h1><p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">Human Assistant is sold as an application campaign because real people do the work. AI Assistant is a lower-cost monthly plan.</p><div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row"><a href="#human" class="rounded-full bg-brand-300 px-7 py-3.5 font-extrabold text-ink">Human Assistant bundles</a><a href="#ai" class="rounded-full bg-white/10 px-7 py-3.5 font-extrabold text-white">AI monthly plans</a></div></div></Container>
+  </section>
+
+  <section id="human" class="bg-white py-20 sm:py-28">
+    <Container>
+      <div class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p class="text-lg font-bold text-human-700">Human Assistant</p><h2 class="mt-3 max-w-3xl font-display text-4xl font-extrabold sm:text-6xl">A managed application campaign with a person you can reach.</h2></div><p class="max-w-md text-ink-soft">One-time campaign pricing includes assistant labor, WhatsApp access, dashboard tracking, and application evidence.</p></div>
+      <div class="mt-12 grid gap-5 lg:grid-cols-3">
+        {humanPlans.map(plan => <article class={`relative flex flex-col rounded-2xl p-7 ${plan.featured?"bg-brand-200 ring-2 ring-brand-600":"bg-surface"}`}>{plan.featured&&<span class="mb-5 w-fit rounded-full bg-brand-950 px-3 py-1.5 text-xs font-bold text-white">Most useful for an active search</span>}<h3 class="text-2xl font-extrabold">{plan.name}</h3><p class="mt-3 min-h-12 text-ink-soft">{plan.blurb}</p><p class="mt-7"><span class="font-display text-5xl font-extrabold">{plan.price}</span><span class="text-ink-muted"> one time</span></p><p class="mt-2 font-bold text-brand-800">{plan.applications}</p><Button href="/book-call" class="mt-7 w-full rounded-full bg-ink text-white">Book a strategy call</Button><ul class="mt-7 space-y-3 text-sm font-semibold text-ink-soft">{plan.features.map(f=><li class="flex gap-2"><span class="text-signal-700">✓</span>{f}</li>)}</ul></article>)}
+      </div>
+      <p class="mt-5 text-center text-sm text-ink-muted">Application limits and campaign windows should be validated against assistant capacity before launch.</p>
+    </Container>
+  </section>
+
+  <section id="ai" class="bg-brand-100 py-20 sm:py-28">
+    <Container>
+      <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start"><div><p class="text-lg font-bold text-brand-800">AI Assistant</p><h2 class="mt-3 font-display text-4xl font-extrabold sm:text-6xl">Lower-cost application help that starts immediately.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">Create an account, import your resume, review the extracted data, and let Scout prepare the first job profile. No strategy call is required.</p><Button href="/login?intent=ai" size="lg" class="mt-8 rounded-full bg-ink text-white">Start with AI Assistant</Button></div><div class="grid gap-5 md:grid-cols-2">{aiPlans.map((plan,i)=><article class={`rounded-2xl p-7 ${i===1?"bg-brand-950 text-white":"bg-white"}`}><h3 class={`text-2xl font-extrabold ${i===1?"text-white":""}`}>{plan.name}</h3><p class={`mt-3 min-h-12 ${i===1?"text-white/65":"text-ink-soft"}`}>{plan.blurb}</p><p class="mt-7"><span class={`font-display text-5xl font-extrabold ${i===1?"text-white":""}`}>{plan.price}</span><span class={i===1?"text-white/55":"text-ink-muted"}> / month</span></p><p class={`mt-2 font-bold ${i===1?"text-brand-300":"text-brand-800"}`}>{plan.applications}</p><ul class={`mt-7 space-y-3 text-sm font-semibold ${i===1?"text-white/70":"text-ink-soft"}`}>{plan.features.map(f=><li class="flex gap-2"><span class={i===1?"text-brand-300":"text-signal-700"}>✓</span>{f}</li>)}</ul></article>)}</div></div>
+    </Container>
+  </section>
+
+  <section class="bg-white py-20 sm:py-28"><Container><div class="mx-auto max-w-3xl"><FAQ items={faqs} /></div></Container></section>
+  <MarketingCTA />
+</Base>

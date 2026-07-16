@@ -1,0 +1,47 @@
+---
+import type { ScoutData } from "../lib/scout-data";
+interface Props { profiles: ScoutData["jobProfiles"]; triggerLabel?: string; id?: string; }
+const { profiles, triggerLabel = "+ Add a job", id = "add-job-dialog" } = Astro.props;
+---
+<button type="button" data-open-job={id} class="whitespace-nowrap rounded-full bg-ink px-4 py-2.5 text-xs font-extrabold leading-none text-white">{triggerLabel}</button>
+<dialog id={id} class="w-[min(92vw,38rem)] rounded-2xl bg-white p-0 text-ink shadow-lift backdrop:bg-ink/55">
+  <form data-job-form class="p-6 sm:p-8">
+    <div class="flex items-start justify-between gap-4"><div><p class="text-xs font-extrabold text-brand-700">SEND TO SCOUT</p><h2 class="mt-2 text-2xl font-extrabold">Add a job you found</h2><p class="mt-2 text-sm text-ink-soft">Paste the essentials now. Your selected assistant will use the job profile rules.</p></div><button type="button" data-close-dialog class="grid h-9 w-9 place-items-center rounded-full bg-surface" aria-label="Close">×</button></div>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <label class="text-sm font-bold">Job title<input required name="title" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal" placeholder="Senior Product Manager"/></label>
+      <label class="text-sm font-bold">Company<input required name="company" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal" placeholder="Company name"/></label>
+      <label class="text-sm font-bold">Location<input name="location" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal" placeholder="Remote or city"/></label>
+      <label class="text-sm font-bold">Job profile<select name="job_profile_id" class="mt-2 w-full rounded-xl border border-ink/15 bg-white px-4 py-3 font-normal">{profiles.map(profile=><option value={profile.id} data-assistant={profile.assistant_type}>{profile.name} · {profile.assistant_type === "human" ? "Human" : "AI"}</option>)}</select></label>
+      <label class="text-sm font-bold sm:col-span-2">Job URL<input name="external_url" type="url" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal" placeholder="https://…"/></label>
+      <label class="text-sm font-bold sm:col-span-2">Job description<textarea name="description" rows="4" class="mt-2 w-full resize-y rounded-xl border border-ink/15 px-4 py-3 font-normal" placeholder="Paste the job description or key requirements"></textarea></label>
+    </div>
+    <input type="hidden" name="status" value="delegated"/><input type="hidden" name="assistant_type" value={profiles[0]?.assistant_type || "ai"}/>
+    <p data-form-error class="mt-4 hidden rounded-lg bg-red-50 p-3 text-sm font-bold text-red-800" role="alert"></p>
+    <div class="mt-6 flex justify-end gap-3"><button type="button" data-close-dialog class="rounded-full px-5 py-3 text-sm font-bold">Cancel</button><button type="submit" class="rounded-full bg-brand-500 px-6 py-3 text-sm font-extrabold text-ink">Send to assistant</button></div>
+  </form>
+</dialog>
+<script define:vars={{ id }}>
+  const dialog = document.getElementById(id);
+  const form = dialog?.querySelector("[data-job-form]");
+  document.querySelectorAll(`[data-open-job="${id}"]`).forEach(button => button.addEventListener("click", () => dialog?.showModal()));
+  dialog?.querySelectorAll("[data-close-dialog]").forEach(button => button.addEventListener("click", () => dialog.close()));
+  dialog?.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
+  const select = form?.querySelector("[name=job_profile_id]");
+  select?.addEventListener("change", () => { form.elements.assistant_type.value = select.selectedOptions[0]?.dataset.assistant || "ai"; });
+  form?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = form.querySelector("[type=submit]");
+    const error = form.querySelector("[data-form-error]");
+    button.disabled = true; button.textContent = "Sending…"; error.classList.add("hidden");
+    try {
+      const body = Object.fromEntries(new FormData(form).entries());
+      const response = await fetch("/api/app/jobs", { method: "POST", headers: {"content-type":"application/json"}, body: JSON.stringify(body) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to add job");
+      window.scoutToast?.("Job sent to your assistant");
+      location.reload();
+    } catch (reason) {
+      error.textContent = reason.message; error.classList.remove("hidden"); button.disabled = false; button.textContent = "Send to assistant";
+    }
+  });
+</script>

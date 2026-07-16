@@ -1,0 +1,65 @@
+---
+import { ATS_PAGES } from "../../data/ats";
+import Base from "../../layouts/Base.astro";
+import Container from "../../components/Container.astro";
+import Button from "../../components/Button.astro";
+import FAQ from "../../components/FAQ.astro";
+import { SITE } from "../../config/site";
+
+export function getStaticPaths() {
+  return ATS_PAGES.map((page) => ({ params: { ats: page.slug }, props: { page } }));
+}
+const { page } = Astro.props;
+
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Auto-apply", item: new URL("/auto-apply", SITE.url).href },
+    { "@type": "ListItem", position: 2, name: page.name, item: new URL(`/auto-apply/${page.slug}`, SITE.url).href },
+  ],
+};
+---
+<Base
+  title={`Auto-Apply to ${page.name} Jobs`}
+  description={page.intro}
+>
+  <Container>
+    <section class="py-16 sm:py-20">
+      <nav class="text-sm text-ink-muted"><a href="/auto-apply" class="hover:text-ink">Auto-apply</a> <span aria-hidden="true">/</span> {page.name}</nav>
+      <div class="mt-4 max-w-3xl">
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand-600">{page.kind === "ATS" ? "Applicant tracking system" : "Job board"}</p>
+        <h1 class="mt-2 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Auto-apply to {page.name} jobs</h1>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft">{page.intro}</p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row"><Button href="/login?intent=ai">Start with AI</Button><Button href="/book-call" variant="secondary">Book a human strategy call</Button></div>
+      </div>
+
+      <div class="mt-14 rounded-3xl border border-black/5 bg-white p-8 shadow-card">
+        <h2 class="text-2xl font-bold">How Scout applies to {page.name} for you</h2>
+        <ul class="mt-6 grid gap-4 sm:grid-cols-2">
+          {page.bullets.map((b) => (
+            <li class="flex items-start gap-3 text-ink-soft">
+              <svg class="mt-0.5 shrink-0 text-brand-600" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="mt-6 rounded-2xl bg-brand-50 p-4 text-sm text-brand-900">
+          <strong>Auto-submit, not just autofill.</strong> Most tools only pre-fill fields and leave you to finish. Your selected Scout assistant completes the application using the job profile and resume rules you chose.
+        </p>
+      </div>
+    </section>
+
+    <div class="border-t border-black/5 py-16">
+      <FAQ items={page.faqs} heading={`${page.name} auto-apply: questions`} />
+    </div>
+
+    <section class="mb-12 rounded-3xl bg-surface-soft px-6 py-12 text-center sm:px-10">
+      <h2 class="text-3xl font-bold tracking-tight">Stop filling out {page.name} forms.</h2>
+      <p class="mx-auto mt-3 max-w-lg text-ink-soft">Let Scout apply to your {page.name} matches with a tailored resume and cover letter.</p>
+      <div class="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><Button href="/login?intent=ai">Start with AI</Button><Button href="/book-call" variant="secondary">Book a human strategy call</Button></div>
+    </section>
+  </Container>
+
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+</Base>

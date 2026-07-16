@@ -1,0 +1,16 @@
+---
+import Base from "./Base.astro";
+import Container from "../components/Container.astro";
+interface Props { title: string; description?: string; updated?: string; noindex?: boolean; }
+const { title, description, updated, noindex = false } = Astro.props;
+const updatedLabel = updated ?? new Date().toISOString().slice(0, 10);
+---
+<Base title={title} description={description} noindex={noindex}>
+  <Container>
+    <article class="prose prose-slate mx-auto max-w-prose py-16 prose-headings:font-display prose-headings:tracking-tight prose-a:text-brand-700">
+      <h1>{title}</h1>
+      <p class="text-sm text-ink-muted">Last updated: {updatedLabel}</p>
+      <slot />
+    </article>
+  </Container>
+</Base>

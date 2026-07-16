@@ -1,0 +1,31 @@
+---
+import ProductScreenshot from "./ProductScreenshot.astro";
+---
+<section class="bg-white py-20 sm:py-28">
+  <div class="mx-auto max-w-container px-5 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="font-display text-4xl font-extrabold leading-tight sm:text-6xl">How Scout gets you from searching to submitted.</h2>
+      <p class="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">Choose Human or AI, set up your first job profile, and give the repetitive work to the assistant you selected.</p>
+    </div>
+    <div class="mt-14 grid gap-5 lg:grid-cols-3">
+      <article class="relative min-h-[520px] overflow-hidden rounded-2xl bg-brand-100 p-6">
+        <h3 class="text-2xl font-extrabold">1. Tell us what fits</h3>
+        <p class="mt-2 leading-relaxed text-ink-soft">Add your resume, goals, salary floor, locations, and dealbreakers.</p>
+        <img src="/assets/scout-profile-step.webp" alt="A Scout member ready to set their job-search preferences" width="1200" height="680" loading="lazy" class="absolute bottom-0 left-0 h-[68%] w-full object-cover object-center" />
+        <div class="absolute bottom-5 left-5 right-5 rounded-xl bg-white p-4 shadow-card"><div class="flex flex-wrap gap-2 text-xs font-bold"><span class="rounded-full bg-brand-100 px-3 py-1.5">Product roles</span><span class="rounded-full bg-surface px-3 py-1.5">Remote</span><span class="rounded-full bg-surface px-3 py-1.5">$120k+</span></div></div>
+      </article>
+      <article class="relative min-h-[520px] overflow-hidden rounded-2xl bg-surface p-6">
+        <h3 class="text-2xl font-extrabold">2. Build and delegate your queue</h3>
+        <p class="mt-2 leading-relaxed text-ink-soft">Scout finds matches, and you can add any job from the dashboard or Chrome extension.</p>
+        <ProductScreenshot variant="queue" class="absolute -bottom-10 left-5 w-[calc(100%-1.25rem)] min-w-[570px] origin-bottom-left scale-[0.62] sm:scale-[0.68] lg:scale-[0.62]" />
+      </article>
+      <article class="relative min-h-[520px] overflow-hidden rounded-2xl bg-brand-950 p-6 text-white">
+        <h3 class="text-2xl font-extrabold text-white">3. We apply and prove it</h3>
+        <p class="mt-2 leading-relaxed text-white/70">Your chosen assistant applies. Both lanes log the job and resume; Human plans also save detailed answer evidence.</p>
+        <div class="absolute bottom-5 left-5 right-5 space-y-3">
+          {['Product Operations Manager','Backend Engineer','Customer Success Lead'].map((role, i) => <div class="rounded-xl bg-white p-4 text-ink"><div class="flex items-center justify-between gap-3"><div><strong class="text-sm">{role}</strong><p class="mt-1 text-xs text-ink-muted">{['Northstar Health','Arcade Labs','Pilot Fiber'][i]}</p></div><span class={`rounded-full px-2.5 py-1 text-xs font-bold ${i===1?'bg-human-50 text-human-700':'bg-signal-50 text-signal-700'}`}>{i===1?'Human check':'Applied ✓'}</span></div></div>)}
+        </div>
+      </article>
+    </div>
+  </div>
+</section>

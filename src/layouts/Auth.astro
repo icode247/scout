@@ -1,0 +1,11 @@
+---
+import "../styles/global.css";
+import BaseHead from "../components/BaseHead.astro";
+interface Props { title?: string; description?: string; noindex?: boolean; }
+const { title, description, noindex = true } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+<head><BaseHead title={title} description={description} noindex={noindex} /></head>
+<body class="min-h-screen"><main><slot /></main></body>
+</html>

@@ -1,0 +1,21 @@
+---
+import Legal from "../layouts/Legal.astro";
+export const prerender = false;
+const error = Astro.url.searchParams.get("error");
+---
+<Legal title="Delete your account" description="Delete your Scout account and all associated data." noindex={true}>
+  <p>You can permanently delete your Scout account and associated data at any time.</p>
+  {error === "confirmation" && <p class="rounded-xl bg-red-50 p-4 font-bold text-red-800">Type DELETE exactly to confirm.</p>}
+  {error === "configuration" && <p class="rounded-xl bg-red-50 p-4 font-bold text-red-800">Account deletion is not configured on this deployment. Email privacy@getscout.app and we’ll complete it manually.</p>}
+  <h2>Delete now</h2>
+  <p>This removes your login, resumes, job profiles, jobs, application history, and uploaded evidence. It cannot be undone.</p>
+  <form action="/api/app/account" method="post" class="not-prose mt-6 max-w-lg rounded-2xl border border-red-200 bg-white p-6">
+    <label class="block text-sm font-bold" for="confirmation">Type <strong>DELETE</strong> to confirm</label>
+    <input id="confirmation" name="confirmation" required autocomplete="off" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3" />
+    <button class="mt-4 rounded-full bg-red-700 px-5 py-3 text-sm font-extrabold text-white">Permanently delete my account</button>
+  </form>
+  <h2>Request deletion by email</h2>
+  <p>Send a request from your account email to <a href="mailto:privacy@getscout.app?subject=Delete%20my%20Scout%20account">privacy@getscout.app</a>. We’ll verify the request before processing it.</p>
+  <h2>Limited retention</h2>
+  <p>Records required by law or fraud-prevention obligations may be retained as described in our <a href="/privacy">Privacy Policy</a>.</p>
+</Legal>

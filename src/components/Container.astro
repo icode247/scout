@@ -1,0 +1,7 @@
+---
+interface Props { class?: string; }
+const { class: cls = "" } = Astro.props;
+---
+<div class={`mx-auto w-full max-w-container px-5 sm:px-6 lg:px-8 ${cls}`}>
+  <slot />
+</div>

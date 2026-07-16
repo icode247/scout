@@ -1,0 +1,84 @@
+---
+import "../styles/global.css";
+import BaseHead from "../components/BaseHead.astro";
+
+const concepts = [
+  { id: "a", name: "Routefold", idea: "Two application paths folding into one decisive route.", root: "/brand/concept-a" },
+  { id: "b", name: "Open Gate", idea: "Human and AI assistance opening one clear path forward.", root: "/brand/concept-b" },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head><BaseHead title="Logo Lab" description="Private Scout logo comparison." noindex={true} /></head>
+  <body class="logo-lab">
+    <header class="lab-topbar">
+      <a href="/" class="lab-back">← Back to Scout</a>
+      <div><strong>Scout Logo Lab</strong><span>Production remains unchanged</span></div>
+      <p id="selection-status" role="status" aria-live="polite">No concept selected</p>
+    </header>
+    <main>
+      <section class="lab-intro">
+        <p class="lab-kicker">IDENTITY COMPARISON</p>
+        <h1>Choose the mark that can carry Scout for the next decade.</h1>
+        <p>Both directions use the same wordmark, palette, and production constraints. Compare the silhouette—not the presentation board.</p>
+      </section>
+      <div class="concept-grid">
+        {concepts.map((concept) => (
+          <article class="concept" data-concept={concept.id}>
+            <header class="concept-heading">
+              <div><p>CONCEPT {concept.id.toUpperCase()}</p><h2>{concept.name}</h2><span>{concept.idea}</span></div>
+              <button class="select-concept" type="button" data-select={concept.id} aria-pressed="false">Select Concept {concept.id.toUpperCase()}</button>
+            </header>
+            <section class="website-preview" aria-label={concept.name + " website header preview"}>
+              <nav>
+                <img src={concept.root + "/logo-horizontal.svg"} width="176" height="40" alt={"Scout " + concept.name + " logo"} />
+                <div class="preview-nav"><span>How it works</span><span>Pricing</span><span>Reviews</span></div>
+                <span class="preview-cta">Get started</span>
+              </nav>
+              <div class="preview-hero"><p>3500+ JOB SEEKERS HELPED</p><h3>Land jobs faster with a Human or AI Assistant.</h3><span>Scout handles the application work while you focus on interviews.</span></div>
+            </section>
+            <div class="context-grid">
+              <section class="browser-preview" aria-label={concept.name + " browser tab preview"}>
+                <p class="context-label">BROWSER TAB · 16PX</p>
+                <div class="browser-bar"><span class="browser-dot"></span><img src={concept.root + "/mark-16.png"} width="16" height="16" alt="" /><strong>Scout — Job applications</strong><span class="browser-close">×</span></div>
+              </section>
+              <section class="app-preview" aria-label={concept.name + " app sidebar preview"}>
+                <p class="context-label">APPLICATION SIDEBAR</p>
+                <div class="app-shell">
+                  <aside><img src={concept.root + "/logo-horizontal.svg"} width="132" height="30" alt="" /><span class="active">Overview</span><span>Jobs</span><span>Applications</span><span>Job profiles</span></aside>
+                  <div><small>APPLICATION DESK</small><strong>Good morning, Alex.</strong><span>4 applications are moving today.</span></div>
+                </div>
+              </section>
+            </div>
+            <section class="scale-preview">
+              <div><p class="context-label">MARK SCALE</p><span class="mark-sizes"><img src={concept.root + "/mark.svg"} width="80" height="80" alt="" /><img src={concept.root + "/mark.svg"} width="48" height="48" alt="" /><img src={concept.root + "/mark.svg"} width="32" height="32" alt="" /><img src={concept.root + "/mark-16.png"} width="16" height="16" alt="" /></span></div>
+              <div class="reverse-lockup"><p class="context-label">REVERSED</p><img src={concept.root + "/logo-reversed.svg"} width="176" height="40" alt="" /></div>
+              <div><p class="context-label">ONE COLOR</p><img src={concept.root + "/logo-monochrome.svg"} width="176" height="40" alt="" /></div>
+            </section>
+            <details>
+              <summary>View generated source board and asset links</summary>
+              <img class="source-board" src={concept.root + "/generated-board.png"} width="1692" height="960" loading="lazy" alt={"Original generated " + concept.name + " logo presentation"} />
+              <div class="asset-links"><a href={concept.root + "/mark.svg"}>Mark SVG</a><a href={concept.root + "/logo-horizontal.svg"}>Horizontal SVG</a><a href={concept.root + "/logo-reversed.svg"}>Reversed SVG</a><a href={concept.root + "/logo-monochrome.svg"}>Monochrome SVG</a><a href={concept.root + "/favicon.svg"}>Favicon SVG</a><a href={concept.root + "/mark-512.png"}>512px PNG</a><a href={concept.root + "/apple-touch-icon.png"}>Apple touch icon</a></div>
+            </details>
+          </article>
+        ))}
+      </div>
+    </main>
+    <script is:inline>
+      const buttons = [...document.querySelectorAll("[data-select]")];
+      const status = document.getElementById("selection-status");
+      const saved = localStorage.getItem("scout-logo-selection");
+      function setSelection(id) {
+        document.querySelectorAll("[data-concept]").forEach((card) => card.classList.toggle("is-selected", card.dataset.concept === id));
+        buttons.forEach((button) => button.setAttribute("aria-pressed", button.dataset.select === id ? "true" : "false"));
+        if (status) status.textContent = id ? "Concept " + id.toUpperCase() + " selected" : "No concept selected";
+        if (id) localStorage.setItem("scout-logo-selection", id);
+      }
+      buttons.forEach((button) => button.addEventListener("click", () => setSelection(button.dataset.select)));
+      if (saved === "a" || saved === "b") setSelection(saved);
+    </script>
+  </body>
+</html>
+<style>
+  :global(body.logo-lab){margin:0;background:#f7f9f5;color:#14210f}.lab-topbar{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:64px;padding:0 32px;border-bottom:1px solid rgb(20 33 15/.12);background:rgb(255 255 255/.94);backdrop-filter:blur(12px)}.lab-topbar>div{text-align:center}.lab-topbar strong{display:block;font:700 15px/1.2 "Space Grotesk",sans-serif}.lab-topbar span,.lab-topbar p{color:#69735f;font-size:11px}.lab-topbar p{justify-self:end;margin:0;font-weight:700}.lab-back{color:#14210f;font-size:13px;font-weight:700;text-decoration:none}main{width:min(1480px,calc(100% - 40px));margin:0 auto;padding:72px 0 96px}.lab-intro{max-width:760px;margin:0 auto 48px;text-align:center}.lab-kicker{color:#49791c;font-size:12px;font-weight:800;letter-spacing:.12em}.lab-intro h1{margin:16px 0;font-size:clamp(40px,5vw,68px);line-height:.98;letter-spacing:-.04em}.lab-intro>p:last-child{max-width:650px;margin:0 auto;color:#3d4a35;font-size:17px;line-height:1.7}.concept-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}.concept{overflow:hidden;border:2px solid transparent;border-radius:16px;background:white;box-shadow:0 8px 24px -18px rgb(13 27 42/.25);transition:border-color 180ms ease,box-shadow 180ms ease}.concept.is-selected{border-color:#7fc92b;box-shadow:0 0 0 4px rgb(127 201 43/.16)}.concept-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:24px;border-bottom:1px solid rgb(20 33 15/.1)}.concept-heading p,.context-label{margin:0 0 6px;color:#69735f;font-size:10px;font-weight:800;letter-spacing:.1em}.concept-heading h2{margin:0;font-size:30px;letter-spacing:-.03em}.concept-heading span{display:block;margin-top:4px;color:#3d4a35;font-size:13px}.select-concept{min-height:44px;flex:none;cursor:pointer;border:0;border-radius:999px;background:#10210d;padding:0 18px;color:white;font:800 12px/1 "Manrope",sans-serif;transition:background 180ms ease,color 180ms ease}.select-concept[aria-pressed=true]{background:#9dde47;color:#10210d}.select-concept:focus-visible{outline:3px solid #7fc92b;outline-offset:3px}.website-preview{min-height:390px;padding:20px;background:#f4ffeb}.website-preview nav{display:flex;align-items:center;gap:24px;min-height:58px;border-radius:12px;background:white;padding:8px 14px;box-shadow:0 4px 8px rgb(13 27 42/.05)}.website-preview nav img{width:132px;height:auto}.preview-nav{display:flex;flex:1;justify-content:center;gap:18px;color:#3d4a35;font-size:10px;font-weight:700}.preview-cta{border-radius:999px;background:#10210d;padding:10px 14px;color:white;font-size:10px;font-weight:800}.preview-hero{max-width:520px;margin:72px auto 0;text-align:center}.preview-hero p{margin:0;color:#49791c;font-size:10px;font-weight:800;letter-spacing:.08em}.preview-hero h3{margin:14px 0;font-size:clamp(28px,3vw,42px);line-height:1.02;letter-spacing:-.04em}.preview-hero span{color:#3d4a35;font-size:13px}.context-grid{display:grid;grid-template-columns:.85fr 1.15fr;border-top:1px solid rgb(20 33 15/.1);border-bottom:1px solid rgb(20 33 15/.1)}.browser-preview,.app-preview{min-width:0;padding:20px}.browser-preview{border-right:1px solid rgb(20 33 15/.1)}.browser-bar{display:flex;align-items:center;gap:8px;overflow:hidden;min-height:42px;border-radius:9px;background:#232323;padding:0 12px;color:#ddd}.browser-dot{width:7px;height:7px;border-radius:50%;background:#676767}.browser-bar img{flex:none}.browser-bar strong{overflow:hidden;flex:1;font-size:10px;font-weight:500;text-overflow:ellipsis;white-space:nowrap}.browser-close{color:#999}.app-shell{display:grid;grid-template-columns:112px 1fr;min-height:168px;overflow:hidden;border:1px solid rgb(20 33 15/.1);border-radius:12px;background:#f7f9f5}.app-shell aside{display:flex;flex-direction:column;gap:3px;border-right:1px solid rgb(20 33 15/.1);background:white;padding:12px 8px}.app-shell aside img{width:92px;height:auto;margin:0 4px 14px}.app-shell aside span{border-radius:6px;padding:6px 7px;color:#3d4a35;font-size:8px;font-weight:700}.app-shell aside span.active{background:#e7ffd2;color:#14210f}.app-shell>div{display:flex;flex-direction:column;justify-content:center;padding:18px}.app-shell small{color:#49791c;font-size:8px;font-weight:800}.app-shell strong{margin-top:8px;font-size:17px}.app-shell>div span{margin-top:6px;color:#69735f;font-size:9px}.scale-preview{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:18px;padding:24px}.mark-sizes{display:flex;align-items:end;gap:12px;min-height:80px}.reverse-lockup{border-radius:10px;background:#10210d;padding:14px}.reverse-lockup .context-label{color:rgb(255 255 255/.55)}.scale-preview img{max-width:100%;height:auto}details{border-top:1px solid rgb(20 33 15/.1)}summary{min-height:48px;cursor:pointer;padding:16px 24px;font-size:12px;font-weight:800}.source-board{display:block;width:100%;height:auto;border-top:1px solid rgb(20 33 15/.1)}.asset-links{display:flex;flex-wrap:wrap;gap:8px;padding:18px 24px 24px}.asset-links a{border-radius:999px;background:#f4ffeb;padding:9px 12px;color:#33551a;font-size:10px;font-weight:800;text-decoration:none}@media(max-width:1050px){.concept-grid{grid-template-columns:1fr}}@media(max-width:680px){.lab-topbar{grid-template-columns:1fr auto;padding:0 16px}.lab-topbar>div{text-align:right}.lab-topbar p{display:none}main{width:min(100% - 24px,1480px);padding-top:48px}.lab-intro h1{font-size:42px}.concept-heading{align-items:flex-start;flex-direction:column}.select-concept{width:100%}.preview-nav{display:none}.website-preview{min-height:330px}.preview-hero{margin-top:58px}.context-grid,.scale-preview{grid-template-columns:1fr}.browser-preview{border-right:0;border-bottom:1px solid rgb(20 33 15/.1)}}@media(prefers-reduced-motion:reduce){.concept,.select-concept{transition:none}}
+</style>

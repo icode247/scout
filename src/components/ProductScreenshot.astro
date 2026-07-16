@@ -1,0 +1,50 @@
+---
+interface Props {
+  variant?: "queue" | "tracker" | "documents" | "human" | "profiles";
+  class?: string;
+  priority?: boolean;
+}
+const { variant = "tracker", class: cls = "", priority = false } = Astro.props;
+const views = {
+  queue: {
+    src: "/assets/product-jobs.webp",
+    alt: "Scout Jobs workspace showing matched roles, fit scores, job profiles, and delegation to a Human Assistant",
+    label: "Jobs workspace",
+  },
+  tracker: {
+    src: "/assets/product-dashboard.webp",
+    alt: "Scout dashboard showing recent applications, active job profiles, assistant status, and application totals",
+    label: "Dashboard overview",
+  },
+  documents: {
+    src: "/assets/product-profiles.webp",
+    alt: "Scout job profiles showing different role searches and the resumes attached to each profile",
+    label: "Profiles and resumes",
+  },
+  human: {
+    src: "/assets/product-applications.webp",
+    alt: "Scout application record showing the Human Assistant, job profile, submission status, and assistant note",
+    label: "Application evidence",
+  },
+  profiles: {
+    src: "/assets/product-profiles.webp",
+    alt: "Scout job profiles with separate roles, locations, assistant lanes, and attached resumes",
+    label: "Job profiles",
+  },
+} as const;
+const view = views[variant];
+---
+<figure class:list={["product-screenshot", cls]}>
+  <div class="product-screenshot__bar" aria-hidden="true">
+    <span class="product-screenshot__dot"></span><span class="product-screenshot__dot"></span><span class="product-screenshot__dot"></span>
+    <span class="product-screenshot__label">{view.label}</span>
+  </div>
+  <img src={view.src} alt={view.alt} width="1600" height="850" loading={priority ? "eager" : "lazy"} fetchpriority={priority ? "high" : "auto"} decoding="async" />
+</figure>
+<style>
+  .product-screenshot { overflow:hidden; margin:0; border-radius:14px; background:white; box-shadow:0 6px 12px -8px rgba(16,33,13,.36); }
+  .product-screenshot__bar { display:flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-bottom:1px solid rgba(16,33,13,.08); background:#fff; }
+  .product-screenshot__dot { width:6px; height:6px; border-radius:999px; background:#cfd7ca; }
+  .product-screenshot__label { margin-left:6px; color:#69735f; font-size:10px; font-weight:700; }
+  .product-screenshot img { display:block; width:100%; height:auto; }
+</style>
