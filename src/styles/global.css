@@ -13,13 +13,20 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
   }
 
   body {
     @apply bg-surface text-ink antialiased font-sans;
     text-rendering: optimizeLegibility;
     font-feature-settings: "ss01";
+    min-width: 320px;
+    overflow-wrap: break-word;
   }
+
+  img, svg, video, canvas { max-width: 100%; }
+  input, select, textarea, button { font: inherit; }
+  dialog { max-height: calc(100dvh - 1rem); }
 
   h1, h2, h3, h4 {
     @apply font-display tracking-tight text-ink;
@@ -36,6 +43,18 @@
   }
 
   ::selection { background: rgba(127, 201, 43, 0.28); }
+}
+
+@media (max-width: 639px) {
+  h1, h2, h3 { overflow-wrap: anywhere; }
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { min-height: 3rem; font-size: 1rem; }
+  button, a, summary { -webkit-tap-highlight-color: rgba(127, 201, 43, 0.18); }
+  dialog { width: calc(100vw - 1rem) !important; max-width: none !important; margin: auto .5rem; border-radius: .875rem !important; }
+  dialog > form { max-height: calc(100dvh - 1rem); overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem !important; }
+}
+
+@media (pointer: coarse) {
+  button:not(.sr-only), summary, a[class*="rounded"] { min-height: 2.75rem; }
 }
 
 @layer components {

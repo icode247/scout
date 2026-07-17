@@ -17,7 +17,7 @@ const { profiles, triggerLabel = "+ Add a job", id = "add-job-dialog" } = Astro.
     </div>
     <input type="hidden" name="status" value="delegated"/><input type="hidden" name="assistant_type" value={profiles[0]?.assistant_type || "ai"}/>
     <p data-form-error class="mt-4 hidden rounded-lg bg-red-50 p-3 text-sm font-bold text-red-800" role="alert"></p>
-    <div class="mt-6 flex justify-end gap-3"><button type="button" data-close-dialog class="rounded-full px-5 py-3 text-sm font-bold">Cancel</button><button type="submit" class="rounded-full bg-brand-500 px-6 py-3 text-sm font-extrabold text-ink">Send to assistant</button></div>
+    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" data-close-dialog class="rounded-full px-5 py-3 text-sm font-bold">Cancel</button><button type="submit" class="rounded-full bg-brand-500 px-6 py-3 text-sm font-extrabold text-ink">Send to assistant</button></div>
   </form>
 </dialog>
 <script define:vars={{ id }}>
