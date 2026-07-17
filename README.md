@@ -53,3 +53,5 @@ npm run preview    # preview the build
 - [ ] First-party-proxy or self-host analytics + fonts (see note in `BaseHead.astro`).
 - [ ] Set `PUBLIC_PLAUSIBLE_DOMAIN`; verify in Google Search Console + Bing Webmaster.
 - [ ] Cap free-tier auto-applies + verification to control COGS (~$4.45/profile/mo via FastApply).
+
+# scout
