@@ -11,3 +11,6 @@ dist/
 
 # Local agent/session metadata
 .claude/
+
+# Local Supabase CLI connection metadata
+supabase/.temp/

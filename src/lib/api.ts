@@ -9,7 +9,12 @@ export function requireUser(context: APIContext): User {
 
 export function assertSameOrigin(context: APIContext) {
   const origin = context.request.headers.get("origin");
-  if (origin && origin !== context.url.origin) {
+  const referer = context.request.headers.get("referer");
+  let requestOrigin = origin;
+  if (!requestOrigin && referer) {
+    try { requestOrigin = new URL(referer).origin; } catch { requestOrigin = null; }
+  }
+  if (!requestOrigin || requestOrigin !== context.url.origin) {
     throw new Response(JSON.stringify({ error: "Invalid request origin" }), { status: 403, headers: { "content-type": "application/json" } });
   }
 }
@@ -32,9 +37,18 @@ export function list(value: unknown) {
 
 export function safeNext(value: unknown, fallback = "/onboarding") {
   const path = String(value || "");
-  return path.startsWith("/") && !path.startsWith("//") ? path : fallback;
+  if (!path.startsWith("/") || path.startsWith("//") || path.includes("\\")) return fallback;
+  try {
+    const base = "https://scout.invalid";
+    const url = new URL(path, base);
+    return url.origin === base ? `${url.pathname}${url.search}${url.hash}` : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 export function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong";
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string" && error.message) return error.message;
+  return "Something went wrong";
 }

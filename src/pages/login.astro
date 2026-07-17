@@ -3,7 +3,7 @@ import Auth from "../layouts/Auth.astro";
 import Logo from "../components/Logo.astro";
 export const prerender = false;
 const intent = Astro.url.searchParams.get("intent");
-const next = Astro.url.searchParams.get("next") || "/onboarding";
+const next = Astro.url.searchParams.get("next") || (intent === "ai" || intent === "human" ? `/onboarding?intent=${intent}` : "/onboarding");
 const sent = Astro.url.searchParams.get("sent");
 const error = Astro.url.searchParams.get("error");
 const heading = intent === "ai" ? "Start with your AI Assistant" : intent === "human" ? "Continue with Human Assistant" : "Welcome to Scout";

@@ -64,7 +64,7 @@ export function createSupabaseTokenClient(token: string): SupabaseClient {
 }
 
 export function demoModeEnabled() {
-  return import.meta.env.DEV || import.meta.env.SCOUT_DEMO_MODE === "true";
+  return import.meta.env.DEV && import.meta.env.SCOUT_DEMO_MODE === "true";
 }
 
 export function publicSiteUrl(request?: Request) {

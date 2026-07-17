@@ -12,6 +12,7 @@ import { SITE } from "./src/config/site.ts";
 export default defineConfig({
   site: SITE.url,
   adapter: vercel(),
+  output: "server",
   trailingSlash: "never",
   redirects: {
     "/first-apply": "/ai-job-application-assistant",

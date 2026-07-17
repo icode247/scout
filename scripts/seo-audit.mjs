@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const root = path.resolve("dist");
+const distRoot = path.resolve("dist");
+const root = fs.existsSync(path.join(distRoot, "client")) ? path.join(distRoot, "client") : distRoot;
 if (!fs.existsSync(root)) {
   console.error("dist/ is missing. Run npm run build first.");
   process.exit(1);

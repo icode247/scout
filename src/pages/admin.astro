@@ -1,0 +1,71 @@
+---
+import App from "../layouts/App.astro";
+import { createAdminClient, requireAdmin } from "../lib/admin";
+import { assignedHumanAssistant, humanAssistants } from "../lib/human-assistants";
+export const prerender = false;
+try { requireAdmin(Astro); } catch (response) { if (response instanceof Response) return Astro.redirect("/dashboard", 303); throw response; }
+const admin = createAdminClient();
+const humanProfilesResult = await admin.from("profiles").select("user_id,full_name,email,assistant_name,whatsapp_phone,whatsapp_url,created_at").eq("assistant_type", "human").order("created_at", { ascending: false });
+if (humanProfilesResult.error) throw humanProfilesResult.error;
+const humanProfiles = humanProfilesResult.data || [];
+const result = await admin.from("applications").select("id,user_id,job_id,job_profile_id,resume_id,assistant_type,status,notes,created_at,submitted_at").order("created_at", { ascending: false }).limit(100);
+if (result.error) throw result.error;
+const applications = result.data || [];
+const jobIds = [...new Set(applications.map((item) => item.job_id).filter(Boolean))];
+const applicationIds = applications.map((item) => item.id);
+const [jobsResult, evidenceResult] = await Promise.all([
+  jobIds.length ? admin.from("jobs").select("id,title,company,external_url").in("id", jobIds) : Promise.resolve({ data: [], error: null }),
+  applicationIds.length ? admin.from("application_evidence").select("id,application_id,label,mime_type,created_at").in("application_id", applicationIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [], error: null }),
+]);
+if (jobsResult.error || evidenceResult.error) throw jobsResult.error || evidenceResult.error;
+type AdminJob = { id:string; title:string; company:string; external_url:string | null };
+const jobs = new Map<string, AdminJob>(((jobsResult.data || []) as AdminJob[]).map((job) => [job.id, job]));
+const evidenceByApplication = new Map<string, Array<{ id:string; label:string; mime_type:string; created_at:string }>>();
+for (const item of evidenceResult.data || []) {
+  const items = evidenceByApplication.get(item.application_id) || [];
+  items.push(item);
+  evidenceByApplication.set(item.application_id, items);
+}
+const statuses = ["preparing","submitted","needs_input","evidence_ready","interview","rejected","withdrawn"];
+---
+<App title="Operations queue" active="admin">
+  <div class="flex flex-wrap items-end justify-between gap-4"><div><p class="text-sm font-extrabold text-signal-700">SCOUT OPERATIONS</p><h1 class="mt-2 text-4xl font-extrabold">Application fulfillment</h1><p class="mt-2 text-ink-soft">Every delegated job must leave this queue with a truthful outcome and supporting evidence when included.</p></div><span class="rounded-full bg-brand-100 px-4 py-2 text-sm font-bold">{applications.length} recent</span></div>
+  <section class="mt-8 rounded-xl bg-white p-5 shadow-card sm:p-6"><div class="flex flex-wrap items-end justify-between gap-4"><div><h2 class="text-xl font-extrabold">Human assistant setup</h2><p class="mt-1 text-sm text-ink-soft">Create the private WhatsApp group manually, then save its invite link here.</p></div><span class="rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700">{humanProfiles.filter((profile) => !profile.whatsapp_url).length} awaiting setup</span></div><div class="mt-5 divide-y divide-ink/10">{humanProfiles.length ? humanProfiles.map((profile) => { const assigned = assignedHumanAssistant(profile.user_id, profile.assistant_name); const groupName = `Scout · ${profile.full_name || profile.email} · ${assigned.firstName}`; return <div class="py-5 first:pt-0 last:pb-0"><div class="flex flex-wrap items-start justify-between gap-4"><div class="flex min-w-0 items-center gap-3"><img src={assigned.avatar} alt="" class="h-11 w-11 rounded-full object-cover"/><div class="min-w-0"><strong class="block truncate">{profile.full_name || "Unnamed member"}</strong><p class="truncate text-sm text-ink-soft">{profile.email}</p><p class="mt-1 text-xs font-bold text-ink-muted">{profile.whatsapp_phone || "WhatsApp number not provided"}</p></div></div><span class={profile.whatsapp_url ? "rounded-full bg-signal-50 px-3 py-1.5 text-xs font-bold text-signal-700" : "rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700"}>{profile.whatsapp_url ? "Group ready" : "Setup required"}</span></div><div class="mt-4 rounded-xl bg-surface p-4"><p class="text-xs font-bold text-ink-muted">GROUP TO CREATE</p><strong class="mt-1 block text-sm">{groupName}</strong><p class="mt-2 text-xs text-ink-soft">Add {profile.full_name || "the member"}, {assigned.name}, and the Scout supervisor. Copy the group invite link after creating it.</p></div><form data-assistant-form class="mt-4 grid gap-3 lg:grid-cols-[220px_1fr_auto]"><input type="hidden" name="user_id" value={profile.user_id}/><label class="text-xs font-bold">Assigned assistant<select name="assistant_name" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2.5 text-sm">{humanAssistants.map((assistant) => <option value={assistant.name} selected={assistant.name === assigned.name}>{assistant.name}</option>)}</select></label><label class="text-xs font-bold">WhatsApp group invite link<input name="whatsapp_url" type="url" value={profile.whatsapp_url || ""} placeholder="https://chat.whatsapp.com/..." class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2.5 text-sm"/></label><div class="self-end"><button class="rounded-full bg-ink px-4 py-2.5 text-sm font-extrabold text-white">{profile.whatsapp_url ? "Update group" : "Save group"}</button></div><p data-assistant-error class="hidden text-xs font-bold text-red-700 lg:col-span-3" role="alert"></p></form></div> }) : <p class="py-8 text-center text-sm text-ink-muted">No Human Assistant members yet.</p>}</div></section>
+  <div class="mt-8 space-y-4">{applications.length ? applications.map((application) => {
+    const job = jobs.get(application.job_id);
+    const evidence = evidenceByApplication.get(application.id) || [];
+    return <article class="rounded-xl bg-white p-5 shadow-card">
+      <div class="flex flex-wrap items-start justify-between gap-5">
+        <div class="min-w-0"><p class="text-xs font-bold text-ink-muted">{application.assistant_type.toUpperCase()} · {application.status.replaceAll("_"," ")}</p><h2 class="mt-1 truncate text-xl font-extrabold">{job?.title || "Unknown role"}</h2><p class="text-sm text-ink-soft">{job?.company || "Unknown company"} · queued {new Date(application.created_at).toLocaleString()}</p>{job?.external_url && <a class="mt-2 inline-block text-sm font-bold text-brand-700" href={job.external_url} target="_blank" rel="noopener noreferrer">Open job ↗</a>}</div>
+        <form action="/api/admin/applications" method="post" data-status-form class="flex flex-wrap items-end gap-2"><input type="hidden" name="id" value={application.id}/><label class="text-xs font-bold">Status<select name="status" class="mt-1 block rounded-lg border border-ink/15 px-3 py-2 text-sm">{statuses.map(status=><option value={status} selected={status===application.status}>{status.replaceAll("_"," ")}</option>)}</select></label><label class="text-xs font-bold">Ops note<input name="notes" value={application.notes || ""} class="mt-1 block min-w-64 rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label><button class="rounded-full bg-ink px-4 py-2 text-sm font-extrabold text-white">Update</button><p data-status-error class="hidden w-full text-xs font-bold text-red-700" role="alert"></p></form>
+      </div>
+      {application.assistant_type === "human" && <div class="mt-5 border-t border-ink/10 pt-5"><div class="flex flex-wrap items-center justify-between gap-3"><div><strong class="text-sm">Application evidence</strong><p class="mt-1 text-xs text-ink-muted">Upload screenshots or a PDF receipt. Members receive secure, expiring previews.</p></div>{evidence.length > 0 && <div class="flex flex-wrap gap-2">{evidence.map(item=><a href={`/api/admin/evidence?id=${item.id}`} target="_blank" class="rounded-full bg-surface px-3 py-2 text-xs font-bold">{item.label} ↗</a>)}</div>}</div><form data-evidence-form class="mt-4 flex flex-wrap items-end gap-2"><input type="hidden" name="application_id" value={application.id}/><label class="text-xs font-bold">Label<input name="label" value="Application answers" maxlength="160" class="mt-1 block rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label><label class="text-xs font-bold">Files<input name="evidence" type="file" multiple required accept=".png,.jpg,.jpeg,.webp,.pdf" class="mt-1 block max-w-xs text-sm"/></label><button class="rounded-full bg-brand-500 px-4 py-2 text-sm font-extrabold text-ink">Upload evidence</button><p data-evidence-error class="hidden text-xs font-bold text-red-700" role="alert"></p></form></div>}
+    </article>
+  }) : <div class="rounded-xl bg-white p-10 text-center shadow-card"><strong>The queue is empty.</strong></div>}</div>
+  <script is:inline>
+    document.querySelectorAll("[data-status-form]").forEach(form=>form.addEventListener("submit",async event=>{
+      event.preventDefault();const button=form.querySelector("button"),error=form.querySelector("[data-status-error]");button.disabled=true;button.textContent="Updating…";error.classList.add("hidden");
+      try{const response=await fetch(form.action,{method:"POST",headers:{accept:"application/json"},body:new FormData(form)});const data=await response.json();if(!response.ok)throw new Error(data.error||"Application update failed");location.reload()}
+      catch(reason){error.textContent=reason instanceof Error?reason.message:"Application update failed";error.classList.remove("hidden");button.disabled=false;button.textContent="Update"}
+    }));
+    document.querySelectorAll("[data-assistant-form]").forEach(form=>form.addEventListener("submit",async event=>{
+      event.preventDefault();const button=form.querySelector("button"),error=form.querySelector("[data-assistant-error]");button.disabled=true;button.textContent="Saving…";error.classList.add("hidden");
+      try{const response=await fetch("/api/admin/assistants",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});const data=await response.json();if(!response.ok)throw new Error(data.error||"Group setup could not be saved");location.reload()}
+      catch(reason){error.textContent=reason instanceof Error?reason.message:"Group setup could not be saved";error.classList.remove("hidden");button.disabled=false;button.textContent="Save group"}
+    }));
+    document.querySelectorAll("[data-evidence-form]").forEach(form=>form.addEventListener("submit",async event=>{
+      event.preventDefault();
+      const button=form.querySelector("button"),error=form.querySelector("[data-evidence-error]");
+      button.disabled=true;button.textContent="Uploading…";error.classList.add("hidden");
+      try{
+        const response=await fetch("/api/admin/evidence",{method:"POST",body:new FormData(form)});
+        const data=await response.json();
+        if(!response.ok)throw new Error(data.error||"Evidence upload failed");
+        location.reload();
+      }catch(reason){
+        error.textContent=reason instanceof Error?reason.message:"Evidence upload failed";
+        error.classList.remove("hidden");button.disabled=false;button.textContent="Upload evidence";
+      }
+    }));
+  </script>
+</App>

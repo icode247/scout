@@ -7,7 +7,7 @@ const { title, description } = Astro.props;
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} noindex={true} />
+    <BaseHead title={title} description={description} noindex={true} analytics={false} />
     <script is:inline>document.documentElement.classList.add("js");</script>
   </head>
   <body class="min-h-screen">
