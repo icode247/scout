@@ -81,7 +81,7 @@ import ProductScreenshot from "./ProductScreenshot.astro";
   </Container>
 </section>
 
-<section class="bg-brand-950 py-20 text-white sm:py-28">
+<section id="chrome-extension" class="bg-brand-950 py-20 text-white sm:py-28">
   <Container>
     <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
       <ProductScreenshot variant="queue" class="order-2 lg:order-1" />
@@ -89,7 +89,7 @@ import ProductScreenshot from "./ProductScreenshot.astro";
         <p class="text-lg font-bold text-brand-300">Found a role anywhere?</p>
         <h2 class="mt-4 font-display text-4xl font-extrabold leading-tight text-white sm:text-6xl">Send it to your assistant without leaving the job page.</h2>
         <p class="mt-6 max-w-xl text-lg leading-relaxed text-white/70">The Scout extension detects the job, asks which profile to use, and adds it directly to the same application queue.</p>
-        <a href="/download" class="mt-8 inline-flex rounded-full bg-white px-7 py-3.5 font-extrabold text-ink">Add Scout to Chrome</a>
+        <a href="/download" class="mt-8 flex w-full items-center justify-between rounded-xl bg-white px-5 py-3.5 font-extrabold text-ink sm:inline-flex sm:w-auto sm:justify-center sm:gap-3 sm:rounded-full sm:px-7"><span>Add Scout to Chrome</span><span aria-hidden="true" class="text-lg leading-none">→</span></a>
       </div>
     </div>
   </Container>
