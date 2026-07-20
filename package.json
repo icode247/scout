@@ -13,6 +13,7 @@
     "seo:audit": "npm run build && node scripts/seo-audit.mjs"
   },
   "dependencies": {
+    "@amplitude/unified": "^1.1.25",
     "@anthropic-ai/sdk": "^0.111.0",
     "@astrojs/mdx": "^4.3.13",
     "@astrojs/react": "^4.4.2",

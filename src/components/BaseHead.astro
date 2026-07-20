@@ -1,6 +1,7 @@
 ---
 import { SEO } from "astro-seo";
 import { SITE } from "../config/site";
+import AmplitudeAnalytics from "./AmplitudeAnalytics.astro";
 
 interface Props {
   title?: string;
@@ -56,6 +57,7 @@ const siteLd = {
 <meta name="theme-color" content={SITE.themeColor} />
 <meta name="generator" content={Astro.generator} />
 <meta name="author" content={SITE.name} />
+<AmplitudeAnalytics />
 <meta name="googlebot" content={noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"} />
 
 <SEO

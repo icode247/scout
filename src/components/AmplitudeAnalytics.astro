@@ -1,0 +1,54 @@
+<script>
+  import * as amplitude from "@amplitude/unified";
+
+  type AmplitudeWindow = Window & {
+    __scoutAmplitudeInitialized?: boolean;
+  };
+
+  const amplitudeWindow = window as AmplitudeWindow;
+
+  if (!amplitudeWindow.__scoutAmplitudeInitialized) {
+    amplitudeWindow.__scoutAmplitudeInitialized = true;
+
+    amplitude.initAll("23eb257bc6b3bcc4b3a29d9ccfdbedc5", {
+      analytics: { autocapture: true },
+      sessionReplay: { sampleRate: 1 },
+    });
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const control = target.closest<HTMLElement>("a, button");
+      if (!control) return;
+
+      const label = control.dataset.amplitudeEvent
+        || control.getAttribute("aria-label")
+        || control.textContent?.trim().replace(/\s+/g, " ").slice(0, 100);
+      if (!label) return;
+
+      const href = control instanceof HTMLAnchorElement
+        ? control.getAttribute("href")
+        : undefined;
+
+      amplitude.track("Key Interaction Clicked", {
+        label,
+        destination: href,
+        path: window.location.pathname,
+        control_type: control.tagName.toLowerCase(),
+      });
+    });
+
+    document.addEventListener("submit", (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+
+      amplitude.track("Form Submitted", {
+        form_name: form.dataset.amplitudeEvent || form.getAttribute("aria-label") || form.id || "unnamed",
+        action: form.getAttribute("action") || window.location.pathname,
+        method: (form.getAttribute("method") || "get").toLowerCase(),
+        path: window.location.pathname,
+      });
+    });
+  }
+</script>
