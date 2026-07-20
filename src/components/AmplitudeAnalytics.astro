@@ -1,19 +1,23 @@
 <script>
-  import * as amplitude from "@amplitude/unified";
+  import * as amplitude from "@amplitude/analytics-browser";
+  import { sessionReplayPlugin } from "@amplitude/plugin-session-replay-browser";
 
   type AmplitudeWindow = Window & {
-    __scoutAmplitudeInitialized?: boolean;
+    __scoutAmplitudeInitialization?: Promise<void>;
   };
 
   const amplitudeWindow = window as AmplitudeWindow;
 
-  if (!amplitudeWindow.__scoutAmplitudeInitialized) {
-    amplitudeWindow.__scoutAmplitudeInitialized = true;
-
-    amplitude.initAll("23eb257bc6b3bcc4b3a29d9ccfdbedc5", {
-      analytics: { autocapture: true },
-      sessionReplay: { sampleRate: 1 },
+  async function initializeAmplitude() {
+    const sessionReplay = sessionReplayPlugin({
+      sampleRate: 1,
+      debugMode: import.meta.env.DEV,
     });
+
+    amplitude.add(sessionReplay);
+    await amplitude.init("23eb257bc6b3bcc4b3a29d9ccfdbedc5", {
+      autocapture: true,
+    }).promise;
 
     document.addEventListener("click", (event) => {
       const target = event.target;
@@ -50,5 +54,9 @@
         path: window.location.pathname,
       });
     });
+  }
+
+  if (!amplitudeWindow.__scoutAmplitudeInitialization) {
+    amplitudeWindow.__scoutAmplitudeInitialization = initializeAmplitude();
   }
 </script>
