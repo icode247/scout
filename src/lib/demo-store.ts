@@ -14,7 +14,7 @@ export interface DemoState {
   };
   resumes: Array<{ id: string; name: string; kind: "original" | "tailored"; storage_path: string | null; created_at: string }>;
   jobProfiles: Array<{ id: string; name: string; assistant_type: AssistantType; target_roles: string[]; locations: string[]; salary_min: number | null; resume_behavior: "tailor" | "original"; active: boolean; resume_ids: string[] }>;
-  jobs: Array<{ id: string; title: string; company: string; location: string; description: string; external_url: string | null; source?: string | null; status: JobStatus; is_saved: boolean; fit_score: number | null; fit_status: "pending" | "processing" | "complete" | "failed"; fit_analysis: Record<string, unknown>; assistant_type: AssistantType; job_profile_id: string | null; created_at: string }>;
+  jobs: Array<{ id: string; title: string; company: string; location: string; employment_type?: string; salary?: string; description: string; external_url: string | null; source?: string | null; status: JobStatus; is_saved: boolean; fit_score: number | null; fit_status: "pending" | "processing" | "complete" | "failed"; fit_analysis: Record<string, unknown>; assistant_type: AssistantType; job_profile_id: string | null; created_at: string }>;
   applications: Array<{ id: string; job_id: string; job_profile_id: string | null; resume_id: string | null; assistant_type: AssistantType; status: string; submitted_at: string | null; notes: string | null; answer_evidence: Array<{ label: string; path?: string }>; evidence?: Array<{ id: string; label: string; mime_type: string; created_at: string }> }>;
 }
 

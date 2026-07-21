@@ -1,6 +1,180 @@
 ---
 import Base from "../layouts/Base.astro";
+
+const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://calendly.com/hello-applyscout/scout-strategy-call";
 ---
-<Base title="Book your free Scout strategy call" description="Tell Scout what you are targeting and meet the team before choosing a Human Assistant plan.">
-<section class="bg-brand-950 py-12 text-white sm:py-20"><div class="mx-auto max-w-6xl px-5"><div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start"><div class="lg:sticky lg:top-28"><a href="/" class="text-sm font-bold text-brand-300">← Back to Scout</a><h1 class="mt-8 font-display text-5xl font-extrabold leading-tight text-white sm:text-7xl">Let us understand the search before we assign your assistant.</h1><p class="mt-6 max-w-xl text-lg leading-relaxed text-white/70">In 15 minutes, we will learn what you are targeting, explain the Human Assistant workflow, and help you choose the right plan.</p><div class="mt-9 space-y-4 text-sm font-bold text-white/75"><p>✓ No commitment or sales pressure</p><p>✓ Bring your resume if you have one</p><p>✓ Leave with a clearer application plan</p></div></div><form class="rounded-2xl bg-white p-6 text-ink sm:p-8"><h2 class="text-2xl font-extrabold">Book a free strategy call</h2><p class="mt-2 text-ink-soft">We will use these details to make the call useful.</p><div class="mt-7 grid gap-5 sm:grid-cols-2"><label class="text-sm font-bold">First name<input required class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3"></label><label class="text-sm font-bold">Last name<input required class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3"></label><label class="text-sm font-bold sm:col-span-2">Email<input type="email" required class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3"></label><label class="text-sm font-bold">Primary role<select class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3"><option>Select a role family</option><option>Engineering</option><option>Product</option><option>Operations</option><option>Sales & marketing</option><option>Other</option></select></label><label class="text-sm font-bold">Target location<input placeholder="Remote, London, New York…" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3"></label><label class="text-sm font-bold sm:col-span-2">What is hardest about applying right now?<textarea rows="4" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3"></textarea></label></div><div class="mt-7 rounded-xl bg-surface p-4"><strong class="text-sm">Next: choose a time</strong><p class="mt-1 text-sm text-ink-soft">Connect Calendly or your scheduling provider to this button before launch.</p></div><button class="mt-5 w-full rounded-full bg-brand-500 px-6 py-3.5 font-extrabold">Continue to available times</button><p class="mt-4 text-center text-xs text-ink-muted">Prefer to start without a call? <a href="/login" class="font-bold text-brand-700">Create an account</a></p></form></div></div></section>
+<Base title="Book your free Scout strategy call" description="Tell Scout what you are targeting, choose a time, and meet the team before selecting a Human Assistant plan.">
+  <section class="min-h-[calc(100dvh-5rem)] bg-brand-950 py-10 text-white sm:py-16">
+    <div class="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
+      <a href="/" class="inline-flex min-h-11 items-center text-sm font-bold text-brand-300 hover:text-brand-200">← Back to Scout</a>
+      <div class="mt-6 grid gap-10 lg:grid-cols-[0.76fr_1.24fr] lg:items-start">
+        <div class="lg:sticky lg:top-28">
+          <p class="text-base font-bold text-brand-300">A useful first conversation, not a sales script.</p>
+          <h1 class="mt-4 max-w-xl text-balance font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.035em] text-white sm:text-7xl">Let us understand the search before we assign your assistant.</h1>
+          <p class="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-white/75">In 15 minutes, we will learn what you are targeting, explain the Human Assistant workflow, and help you choose the right plan.</p>
+          <div class="mt-9 grid gap-3 text-sm font-bold text-white/75 sm:grid-cols-3 lg:grid-cols-1">
+            <p>✓ No commitment or sales pressure</p>
+            <p>✓ Bring your resume if you have one</p>
+            <p>✓ Leave with a clearer application plan</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-white text-ink shadow-card">
+          <form id="booking-details" class="p-6 sm:p-8" novalidate>
+            <div class="flex items-start justify-between gap-4">
+              <div><p class="text-sm font-bold text-brand-700">Step 1 of 2</p><h2 class="mt-1 text-2xl font-extrabold">Tell us about your search</h2></div>
+              <span class="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-800">15 min</span>
+            </div>
+            <p class="mt-3 max-w-xl text-ink-soft">We use these details to prepare for the call. You will choose an available time next.</p>
+
+            <div class="mt-7 grid gap-5 sm:grid-cols-2">
+              <label class="text-sm font-bold">First name<input name="first_name" autocomplete="given-name" maxlength="80" required class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-200" /></label>
+              <label class="text-sm font-bold">Last name<input name="last_name" autocomplete="family-name" maxlength="80" required class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-200" /></label>
+              <label class="text-sm font-bold sm:col-span-2">Email<input name="email" type="email" autocomplete="email" maxlength="254" required class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-200" /></label>
+              <label class="text-sm font-bold">Primary role<select name="primary_role" required class="mt-2 w-full rounded-xl border border-ink/15 bg-white px-4 py-3 font-normal outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-200"><option value="">Select a role family</option><option>Engineering</option><option>Product</option><option>Operations</option><option>Sales & marketing</option><option>Design</option><option>Finance</option><option>Other</option></select></label>
+              <label class="text-sm font-bold">Target location<input name="target_location" autocomplete="address-level2" maxlength="120" required placeholder="Remote, London, New York…" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal outline-none transition placeholder:text-ink-muted focus:border-brand-600 focus:ring-2 focus:ring-brand-200" /></label>
+              <label class="text-sm font-bold sm:col-span-2">What is hardest about applying right now?<textarea name="challenge" rows="4" maxlength="2000" required class="mt-2 w-full resize-y rounded-xl border border-ink/15 px-4 py-3 font-normal outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-200"></textarea></label>
+              <label class="sr-only" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label>
+            </div>
+
+            <p id="booking-error" class="mt-5 hidden rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-800" role="alert"></p>
+            <button id="booking-submit" class="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand-600 px-6 py-3.5 font-extrabold text-white transition hover:bg-brand-700 disabled:cursor-wait disabled:opacity-65">
+              <span data-submit-label>Continue to available times</span><span data-submit-loading class="hidden">Saving your details…</span>
+            </button>
+            <p class="mt-4 text-center text-xs leading-relaxed text-ink-muted">By continuing, you agree that Scout may contact you about this strategy call. Prefer to start immediately? <a href="/login?intent=ai" class="font-bold text-brand-700">Start with AI</a>.</p>
+          </form>
+
+          <section id="booking-calendar" class="hidden" aria-labelledby="calendar-heading">
+            <div class="border-b border-ink/10 px-6 py-5 sm:px-8">
+              <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-sm font-bold text-brand-700">Step 2 of 2</p><h2 id="calendar-heading" class="mt-1 text-2xl font-extrabold">Choose an available time</h2></div><button id="edit-booking-details" type="button" class="min-h-11 rounded-full bg-surface px-4 text-sm font-bold text-ink-soft hover:text-ink">Edit details</button></div>
+              <p id="calendar-person" class="mt-2 text-sm text-ink-soft"></p>
+            </div>
+            <iframe id="calendly-frame" title="Schedule your Scout strategy call" class="h-[740px] w-full rounded-b-2xl bg-white" loading="eager" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          </section>
+
+          <section id="booking-confirmation" class="hidden p-7 text-center sm:p-12" aria-labelledby="confirmation-heading">
+            <span class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-signal-50 text-2xl text-signal-700" aria-hidden="true">✓</span>
+            <p class="mt-6 text-sm font-bold text-signal-700">Your call is booked</p>
+            <h2 id="confirmation-heading" class="mt-2 text-balance font-display text-4xl font-extrabold">We will come prepared.</h2>
+            <p class="mx-auto mt-4 max-w-md text-pretty leading-relaxed text-ink-soft">Calendly has sent the meeting details to your email. Bring your resume and any roles you want us to discuss.</p>
+            <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><a href="/" class="inline-flex min-h-12 items-center justify-center rounded-full bg-ink px-6 font-bold text-white">Back to Scout</a><a href="/login?intent=human" class="inline-flex min-h-12 items-center justify-center rounded-full bg-brand-100 px-6 font-bold text-brand-900">Create your account</a></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script define:vars={{ calendlyUrl }}>
+    const form = document.getElementById("booking-details");
+    const calendar = document.getElementById("booking-calendar");
+    const confirmation = document.getElementById("booking-confirmation");
+    const frame = document.getElementById("calendly-frame");
+    const errorBox = document.getElementById("booking-error");
+    const submit = document.getElementById("booking-submit");
+    const submitLabel = submit?.querySelector("[data-submit-label]");
+    const submitLoading = submit?.querySelector("[data-submit-loading]");
+    const calendarPerson = document.getElementById("calendar-person");
+    let leadId = null;
+    let bookingDetails = null;
+
+    function track(eventName, properties = {}) {
+      window.scoutTrack?.(eventName, properties);
+    }
+
+    function showError(message) {
+      if (!errorBox) return;
+      errorBox.textContent = message;
+      errorBox.classList.remove("hidden");
+      errorBox.focus?.();
+    }
+
+    function setLoading(loading) {
+      if (!submit) return;
+      submit.disabled = loading;
+      submitLabel?.classList.toggle("hidden", loading);
+      submitLoading?.classList.toggle("hidden", !loading);
+    }
+
+    function openCalendar(details, id) {
+      leadId = id;
+      bookingDetails = details;
+      const fullName = `${details.first_name} ${details.last_name}`.trim();
+      const url = new URL(calendlyUrl);
+      url.searchParams.set("embed_domain", window.location.hostname);
+      url.searchParams.set("embed_type", "Inline");
+      url.searchParams.set("hide_gdpr_banner", "1");
+      url.searchParams.set("background_color", "ffffff");
+      url.searchParams.set("text_color", "10210d");
+      url.searchParams.set("primary_color", "6aaf24");
+      url.searchParams.set("name", fullName);
+      url.searchParams.set("email", details.email);
+      url.searchParams.set("utm_source", "applyscout");
+      url.searchParams.set("utm_medium", "website");
+      url.searchParams.set("utm_campaign", "strategy_call");
+      url.searchParams.set("utm_content", id);
+      frame.src = url.toString();
+      if (calendarPerson) calendarPerson.textContent = `Availability for ${fullName} · ${details.email}`;
+      form.classList.add("hidden");
+      confirmation.classList.add("hidden");
+      calendar.classList.remove("hidden");
+      calendar.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      sessionStorage.setItem("scout_booking", JSON.stringify({ id, first_name: details.first_name, last_name: details.last_name, email: details.email }));
+      track("Strategy Call Calendar Opened", { lead_id: id });
+    }
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      errorBox?.classList.add("hidden");
+      if (!form.reportValidity()) return;
+      setLoading(true);
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        const response = await fetch("/api/book-call", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ...data, source_path: `${window.location.pathname}${window.location.search}` }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "We could not save your details.");
+        openCalendar(data, result.leadId);
+        track("Strategy Call Details Submitted", { lead_id: result.leadId, primary_role: data.primary_role });
+      } catch (error) {
+        showError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    document.getElementById("edit-booking-details")?.addEventListener("click", () => {
+      calendar.classList.add("hidden");
+      form.classList.remove("hidden");
+      form.querySelector("input")?.focus();
+    });
+
+    window.addEventListener("message", async (event) => {
+      if (event.origin !== "https://calendly.com" || event.data?.event !== "calendly.event_scheduled") return;
+      const eventUri = event.data?.payload?.event?.uri;
+      const inviteeUri = event.data?.payload?.invitee?.uri;
+      calendar.classList.add("hidden");
+      confirmation.classList.remove("hidden");
+      confirmation.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+      sessionStorage.removeItem("scout_booking");
+      track("Strategy Call Scheduled", { lead_id: leadId });
+      if (leadId) {
+        fetch("/api/book-call", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ leadId, eventUri, inviteeUri }),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    });
+
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("scout_booking") || "null");
+      if (saved?.id && saved?.first_name && saved?.email) openCalendar(saved, saved.id);
+    } catch {
+      sessionStorage.removeItem("scout_booking");
+    }
+  </script>
 </Base>

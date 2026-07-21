@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Scout — Send Jobs to Your Assistant",
+  "short_name": "Scout",
+  "version": "1.0.0",
+  "description": "Send a job from any website to your Scout Human Assistant.",
+  "icons": {
+    "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  },
+  "action": {
+    "default_title": "Open Scout",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "32": "assets/icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "src/sidepanel.html"
+  },
+  "permissions": ["activeTab", "identity", "scripting", "sidePanel", "storage", "tabs"],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "https://getscout.app/*",
+    "https://*.supabase.co/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ]
+}

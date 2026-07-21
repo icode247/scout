@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_SITE_URL?: string;
   readonly PUBLIC_PLAUSIBLE_DOMAIN?: string;
   readonly PUBLIC_CHROME_EXTENSION_URL?: string;
+  readonly PUBLIC_CHROME_EXTENSION_ID?: string;
   readonly RESUME_EXTRACTION_PROVIDER?: string;
   readonly ANTHROPIC_API_KEY?: string;
   readonly ANTHROPIC_MODEL?: string;

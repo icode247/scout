@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Scout</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div id="app" class="app" aria-live="polite">
+      <header class="topbar">
+        <img class="logo" src="../assets/logo-horizontal.svg" alt="Scout" />
+        <div id="assistant" class="assistant hidden">
+          <img id="assistant-avatar" class="assistant-avatar" alt="" />
+          <span id="assistant-fallback" class="assistant-fallback">HA</span>
+          <div><strong id="assistant-name">Your Human Assistant</strong><span>Human Assistant</span></div>
+        </div>
+        <button id="menu-button" class="icon-button" aria-label="Scout settings" aria-expanded="false">•••</button>
+      </header>
+
+      <div id="menu" class="menu hidden">
+        <button id="refresh-page">Detect this page again</button>
+        <button id="disconnect">Disconnect Scout</button>
+        <details><summary>Developer settings</summary><label>Scout website<input id="site-url" type="url" spellcheck="false" /></label><button id="save-site">Save website</button></details>
+      </div>
+
+      <main>
+        <section id="loading-state" class="state state-loading">
+          <div class="skeleton logo-skeleton"></div><div class="skeleton title-skeleton"></div><div class="skeleton line-skeleton"></div><div class="skeleton form-skeleton"></div>
+          <p>Reading this job page…</p>
+        </section>
+
+        <section id="connect-state" class="state hidden">
+          <div class="state-mark"><img src="../assets/icon-512.png" alt="" /></div>
+          <h1>Send jobs to your assistant.</h1>
+          <p>Connect your Scout account once, then open any job and send it directly to your Human Assistant.</p>
+          <button id="connect" class="primary-button">Connect Scout</button>
+          <p class="fine-print">A secure Scout sign-in window will open. Your password is never shared with the extension.</p>
+        </section>
+
+        <section id="error-state" class="state hidden">
+          <div class="state-icon">!</div><h1 id="error-title">Scout needs attention</h1><p id="error-message"></p>
+          <button id="error-action" class="primary-button">Try again</button>
+        </section>
+
+        <section id="success-state" class="state hidden">
+          <div class="success-ring">✓</div><p class="success-label">Sent to your assistant</p><h1 id="success-title">Job received.</h1>
+          <p id="success-message">Your assistant will prepare the application. Updates will appear in Scout.</p>
+          <button id="send-another" class="secondary-button">Send another job</button>
+        </section>
+
+        <form id="job-form" class="hidden">
+          <section class="job-context">
+            <div class="detected-label"><span class="target-icon">◎</span><span id="detection-label">Job detected</span></div>
+            <label class="editable-field"><span class="sr-only">Job title</span><input id="title" name="title" required maxlength="180" /></label>
+            <label class="context-row"><span aria-hidden="true">▥</span><span class="sr-only">Company</span><input id="company" name="company" required maxlength="180" /></label>
+            <label class="context-row"><span aria-hidden="true">⌖</span><span class="sr-only">Location</span><input id="location" name="location" maxlength="180" placeholder="Location not listed" /></label>
+            <div class="context-meta">
+              <label><span>Job type</span><input id="employment-type" name="employment_type" maxlength="120" placeholder="Not listed" /></label>
+              <label><span>Salary</span><input id="salary" name="salary" maxlength="180" placeholder="Not listed" /></label>
+            </div>
+            <div id="detection-checks" class="checks"></div>
+          </section>
+
+          <section class="form-section">
+            <label class="field-label" for="profile">Job profile</label>
+            <select id="profile" name="profile" required></select>
+            <div id="remembered" class="remembered hidden"><span>✓</span><p><strong>Remembered for this site</strong><small id="remembered-copy"></small></p></div>
+          </section>
+          <section class="form-section">
+            <label class="field-label" for="description">Job description</label>
+            <textarea id="description" name="description" rows="6" placeholder="Paste the job description if Scout could not detect it."></textarea>
+          </section>
+          <section class="form-section resume-section">
+            <span class="field-label">Resume behavior</span>
+            <div id="resume-behavior" class="read-only-control">Uses this profile’s resume settings</div>
+          </section>
+          <div class="sticky-action">
+            <p id="form-error" class="form-error hidden" role="alert"></p>
+            <button id="submit" class="primary-button send-button"><span aria-hidden="true">➤</span><span>Send this job</span></button>
+            <div class="expectation"><span>♢</span><p>Your assistant will prepare the application and updates will appear in Scout.</p></div>
+          </div>
+        </form>
+      </main>
+    </div>
+    <script src="sidepanel.js" type="module"></script>
+  </body>
+</html>

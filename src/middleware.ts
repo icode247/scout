@@ -5,7 +5,7 @@ import { getDemoState } from "./lib/demo-store";
 
 const memberPrefixes = ["/dashboard", "/agent", "/jobs", "/ai-jobs", "/applications", "/profiles", "/settings"];
 const adminPrefixes = ["/admin"];
-const protectedPrefixes = [...memberPrefixes, "/onboarding"];
+const protectedPrefixes = [...memberPrefixes, "/onboarding", "/extension/connect"];
 const protectedApiPrefixes = ["/api/app", "/api/admin", "/api/extension", "/_actions"];
 const demoUserId = "00000000-0000-4000-8000-000000000001";
 const extensionCors = {

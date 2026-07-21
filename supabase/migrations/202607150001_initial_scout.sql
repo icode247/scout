@@ -47,6 +47,8 @@ create table if not exists public.jobs (
   title text not null,
   company text not null,
   location text not null default '',
+  employment_type text,
+  salary text,
   description text not null default '',
   external_url text,
   source text not null default 'dashboard',
