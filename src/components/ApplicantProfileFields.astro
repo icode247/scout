@@ -1,0 +1,169 @@
+<details class="sm:col-span-2 rounded-xl border border-ink/10 bg-surface/60" data-applicant-editor>
+  <summary class="cursor-pointer list-none px-4 py-4 marker:hidden">
+    <span class="flex items-center justify-between gap-4">
+      <span><strong class="block text-sm">Application details</strong><span class="mt-1 block text-xs font-normal text-ink-muted">Answers Scout uses to complete application forms.</span></span>
+      <span aria-hidden="true" class="text-xl">⌄</span>
+    </span>
+  </summary>
+  <div class="border-t border-ink/10 p-4 sm:p-5">
+    <p class="text-xs leading-relaxed text-ink-muted">Your primary resume supplies experience, education, projects, and achievements. Add or correct anything below that the resume does not contain.</p>
+
+    <fieldset class="mt-6">
+      <legend class="text-sm font-extrabold">Personal and contact</legend>
+      <div class="mt-3 grid gap-3 sm:grid-cols-3">
+        <label class="field">First name<input data-applicant-key="firstName" autocomplete="given-name"/></label>
+        <label class="field">Middle name<input data-applicant-key="middleName" autocomplete="additional-name"/></label>
+        <label class="field">Last name<input data-applicant-key="lastName" autocomplete="family-name"/></label>
+        <label class="field sm:col-span-2">Email<input data-applicant-key="email" type="email" autocomplete="email"/></label>
+        <label class="field">Date of birth<input data-applicant-key="dateOfBirth" type="date" autocomplete="bday"/></label>
+        <label class="field">Phone country code<input data-applicant-key="phoneCountryCode" autocomplete="tel-country-code" placeholder="+1"/></label>
+        <label class="field sm:col-span-2">Phone number<input data-applicant-key="phoneNumber" autocomplete="tel-national"/></label>
+        <label class="field sm:col-span-3">Street address<input data-applicant-key="streetAddress" autocomplete="street-address"/></label>
+        <label class="field">City<input data-applicant-key="currentCity" autocomplete="address-level2"/></label>
+        <label class="field">State / province<input data-applicant-key="state" autocomplete="address-level1"/></label>
+        <label class="field">Postal code<input data-applicant-key="zipcode" autocomplete="postal-code"/></label>
+        <label class="field sm:col-span-2">Country<select data-applicant-key="country" data-country autocomplete="country-name"><option value="">Select country</option></select></label>
+        <label class="field">Timezone<select data-applicant-key="timezone" data-timezone><option value="">Select timezone</option></select></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="mt-7 border-t border-ink/10 pt-6">
+      <legend class="text-sm font-extrabold">Professional profile</legend>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="field sm:col-span-2">Professional headline<input data-applicant-key="headline" placeholder="Senior Backend Engineer"/></label>
+        <label class="field sm:col-span-2">Professional summary<textarea data-applicant-key="summary" rows="3"></textarea></label>
+        <label class="field">Years of experience<input data-applicant-key="yearsOfExperience" type="number" min="0" max="80"/></label>
+        <label class="field">Notice period<select data-applicant-key="noticePeriod"><option value="">Select</option><option>Immediate</option><option>2 weeks</option><option>1 month</option><option>2 months</option><option>3 months</option><option>More than 3 months</option></select></label>
+        <label class="field sm:col-span-2">Skills <span>(comma-separated)</span><textarea data-applicant-key="skills" rows="2"></textarea></label>
+        <label class="field">Languages <span>(comma-separated)</span><input data-applicant-key="languages"/></label>
+        <label class="field">Certifications <span>(comma-separated)</span><input data-applicant-key="certifications"/></label>
+        <label class="field sm:col-span-2">Default cover letter <span>(optional)</span><textarea data-applicant-key="coverLetter" rows="4"></textarea></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="mt-7 border-t border-ink/10 pt-6">
+      <legend class="sr-only">Education</legend>
+      <div class="flex items-end justify-between gap-3"><div><p class="text-sm font-extrabold">Education</p><p class="mt-1 text-xs text-ink-muted">Review the education imported from your resume and add anything missing.</p></div><button type="button" data-add-education class="shrink-0 rounded-full bg-surface px-3 py-2 text-xs font-bold">+ Add education</button></div>
+      <div data-education class="mt-3 space-y-3"></div><input type="hidden" data-applicant-key="educationJson"/>
+    </fieldset>
+
+    <fieldset class="mt-7 border-t border-ink/10 pt-6">
+      <legend class="sr-only">Experience</legend>
+      <div class="flex items-end justify-between gap-3"><div><p class="text-sm font-extrabold">Experience</p><p class="mt-1 text-xs text-ink-muted">Review the work history imported from your resume and correct it where needed.</p></div><button type="button" data-add-experience class="shrink-0 rounded-full bg-surface px-3 py-2 text-xs font-bold">+ Add experience</button></div>
+      <div data-experience class="mt-3 space-y-3"></div><input type="hidden" data-applicant-key="experienceJson"/>
+    </fieldset>
+
+    <fieldset class="mt-7 border-t border-ink/10 pt-6">
+      <legend class="text-sm font-extrabold">Work preferences and eligibility</legend>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <div><label class="field">Expected annual salary<input data-applicant-key="desiredSalary" data-salary-amount inputmode="decimal"/></label><label class="mt-2 flex items-center gap-2 text-xs font-bold"><input data-applicant-key="desiredSalaryNegotiable" data-salary-negotiable type="checkbox" class="h-4 w-4 accent-brand-700"/>Salary is negotiable</label></div>
+        <label class="field">Currency<select data-applicant-key="desiredSalaryCurrency" data-currency></select></label>
+        <label class="field">Current annual salary<input data-applicant-key="currentSalary" inputmode="decimal"/></label>
+        <label class="field">Current salary currency<select data-applicant-key="currentSalaryCurrency" data-currency></select></label>
+        <label class="field">Work authorization<select data-applicant-key="workAuthorization"><option value="">Select</option><option>Citizen</option><option>Permanent Resident</option><option>Work Visa / Work Permit</option><option>Student Visa</option><option>Dependent Visa</option><option>Post-Study Work Visa</option><option>Refugee/Asylee</option><option>Temporary Protected Status (TPS)</option><option>No work authorization yet</option></select></label>
+        <label class="field">Requires sponsorship<select data-applicant-key="requiresSponsorship"><option value="">Select</option><option>Yes</option><option>No</option></select></label>
+        <label class="field">Work arrangement<select data-applicant-key="remotePreference"><option value="">Select</option><option>Remote</option><option>Hybrid</option><option>On-site</option><option>Flexible</option></select></label>
+        <label class="field">Willing to relocate<select data-applicant-key="willingToRelocate"><option value="">Select</option><option>Yes</option><option>No</option></select></label>
+        <label class="field sm:col-span-2">Security clearance<input data-applicant-key="securityClearance" placeholder="None, Secret, Top Secret…"/></label>
+              </div>
+    </fieldset>
+
+    <fieldset class="mt-7 border-t border-ink/10 pt-6">
+      <legend class="text-sm font-extrabold">Links and references</legend>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="field">LinkedIn<input data-applicant-key="linkedinURL" type="url" placeholder="https://linkedin.com/in/..."/></label>
+        <label class="field">GitHub<input data-applicant-key="githubURL" type="url" placeholder="https://github.com/..."/></label>
+        <label class="field">Portfolio / website<input data-applicant-key="website" type="url"/></label>
+        <label class="field">X / Twitter<input data-applicant-key="twitterURL" type="url"/></label>
+        <div class="sm:col-span-2">
+          <div class="flex items-end justify-between gap-3"><div><p class="text-xs font-bold">Additional links</p><p class="mt-1 text-xs text-ink-muted">Add a label and URL for portfolios, publications, or other professional profiles.</p></div><button type="button" data-add-link class="shrink-0 rounded-full bg-surface px-3 py-2 text-xs font-bold">+ Add link</button></div>
+          <div data-additional-links class="mt-3 space-y-3"></div>
+          <input type="hidden" data-applicant-key="additionalLinksText"/>
+        </div>
+        <div class="sm:col-span-2 border-t border-ink/10 pt-6">
+          <div class="flex items-end justify-between gap-3"><div><p class="text-xs font-bold">References</p><p class="mt-1 text-xs text-ink-muted">References are used only when an application requests them.</p></div><button type="button" data-add-reference class="shrink-0 rounded-full bg-surface px-3 py-2 text-xs font-bold">+ Add reference</button></div>
+          <div data-references class="mt-3 space-y-3"></div>
+          <input type="hidden" data-applicant-key="referencesText"/>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="mt-7 border-t border-ink/10 pt-6">
+      <legend class="text-sm font-extrabold">Optional demographics</legend>
+      <p class="mt-1 text-xs text-ink-muted">Used only when an employer asks voluntary EEO questions.</p>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="field">Gender<select data-applicant-key="gender"><option value="">Prefer not to answer</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></label>
+        <label class="field">Are you Hispanic or Latino?<select data-applicant-key="ethnicity"><option value="">Select</option><option value="Hispanic or Latino">Hispanic or Latino</option><option value="Not Hispanic or Latino">Not Hispanic or Latino</option><option value="Prefer not to say">Prefer not to say</option></select></label>
+        <label class="field">Race<select data-applicant-key="race"><option value="">Select</option><option value="White">White</option><option value="Black or African American">Black or African American</option><option value="Asian">Asian</option><option value="Native American or Alaska Native">Native American or Alaska Native</option><option value="Native Hawaiian or Pacific Islander">Native Hawaiian or Pacific Islander</option><option value="Two or More Races">Two or More Races</option><option value="Prefer not to say">Prefer not to say</option></select></label>
+        <label class="field">Veteran status<select data-applicant-key="veteranStatus"><option value="">Select</option><option value="Yes">Yes, I am a protected veteran</option><option value="No">No, I am not a protected veteran</option><option value="Prefer not to say">Prefer not to say</option></select></label>
+        <label class="field sm:col-span-2">Disability status<select data-applicant-key="disabilityStatus"><option value="">Select</option><option value="Yes">Yes, I have a disability</option><option value="No">No, I don't have a disability</option><option value="Prefer not to say">Prefer not to say</option></select></label>
+      </div>
+    </fieldset>
+  </div>
+</details>
+
+<style>
+  .field { font-size: .75rem; font-weight: 700; color: rgb(13 27 42); }
+  .field span { font-weight: 400; color: rgb(90 105 117); }
+  .field input, .field select, .field textarea { margin-top: .4rem; width: 100%; border-radius: .75rem; border: 1px solid rgb(13 27 42 / .15); background: white; padding: .7rem .8rem; font-size: .875rem; font-weight: 400; }
+  .field textarea { resize: vertical; }
+</style>
+
+<script>
+// @ts-nocheck
+const currencies=["USD","EUR","GBP","CAD","AUD","JPY","CNY","INR","CHF","SGD","HKD","NZD","SEK","NOK","DKK","ZAR","BRL","MXN","AED","SAR","NGN","KES","PLN","CZK","ILS","KRW","TWD","THB","MYR","PHP","IDR","VND","PKR","BDT","EGP","ARS","CLP","COP","PEN"];
+const timezones=["America/New_York (EST)","America/Chicago (CST)","America/Denver (MST)","America/Los_Angeles (PST)","America/Anchorage (AKST)","Pacific/Honolulu (HST)","Europe/London (GMT)","Europe/Paris (CET)","Europe/Helsinki (EET)","Asia/Dubai (GST)","Asia/Kolkata (IST)","Asia/Singapore (SGT)","Asia/Tokyo (JST)","Australia/Sydney (AEST)","Pacific/Auckland (NZST)","Pacific/Midway (SST)","America/Sao_Paulo (BRT)","America/Argentina/Buenos_Aires (ART)","Africa/Lagos (WAT)","Africa/Johannesburg (SAST)","Africa/Nairobi (EAT)","Europe/Moscow (MSK)","Asia/Riyadh (AST)","Asia/Tehran (IRST)","Asia/Karachi (PKT)","Asia/Kathmandu (NPT)","Asia/Dhaka (BST)","Asia/Yangon (MMT)","Asia/Bangkok (ICT)","Asia/Jakarta (WIB)","Asia/Manila (PHT)","Asia/Hong_Kong (HKT)","Asia/Seoul (KST)","Australia/Adelaide (ACST)"];
+document.querySelectorAll("[data-applicant-editor]").forEach(editor=>{
+  const salaryAmount=editor.querySelector("[data-salary-amount]"),salaryNegotiable=editor.querySelector("[data-salary-negotiable]");
+  const linksContainer=editor.querySelector("[data-additional-links]"),referencesContainer=editor.querySelector("[data-references]"),linksValue=editor.querySelector('[data-applicant-key="additionalLinksText"]'),referencesValue=editor.querySelector('[data-applicant-key="referencesText"]');
+  const educationContainer=editor.querySelector("[data-education]"),experienceContainer=editor.querySelector("[data-experience]"),educationValue=editor.querySelector('[data-applicant-key="educationJson"]'),experienceValue=editor.querySelector('[data-applicant-key="experienceJson"]');
+  let linkEntries=[],referenceEntries=[],educationEntries=[],experienceEntries=[];
+  const dynamicControlClass="mt-1.5 w-full rounded-xl border border-ink/15 bg-white px-3 py-2.5 text-sm font-normal text-ink outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-200";
+  const field=(label,type="text")=>{const wrapper=document.createElement("label");wrapper.className="block text-xs font-bold text-ink";wrapper.textContent=label;const input=document.createElement("input");input.type=type;input.className=dynamicControlClass;wrapper.append(input);return{wrapper,input}};
+  const syncStructured=()=>{linksValue.value=linkEntries.filter(item=>item.label||item.url).map(item=>item.label+" | "+item.url).join("\n");referencesValue.value=referenceEntries.filter(item=>item.name||item.email||item.phone||item.type).map(item=>[item.name,item.email,item.phone,item.type].join(" | ")).join("\n");educationValue.value=JSON.stringify(educationEntries);experienceValue.value=JSON.stringify(experienceEntries)};
+  const renderLinks=()=>{linksContainer.replaceChildren();linkEntries.forEach((item,index)=>{const row=document.createElement("div");row.className="grid gap-3 rounded-xl bg-white p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] sm:items-end";const label=field("Label"),url=field("URL","url"),remove=document.createElement("button");label.input.value=item.label;label.input.placeholder="Dribbble";url.input.value=item.url;url.input.placeholder="https://...";remove.type="button";remove.className="rounded-full px-3 py-2 text-xs font-bold text-red-700";remove.textContent="Remove";label.input.addEventListener("input",()=>{item.label=label.input.value;syncStructured()});url.input.addEventListener("input",()=>{item.url=url.input.value;syncStructured()});remove.addEventListener("click",()=>{linkEntries.splice(index,1);renderLinks();syncStructured()});row.append(label.wrapper,url.wrapper,remove);linksContainer.append(row)});if(!linkEntries.length){const empty=document.createElement("p");empty.className="rounded-lg bg-white px-3 py-4 text-center text-xs text-ink-muted";empty.textContent="No additional links yet.";linksContainer.append(empty)}};
+  const renderReferences=()=>{referencesContainer.replaceChildren();referenceEntries.forEach((item,index)=>{const row=document.createElement("div");row.className="rounded-xl bg-white p-3";const top=document.createElement("div");top.className="mb-3 flex items-center justify-between";const title=document.createElement("strong");title.className="text-xs";title.textContent="Reference "+(index+1);const remove=document.createElement("button");remove.type="button";remove.className="text-xs font-bold text-red-700";remove.textContent="Remove";remove.addEventListener("click",()=>{referenceEntries.splice(index,1);renderReferences();syncStructured()});top.append(title,remove);const grid=document.createElement("div");grid.className="grid gap-3 sm:grid-cols-2";const name=field("Name"),email=field("Email","email"),phone=field("Phone"),typeWrap=document.createElement("label"),type=document.createElement("select");typeWrap.className="block text-xs font-bold text-ink";typeWrap.textContent="Reference type";type.className=dynamicControlClass;type.replaceChildren(new Option("Select",""),new Option("Personal","Personal"),new Option("Work","Work"));typeWrap.append(type);name.input.value=item.name;email.input.value=item.email;phone.input.value=item.phone;type.value=item.type;[[name.input,"name"],[email.input,"email"],[phone.input,"phone"],[type,"type"]].forEach(([control,key])=>control.addEventListener("input",()=>{item[key]=control.value;syncStructured()}));grid.append(name.wrapper,email.wrapper,phone.wrapper,typeWrap);row.append(top,grid);referencesContainer.append(row)});if(!referenceEntries.length){const empty=document.createElement("p");empty.className="rounded-lg bg-white px-3 py-4 text-center text-xs text-ink-muted";empty.textContent="No references yet.";referencesContainer.append(empty)}};
+  const emptyState=(text)=>{const empty=document.createElement("p");empty.className="rounded-lg bg-white px-3 py-4 text-center text-xs text-ink-muted";empty.textContent=text;return empty};
+  const cardHeader=(text,onRemove)=>{const top=document.createElement("div"),title=document.createElement("strong"),remove=document.createElement("button");top.className="mb-3 flex items-center justify-between gap-3";title.className="text-xs";title.textContent=text;remove.type="button";remove.className="text-xs font-bold text-red-700";remove.textContent="Remove";remove.addEventListener("click",onRemove);top.append(title,remove);return top};
+  const bindEntry=(control,item,key)=>control.addEventListener("input",()=>{item[key]=control.value;syncStructured()});
+  const renderEducation=()=>{educationContainer.replaceChildren();educationEntries.forEach((item,index)=>{const card=document.createElement("div"),grid=document.createElement("div"),school=field("School"),major=field("Field of study / major"),gpa=field("GPA"),startDate=field("Start date"),endDate=field("End date"),location=field("Location"),degreeWrap=document.createElement("label"),degree=document.createElement("select");card.className="rounded-xl bg-white p-3 sm:p-4";grid.className="grid gap-3 sm:grid-cols-2";degreeWrap.className="block text-xs font-bold text-ink";degreeWrap.textContent="Degree";degree.className=dynamicControlClass;degree.replaceChildren(new Option("Select",""),...["High School Diploma","Associate Degree","Bachelor's Degree","Master's Degree","Doctorate/PhD","Other"].map(value=>new Option(value,value)));degreeWrap.append(degree);school.input.value=item.school||"";degree.value=item.degree||"";if(item.degree&&!Array.from(degree.options).some(option=>option.value===item.degree)){degree.add(new Option(item.degree,item.degree));degree.value=item.degree}major.input.value=item.major||item.field||item.fieldOfStudy||"";gpa.input.value=item.gpa||"";startDate.input.value=item.startDate||"";endDate.input.value=item.endDate||"";location.input.value=item.location||"";[[school.input,"school"],[degree,"degree"],[major.input,"major"],[gpa.input,"gpa"],[startDate.input,"startDate"],[endDate.input,"endDate"],[location.input,"location"]].forEach(([control,key])=>bindEntry(control,item,key));school.wrapper.classList.add("sm:col-span-2");location.wrapper.classList.add("sm:col-span-2");grid.append(school.wrapper,degreeWrap,major.wrapper,gpa.wrapper,startDate.wrapper,endDate.wrapper,location.wrapper);card.append(cardHeader("Education "+(index+1),()=>{educationEntries.splice(index,1);renderEducation();syncStructured()}),grid);educationContainer.append(card)});if(!educationEntries.length)educationContainer.append(emptyState("No education added yet."))};
+  const renderExperience=()=>{experienceContainer.replaceChildren();experienceEntries.forEach((item,index)=>{const card=document.createElement("div"),grid=document.createElement("div"),title=field("Job title"),company=field("Company"),location=field("Location"),startDate=field("Start date"),endDate=field("End date"),descriptionWrap=document.createElement("label"),description=document.createElement("textarea");card.className="rounded-xl bg-white p-3 sm:p-4";grid.className="grid gap-3 sm:grid-cols-2";descriptionWrap.className="block text-xs font-bold text-ink sm:col-span-2";descriptionWrap.textContent="Description";description.className=dynamicControlClass+" min-h-28 resize-y";descriptionWrap.append(description);title.input.value=item.title||item.role||item.position||"";company.input.value=item.company||"";location.input.value=item.location||"";startDate.input.value=item.startDate||"";endDate.input.value=item.endDate||"";description.value=item.description||"";[[title.input,"title"],[company.input,"company"],[location.input,"location"],[startDate.input,"startDate"],[endDate.input,"endDate"],[description,"description"]].forEach(([control,key])=>bindEntry(control,item,key));location.wrapper.classList.add("sm:col-span-2");grid.append(title.wrapper,company.wrapper,location.wrapper,startDate.wrapper,endDate.wrapper,descriptionWrap);card.append(cardHeader("Experience "+(index+1),()=>{experienceEntries.splice(index,1);renderExperience();syncStructured()}),grid);experienceContainer.append(card)});if(!experienceEntries.length)experienceContainer.append(emptyState("No experience added yet."))};
+  editor.querySelector("[data-add-link]").addEventListener("click",()=>{linkEntries.push({label:"",url:""});renderLinks()});editor.querySelector("[data-add-reference]").addEventListener("click",()=>{referenceEntries.push({name:"",email:"",phone:"",type:""});renderReferences()});
+  editor.querySelector("[data-add-education]").addEventListener("click",()=>{educationEntries.push({school:"",degree:"",major:"",gpa:"",startDate:"",endDate:"",location:""});renderEducation();syncStructured()});
+  editor.querySelector("[data-add-experience]").addEventListener("click",()=>{experienceEntries.push({title:"",company:"",location:"",startDate:"",endDate:"",description:""});renderExperience();syncStructured()});
+  const syncSalary=()=>{salaryAmount.disabled=salaryNegotiable.checked;if(salaryNegotiable.checked)salaryAmount.value=""};
+  salaryNegotiable.addEventListener("change",syncSalary);salaryAmount.addEventListener("input",()=>{if(salaryAmount.value){salaryNegotiable.checked=false;syncSalary()}});
+  editor.querySelectorAll("[data-currency]").forEach(select=>select.innerHTML='<option value="">Select</option>'+currencies.map(code=>'<option>'+code+'</option>').join(""));
+  editor.querySelectorAll("[data-timezone]").forEach(select=>select.replaceChildren(new Option("Select timezone",""),...timezones.map(value=>new Option(value,value))));
+  editor.querySelectorAll("[data-country]").forEach(select=>fetch("/data/countries-cities.json").then(response=>response.json()).then(data=>{const current=select.value;select.replaceChildren(new Option("Select country",""),...data.map(item=>new Option(item.country,item.country)));if(current&&!Array.from(select.options).some(option=>option.value===current))select.add(new Option(current,current));select.value=current}).catch(()=>{}));
+  editor.addEventListener("scout:set-applicant-profile",event=>{
+    const data=event.detail||{};
+    editor.querySelectorAll("[data-applicant-key]").forEach(input=>{
+      const key=input.dataset.applicantKey;
+      let value=data[key];
+      if(key==="skills"||key==="languages")value=Array.isArray(value)?value.join(", "):value;
+      if(key==="certifications"&&Array.isArray(value))value=value.map(item=>typeof item==="string"?item:item.name).filter(Boolean).join(", ");
+      if(key==="referencesText"&&Array.isArray(data.references))value=data.references.map(item=>[item.name,item.email,item.phone,item.type].filter(Boolean).join(" | ")).join("\n");
+      if(key==="additionalLinksText"&&data.additionalLinks)value=Object.entries(data.additionalLinks).map(([label,url])=>label+" | "+url).join("\n");
+      if(input.type==="checkbox")input.checked=Boolean(value);else{const normalized=value??"";if(input.tagName==="SELECT"&&normalized&&!Array.from(input.options).some(option=>option.value===String(normalized)))input.add(new Option(String(normalized),String(normalized)));input.value=normalized}
+    });
+    linkEntries=data.additionalLinks?Object.entries(data.additionalLinks).map(([label,url])=>({label,url:String(url)})):[];referenceEntries=Array.isArray(data.references)?data.references.map(item=>({name:item.name||"",email:item.email||"",phone:item.phone||"",type:item.type||""})):[];educationEntries=Array.isArray(data.education)?data.education.map(item=>({...item,major:item.major||item.field||item.fieldOfStudy||""})):[];experienceEntries=Array.isArray(data.experience)?data.experience.map(item=>({...item,title:item.title||item.role||item.position||""})):[];renderLinks();renderReferences();renderEducation();renderExperience();syncStructured();
+    syncSalary();
+  });
+  editor.closest("form")?.addEventListener("formdata",event=>{
+    const profile={};
+    editor.querySelectorAll("[data-applicant-key]").forEach(input=>{
+      const key=input.dataset.applicantKey;
+      let value=input.type==="checkbox"?input.checked:input.value.trim();
+      if(key==="skills"||key==="languages"||key==="certifications")value=String(value).split(",").map(item=>item.trim()).filter(Boolean);
+      if(key==="yearsOfExperience")value=value===""?undefined:Number(value);
+      if(key==="referencesText"){profile.references=String(value).split("\n").map(line=>{const[name,email,phone,type]=line.split("|").map(item=>item.trim());return{name,email,phone,type}}).filter(item=>item.name);return}
+      if(key==="additionalLinksText"){profile.additionalLinks=Object.fromEntries(String(value).split("\n").map(line=>line.split("|").map(item=>item.trim())).filter(([label,url])=>label&&url));return}
+      if(key==="educationJson"){try{profile.education=JSON.parse(String(value)).filter(item=>item.school||item.degree||item.major)}catch{}return}
+      if(key==="experienceJson"){try{profile.experience=JSON.parse(String(value)).filter(item=>item.title||item.company)}catch{}return}
+      if(value!==""&&value!==undefined&&(!Array.isArray(value)||value.length))profile[key]=value;
+    });
+    event.formData.set("applicant_profile",JSON.stringify(profile));
+  });
+});
+</script>

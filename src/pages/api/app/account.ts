@@ -3,6 +3,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { assertSameOrigin, errorMessage, json, requireUser } from "../../../lib/api";
 import { resetDemoState } from "../../../lib/demo-store";
 import { getSupabaseConfig } from "../../../lib/supabase";
+import { firstApply } from "../../../lib/first-apply";
+import { fastApplyExternalId } from "../../../lib/fastapply-applicant";
+import { getPostHogServer } from "../../../lib/posthog-server";
 
 export const prerender = false;
 
@@ -65,8 +68,19 @@ export const POST: APIRoute = async (context) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
+    const profiles = await admin.from("job_profiles").select("id").eq("user_id", user.id);
+    for (const profile of profiles.data || []) {
+      try { await firstApply.deleteApplicant(fastApplyExternalId(user.id, profile.id)); } catch { /* Local deletion must still complete if the remote applicant was never created. */ }
+    }
+
     await purgeBucket(admin, "resumes", user.id);
     await purgeBucket(admin, "application-evidence", user.id);
+
+    const posthog = getPostHogServer();
+    if (posthog) {
+      posthog.capture({ distinctId: user.id, event: "account_deleted" });
+      await posthog.flush();
+    }
 
     const result = await admin.auth.admin.deleteUser(user.id);
     if (result.error) throw result.error;

@@ -2,6 +2,8 @@ import type { APIRoute } from "astro";
 import { assertSameOrigin, errorMessage, json, list, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
 import { assignedHumanAssistant } from "../../../lib/human-assistants";
+import { fastApplyProfilePayload } from "../../../lib/fastapply-applicant";
+import { getPostHogServer } from "../../../lib/posthog-server";
 
 export const prerender = false;
 
@@ -31,6 +33,11 @@ export const POST: APIRoute = async (context) => {
       state.profile.assistant_name = assistant === "ai" ? "Scout AI" : humanAssistant.name;
       state.profile.whatsapp_phone = assistant === "human" ? whatsappPhone : null;
       state.jobProfiles.unshift({ id: crypto.randomUUID(), name, assistant_type: assistant, target_roles: roles, locations, salary_min: salary, resume_behavior: resumeBehavior, active: true, resume_ids: [resumeId] });
+      const posthog = getPostHogServer();
+      if (posthog) {
+        posthog.capture({ distinctId: user.id, event: "onboarding_completed", properties: { assistant_type: assistant, target_roles_count: roles.length, has_salary_min: !!salary } });
+        await posthog.flush();
+      }
       return json({ ok: true, redirect: "/dashboard" });
     }
 
@@ -50,6 +57,7 @@ export const POST: APIRoute = async (context) => {
     const jobProfile = await supabase.from("job_profiles").insert({
       user_id: user.id, name, assistant_type: assistant, target_roles: roles,
       locations, salary_min: salary, resume_behavior: resumeBehavior, resume_id: resumeId,
+      applicant_profile: fastApplyProfilePayload(user, { target_roles: roles, salary_min: salary }, { extracted_data: resume.data.extracted_data }),
     }).select("id").single();
     if (jobProfile.error) throw jobProfile.error;
 
@@ -68,6 +76,12 @@ export const POST: APIRoute = async (context) => {
       updated_at: new Date().toISOString(),
     }).eq("user_id", user.id);
     if (profileUpdate.error) throw profileUpdate.error;
+
+    const posthog = getPostHogServer();
+    if (posthog) {
+      posthog.capture({ distinctId: user.id, event: "onboarding_completed", properties: { assistant_type: assistant, target_roles_count: roles.length, has_salary_min: !!salary } });
+      await posthog.flush();
+    }
 
     return json({ ok: true, redirect: "/dashboard" });
   } catch (error) {

@@ -14,13 +14,16 @@ const assistantType = profile?.assistant_type || "ai";
 const humanAssistant = assignedHumanAssistant(user?.id || profile?.user_id || "scout-member", profile?.assistant_name);
 const assistantName = assistantType === "human" ? humanAssistant.name : "Scout AI";
 const chromeExtensionUrl = import.meta.env.PUBLIC_CHROME_EXTENSION_URL?.trim();
+const posthogUserId = user?.id || "";
+const posthogUserName = profile?.full_name || user?.user_metadata?.full_name || "";
+const posthogUserEmail = user?.email || "";
+const posthogAssistantType = assistantType;
 const nav = [
   { id: "dashboard", label: "Overview", href: "/dashboard", icon: "⌂" },
   ...(assistantType === "ai" ? [{ id: "agent", label: "Scout AI", href: "/agent", icon: "✦" }] : []),
   { id: "jobs", label: "Jobs", href: "/jobs", icon: "⌕" },
   { id: "applications", label: "Applications", href: "/applications", icon: "✓" },
   { id: "profiles", label: "Job profiles", href: "/profiles", icon: "◎" },
-  { id: "resumes", label: "Resumes", href: "/profiles#resumes", icon: "▤" },
   { id: "settings", label: "Settings", href: "/settings", icon: "⚙" },
 ];
 if (user?.email && adminEmails().has(user.email.toLowerCase())) nav.push({ id: "admin", label: "Operations", href: "/admin", icon: "↗" });
@@ -44,6 +47,11 @@ if (user?.email && adminEmails().has(user.email.toLowerCase())) nav.push({ id: "
     </div>
   </div>
   <div id="toast" class="pointer-events-none fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-4 right-4 z-[100] hidden rounded-xl bg-ink px-5 py-3 text-center text-sm font-bold text-white shadow-lift sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:rounded-full" role="status" aria-live="polite"></div>
+  <script is:inline define:vars={{ posthogUserId, posthogUserName, posthogUserEmail, posthogAssistantType }}>
+    if (posthogUserId && window.posthog) {
+      window.posthog.identify(posthogUserId, { name: posthogUserName || undefined, email: posthogUserEmail || undefined, assistant_type: posthogAssistantType });
+    }
+  </script>
   <script is:inline>
     window.scoutToast = function(message, error) {
       const toast = document.getElementById("toast");

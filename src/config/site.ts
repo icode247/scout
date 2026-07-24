@@ -14,8 +14,6 @@ export const SITE = {
   locale: "en_US",
   themeColor: "#7fc92b",
   twitter: "@getscout",
-  // Sister brand we cross-link for authority.
-  sister: { name: "FastApply", url: "https://fastapply.co" },
 } as const;
 
 export const STORE = {
@@ -64,8 +62,17 @@ export const FOOTER: { heading: string; links: NavItem[] }[] = [
     links: [
       { label: "Blog", href: "/blog" },
       { label: "Is auto-apply safe?", href: "/safety" },
-      { label: "Compare tools", href: "/compare" },
-      { label: "FastApply (extension)", href: "https://fastapply.co" },
+      { label: "Scout for Chrome", href: "/download" },
+    ],
+  },
+  {
+    heading: "Compare",
+    links: [
+      { label: "scale.jobs", href: "/compare/scale-jobs-alternative" },
+      { label: "LazyApply", href: "/compare/lazyapply-alternative" },
+      { label: "JobCopilot", href: "/compare/jobcopilot-alternative" },
+      { label: "AIApply", href: "/compare/aiapply-alternative" },
+      { label: "Compare all", href: "/compare" },
     ],
   },
   {

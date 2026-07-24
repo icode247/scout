@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { assertSameOrigin, errorMessage, json, readBody, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
+import { getPostHogServer } from "../../../lib/posthog-server";
 
 export const prerender = false;
 
@@ -33,6 +34,11 @@ export const PATCH: APIRoute = async (context) => {
     if (updated.error) throw updated.error;
     const job = await supabase.from("jobs").update({ status: "skipped", updated_at: new Date().toISOString() }).eq("id", current.data.job_id).eq("user_id", user.id);
     if (job.error) throw job.error;
+    const posthog = getPostHogServer();
+    if (posthog) {
+      posthog.capture({ distinctId: user.id, event: "application_withdrawn", properties: { previous_status: current.data.status } });
+      await posthog.flush();
+    }
     return json({ ok: true, application: updated.data });
   } catch (error) {
     if (error instanceof Response) return error;

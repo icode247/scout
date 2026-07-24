@@ -1,0 +1,140 @@
+---
+import Base from "../../layouts/Base.astro";
+import Container from "../../components/Container.astro";
+import MarketingCTA from "../../components/MarketingCTA.astro";
+import { competitors } from "../../data/competitors";
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return competitors.map((competitor) => ({
+    params: { competitor: competitor.slug },
+    props: { competitor },
+  }));
+}
+
+const { competitor } = Astro.props;
+const title = `Scout vs ${competitor.name}: which job application service fits?`;
+const description = `Compare Scout with ${competitor.name}, including service model, application workflow, human support, controls, and the job seekers each option fits.`;
+
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Compare", item: new URL("/compare", Astro.site).href },
+    { "@type": "ListItem", position: 2, name: `Scout vs ${competitor.name}`, item: Astro.url.href },
+  ],
+};
+---
+<Base title={title} description={description}>
+  <section class="bg-brand-950 py-16 text-white sm:py-24">
+    <Container>
+      <nav aria-label="Breadcrumb" class="text-sm text-brand-100/75">
+        <a href="/compare" class="transition-colors hover:text-white">Compare</a>
+        <span class="mx-2" aria-hidden="true">/</span>
+        <span>Scout vs {competitor.name}</span>
+      </nav>
+      <div class="mt-10 max-w-4xl">
+        <p class="text-lg font-bold text-brand-300">{competitor.category}</p>
+        <h1 class="mt-4 font-display text-5xl font-extrabold leading-[1] tracking-[-0.035em] text-white sm:text-7xl">
+          Scout vs {competitor.name}
+        </h1>
+        <p class="mt-6 max-w-3xl text-lg leading-relaxed text-white/75 sm:text-xl">{competitor.summary}</p>
+        <p class="mt-6 text-sm text-white/55">Research checked July 23, 2026. Features and pricing can change.</p>
+      </div>
+    </Container>
+  </section>
+
+  <section class="bg-white py-16 sm:py-24">
+    <Container>
+      <div class="grid gap-10 lg:grid-cols-2 lg:gap-16">
+        <div>
+          <h2 class="font-display text-3xl font-extrabold sm:text-4xl">Choose {competitor.name} when…</h2>
+          <p class="mt-5 max-w-prose text-lg leading-relaxed text-ink-soft">{competitor.bestFor}</p>
+          <ul class="mt-7 space-y-4">
+            {competitor.competitorStrengths.map((strength) => (
+              <li class="flex gap-3 text-ink-soft">
+                <span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-ink-muted" aria-hidden="true"></span>
+                <span>{strength}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="border-t border-brand-300 pt-10 lg:border-l lg:border-t-0 lg:pl-16 lg:pt-0">
+          <h2 class="font-display text-3xl font-extrabold sm:text-4xl">Choose Scout when…</h2>
+          <p class="mt-5 max-w-prose text-lg leading-relaxed text-ink-soft">{competitor.scoutBestFor}</p>
+          <ul class="mt-7 space-y-4">
+            {competitor.scoutDifferences.map((difference) => (
+              <li class="flex gap-3 text-ink-soft">
+                <span class="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-200 text-xs font-black text-brand-950" aria-hidden="true">✓</span>
+                <span>{difference}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Container>
+  </section>
+
+  <section class="bg-surface py-16 sm:py-24">
+    <Container>
+      <div class="max-w-3xl">
+        <h2 class="font-display text-4xl font-extrabold sm:text-5xl">The practical differences</h2>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft">
+          Compare the operating model before comparing application counts. The right choice depends on how much work you want handled, where you need human judgment, and what record you expect afterward.
+        </p>
+      </div>
+      <div class="mt-10 overflow-x-auto rounded-2xl bg-white">
+        <table class="w-full min-w-[720px] text-left">
+          <thead>
+            <tr class="border-b border-ink/10">
+              <th class="p-5">Decision point</th>
+              <th class="p-5">{competitor.name}</th>
+              <th class="bg-brand-100 p-5">Scout</th>
+            </tr>
+          </thead>
+          <tbody>
+            {competitor.rows.map((row) => (
+              <tr class="border-b border-ink/10 last:border-0">
+                <th scope="row" class="p-5 font-bold">{row[0]}</th>
+                <td class="p-5 text-ink-soft">{row[1]}</td>
+                <td class="bg-brand-50 p-5 font-semibold text-ink">{row[2]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Container>
+  </section>
+
+  <section class="bg-white py-16 sm:py-24">
+    <Container>
+      <div class="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
+        <div>
+          <h2 class="font-display text-4xl font-extrabold sm:text-5xl">What Scout means by “human or AI”</h2>
+          <div class="mt-7 space-y-5 text-lg leading-relaxed text-ink-soft">
+            <p>The Scout AI Assistant is the lower-cost lane for defined searches and repeatable application answers. It uses your profiles and resume rules, applies, and records the job, status, and resume used.</p>
+            <p>The Scout Human Assistant is for searches that need more judgment. A dedicated person communicates through WhatsApp, handles exceptions, and provides detailed evidence for important application answers.</p>
+            <p>Both lanes use the same profiles, application tracker, resume workflow, and browser-extension delegation flow.</p>
+          </div>
+        </div>
+        <aside class="self-start rounded-2xl bg-brand-950 p-8 text-white">
+          <h2 class="font-display text-2xl font-bold text-white">Verify before buying</h2>
+          <p class="mt-4 leading-relaxed text-white/72">
+            Competitor capabilities and plan limits can change. We used the provider's own current product or pricing page for this comparison.
+          </p>
+          <a href={competitor.sourceUrl} rel="nofollow noopener" target="_blank" class="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-extrabold text-brand-950 transition-colors hover:bg-brand-100">
+            View {competitor.sourceLabel}
+            <span class="ml-2" aria-hidden="true">↗</span>
+          </a>
+        </aside>
+      </div>
+      <div class="mt-14 border-t border-ink/10 pt-8">
+        <a href="/compare" class="font-bold text-brand-700 hover:text-brand-800">Compare all job application service models →</a>
+      </div>
+    </Container>
+  </section>
+
+  <MarketingCTA title="Choose the application help that fits the way you search." />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+</Base>

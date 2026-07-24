@@ -1,33 +1,53 @@
 import type { APIRoute } from "astro";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { assertSameOrigin, errorMessage, json, list, requireUser } from "../../../lib/api";
+import { assertSameOrigin, errorMessage, json, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
 import { extractResume, validateResumeFile } from "../../../lib/resume";
+import { fastApplyProfilePayload } from "../../../lib/fastapply-applicant";
+import { getPostHogServer } from "../../../lib/posthog-server";
 
 export const prerender = false;
 export const maxDuration = 60;
 
+const applicantKeys = new Set([
+  "firstName","middleName","lastName","email","phoneCountryCode","phoneNumber","streetAddress","currentCity","state","zipcode","country","timezone","dateOfBirth",
+  "headline","summary","yearsOfExperience","noticePeriod","skills","languages","certifications","education","experience","coverLetter",
+  "desiredSalary","desiredSalaryCurrency","desiredSalaryNegotiable","currentSalary","currentSalaryCurrency","workAuthorization","requiresSponsorship","remotePreference","willingToRelocate","securityClearance",
+  "linkedinURL","githubURL","website","twitterURL","additionalLinks","references","gender","ethnicity","race","veteranStatus","disabilityStatus",
+]);
+function applicantProfile(value: unknown) {
+  if (!value) return {};
+  let parsed: unknown;
+  try { parsed = JSON.parse(String(value)); } catch { throw new Error("Application details could not be read"); }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Application details must be an object");
+  const clean: Record<string, any> = {};
+  for (const [key, item] of Object.entries(parsed)) {
+    if (!applicantKeys.has(key)) continue;
+    if (typeof item === "string") clean[key] = item.trim().slice(0, key === "summary" || key === "coverLetter" ? 10_000 : 1_000);
+    else if (typeof item === "boolean") clean[key] = item;
+    else if (key === "yearsOfExperience" && typeof item === "number" && Number.isFinite(item) && item >= 0 && item <= 80) clean[key] = item;
+    else if ((key === "skills" || key === "languages" || key === "certifications") && Array.isArray(item)) clean[key] = item.map(String).map(entry => entry.trim().slice(0, 200)).filter(Boolean).slice(0, 100);
+    else if (key === "education" && Array.isArray(item)) clean[key] = item.slice(0, 30).map((entry:any) => ({ school: String(entry?.school || "").trim().slice(0, 1_000), degree: String(entry?.degree || "").trim().slice(0, 1_000), major: String(entry?.major || entry?.field || entry?.fieldOfStudy || "").trim().slice(0, 1_000), gpa: String(entry?.gpa || "").trim().slice(0, 100), startDate: String(entry?.startDate || "").trim().slice(0, 100), endDate: String(entry?.endDate || "").trim().slice(0, 100), location: String(entry?.location || "").trim().slice(0, 1_000) })).filter((entry:any) => entry.school || entry.degree || entry.major);
+    else if (key === "experience" && Array.isArray(item)) clean[key] = item.slice(0, 50).map((entry:any) => ({ title: String(entry?.title || entry?.role || entry?.position || "").trim().slice(0, 1_000), company: String(entry?.company || "").trim().slice(0, 1_000), location: String(entry?.location || "").trim().slice(0, 1_000), startDate: String(entry?.startDate || "").trim().slice(0, 100), endDate: String(entry?.endDate || "").trim().slice(0, 100), description: String(entry?.description || "").trim().slice(0, 10_000) })).filter((entry:any) => entry.title || entry.company);
+    else if (key === "references" && Array.isArray(item)) clean[key] = item.slice(0, 20).map((reference:any) => ({ name: String(reference?.name || "").trim().slice(0, 200), email: String(reference?.email || "").trim().slice(0, 320), phone: String(reference?.phone || "").trim().slice(0, 80), type: String(reference?.type || "").trim().slice(0, 80) })).filter((reference:any) => reference.name);
+    else if (key === "additionalLinks" && item && typeof item === "object" && !Array.isArray(item)) clean[key] = Object.fromEntries(Object.entries(item).slice(0, 20).map(([label,url]) => [label.trim().slice(0, 100), String(url).trim().slice(0, 2_000)]).filter(([label,url]) => label && url));
+  }
+  return clean;
+}
+
 function profileRecord(body: Record<string, any>, assistantType: "human" | "ai") {
   const name = String(body.name || "").trim().slice(0, 120);
-  const targetRoles = list(body.target_roles).slice(0, 20);
-  const locations = list(body.locations).slice(0, 20);
-  const salary = body.salary_min === "" || body.salary_min == null ? null : Number(body.salary_min);
   if (!name) throw new Error("Profile name is required");
-  if (!targetRoles.length) throw new Error("Add at least one target role");
-  if (salary !== null && (!Number.isFinite(salary) || salary < 0 || salary > 10_000_000)) throw new Error("Enter a valid minimum salary");
   return {
     name,
     assistant_type: assistantType,
-    target_roles: targetRoles,
-    locations,
-    salary_min: salary === null ? null : Math.round(salary),
-    resume_behavior: body.resume_behavior === "original" ? "original" as const : "tailor" as const,
     active: body.active === false || body.active === "false" ? false : true,
+    applicant_profile: applicantProfile(body.applicant_profile),
   };
 }
 
 async function uploadResumes(supabase: SupabaseClient, userId: string, files: File[]) {
-  const uploaded: Array<{ id: string; name: string; storage_path: string; extraction_status: string }> = [];
+  const uploaded: Array<{ id: string; name: string; storage_path: string; extraction_status: string; extracted_data?: Record<string, any> }> = [];
   for (const file of files) {
     await validateResumeFile(file);
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -50,7 +70,7 @@ async function uploadResumes(supabase: SupabaseClient, userId: string, files: Fi
         extraction_completed_at: new Date().toISOString(),
       }).eq("id", resume.data.id).eq("user_id", userId).select("id,name,storage_path,extraction_status").single();
       if (updated.error) throw updated.error;
-      uploaded.push(updated.data);
+      uploaded.push({ ...updated.data, extracted_data: extracted as Record<string, any> });
     } catch (error) {
       const warning = errorMessage(error);
       await supabase.from("resumes").update({
@@ -96,7 +116,7 @@ export const POST: APIRoute = async (context) => {
       });
       const linkedIds = [...new Set([...resumeIds.filter((id) => state.resumes.some((resume) => resume.id === id)), ...uploaded.map((resume) => resume.id)])];
       if (!linkedIds.length) return json({ error: "Select or upload at least one resume" }, { status: 400 });
-      const item = { id: crypto.randomUUID(), ...record, resume_ids: linkedIds };
+      const item = { id: crypto.randomUUID(), target_roles: [], locations: [], salary_min: null, resume_behavior: "tailor" as const, ...record, resume_ids: linkedIds };
       state.jobProfiles.unshift(item);
       return json({ ok: true, profile: item, resumes: uploaded });
     }
@@ -104,16 +124,25 @@ export const POST: APIRoute = async (context) => {
     const supabase = context.locals.supabase!;
     const existingIds = await ownedResumeIds(supabase, user.id, resumeIds);
     const uploaded = await uploadResumes(supabase, user.id, files);
+    if (uploaded[0]?.extracted_data) {
+      const extractedApplicant = applicantProfile(JSON.stringify(fastApplyProfilePayload(user, {}, uploaded[0])));
+      record.applicant_profile = { ...extractedApplicant, ...record.applicant_profile };
+    }
     const linkedIds = [...new Set([...existingIds, ...uploaded.map((resume) => resume.id)])];
     if (!linkedIds.length) return json({ error: "Select or upload at least one resume" }, { status: 400 });
 
-    const result = await supabase.from("job_profiles").insert({ user_id: user.id, ...record, resume_id: linkedIds[0] }).select("*").single();
+    const result = await supabase.from("job_profiles").insert({ user_id: user.id, target_roles: [], locations: [], salary_min: null, resume_behavior: "tailor", ...record, resume_id: linkedIds[0] }).select("*").single();
     if (result.error) throw result.error;
     const links = linkedIds.map((resumeId, index) => ({ user_id: user.id, job_profile_id: result.data.id, resume_id: resumeId, is_primary: index === 0 }));
     const linked = await supabase.from("job_profile_resumes").insert(links);
     if (linked.error) {
       await supabase.from("job_profiles").delete().eq("id", result.data.id).eq("user_id", user.id);
       throw linked.error;
+    }
+    const posthogCreate = getPostHogServer();
+    if (posthogCreate) {
+      posthogCreate.capture({ distinctId: user.id, event: "job_profile_created", properties: { assistant_type: record.assistant_type, resume_count: linkedIds.length } });
+      await posthogCreate.flush();
     }
     return json({ ok: true, profile: { ...result.data, resume_ids: linkedIds }, resumes: uploaded });
   } catch (error) {
@@ -152,6 +181,10 @@ export const PATCH: APIRoute = async (context) => {
     if (existingProfile.error) return json({ error: "Profile not found" }, { status: 404 });
     const existingIds = await ownedResumeIds(supabase, user.id, resumeIds);
     const uploaded = await uploadResumes(supabase, user.id, files);
+    if (uploaded[0]?.extracted_data) {
+      const extractedApplicant = applicantProfile(JSON.stringify(fastApplyProfilePayload(user, {}, uploaded[0])));
+      record.applicant_profile = { ...extractedApplicant, ...record.applicant_profile };
+    }
     const linkedIds = [...new Set([...existingIds, ...uploaded.map((resume) => resume.id)])];
     if (!linkedIds.length) return json({ error: "Select or upload at least one resume" }, { status: 400 });
 
@@ -166,6 +199,11 @@ export const PATCH: APIRoute = async (context) => {
     if (removedIds.length) {
       const removed = await supabase.from("job_profile_resumes").delete().eq("job_profile_id", id).eq("user_id", user.id).in("resume_id", removedIds);
       if (removed.error) throw removed.error;
+    }
+    const posthogUpdate = getPostHogServer();
+    if (posthogUpdate) {
+      posthogUpdate.capture({ distinctId: user.id, event: "job_profile_updated", properties: { resume_count: linkedIds.length } });
+      await posthogUpdate.flush();
     }
     return json({ ok: true, profile: { ...result.data, resume_ids: linkedIds }, resumes: uploaded });
   } catch (error) {
@@ -188,6 +226,11 @@ export const DELETE: APIRoute = async (context) => {
     const result = await context.locals.supabase!.from("job_profiles").delete().eq("id", id).eq("user_id", user.id).select("id").maybeSingle();
     if (result.error) throw result.error;
     if (!result.data) return json({ error: "Profile not found" }, { status: 404 });
+    const posthogDelete = getPostHogServer();
+    if (posthogDelete) {
+      posthogDelete.capture({ distinctId: user.id, event: "job_profile_deleted" });
+      await posthogDelete.flush();
+    }
     return json({ ok: true });
   } catch (error) {
     if (error instanceof Response) return error;

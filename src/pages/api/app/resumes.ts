@@ -2,9 +2,24 @@ import type { APIRoute } from "astro";
 import { assertSameOrigin, errorMessage, json, readBody, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
 import { extractResume, validateResumeFile } from "../../../lib/resume";
+import { getPostHogServer } from "../../../lib/posthog-server";
 
 export const prerender = false;
 export const maxDuration = 60;
+
+async function attachResumeToProfile(supabase: any, userId: string, profileId: string, resumeId: string) {
+  if (!profileId) return;
+  const profile = await supabase.from("job_profiles").select("id").eq("id", profileId).eq("user_id", userId).single();
+  if (profile.error) throw new Error("Profile not found");
+  const linked = await supabase.from("job_profile_resumes").upsert({
+    user_id: userId, job_profile_id: profileId, resume_id: resumeId, is_primary: true,
+  }, { onConflict: "job_profile_id,resume_id" });
+  if (linked.error) throw linked.error;
+  const removed = await supabase.from("job_profile_resumes").delete().eq("job_profile_id", profileId).eq("user_id", userId).neq("resume_id", resumeId);
+  if (removed.error) throw removed.error;
+  const primary = await supabase.from("job_profiles").update({ resume_id: resumeId, updated_at: new Date().toISOString() }).eq("id", profileId).eq("user_id", userId);
+  if (primary.error) throw primary.error;
+}
 
 export const POST: APIRoute = async (context) => {
   let path: string | null = null;
@@ -13,16 +28,27 @@ export const POST: APIRoute = async (context) => {
     const user = requireUser(context);
     const form = await context.request.formData();
     const file = form.get("resume");
+    const profileId = String(form.get("profile_id") || "");
     if (!(file instanceof File)) return json({ error: "Choose a resume file" }, { status: 400 });
     await validateResumeFile(file);
 
     if (context.locals.demoMode) {
+      const state = getDemoState(user.id, user.email);
+      const profile = profileId ? state.jobProfiles.find((item) => item.id === profileId) : null;
+      if (profileId && !profile) return json({ error: "Profile not found" }, { status: 404 });
       const resume = { id: crypto.randomUUID(), name: file.name, kind: "original" as const, storage_path: null, created_at: new Date().toISOString(), extraction_status: "failed" };
-      getDemoState(user.id, user.email).resumes.unshift(resume);
+      state.resumes.unshift(resume);
+      if (profileId) {
+        profile!.resume_ids = [resume.id];
+      }
       return json({ ok: true, resume, warning: "Extraction is unavailable in demo mode" });
     }
 
     const supabase = context.locals.supabase!;
+    if (profileId) {
+      const profile = await supabase.from("job_profiles").select("id").eq("id", profileId).eq("user_id", user.id).single();
+      if (profile.error) return json({ error: "Profile not found" }, { status: 404 });
+    }
     path = user.id + "/" + crypto.randomUUID() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
     const upload = await supabase.storage.from("resumes").upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
     if (upload.error) throw upload.error;
@@ -41,6 +67,12 @@ export const POST: APIRoute = async (context) => {
         extraction_completed_at: new Date().toISOString(),
       }).eq("id", inserted.data.id).eq("user_id", user.id).select("*").single();
       if (updated.error) throw updated.error;
+      await attachResumeToProfile(supabase, user.id, profileId, updated.data.id);
+      const posthog = getPostHogServer();
+      if (posthog) {
+        posthog.capture({ distinctId: user.id, event: "resume_uploaded", properties: { extraction_status: "complete", attached_to_profile: !!profileId } });
+        await posthog.flush();
+      }
       return json({ ok: true, resume: updated.data });
     } catch (extractionError) {
       const warning = errorMessage(extractionError);
@@ -48,6 +80,12 @@ export const POST: APIRoute = async (context) => {
         extracted_data: { version: 1, status: "failed" }, extraction_status: "failed",
         extraction_error: warning, extraction_completed_at: new Date().toISOString(),
       }).eq("id", inserted.data.id).eq("user_id", user.id).select("*").single();
+      await attachResumeToProfile(supabase, user.id, profileId, inserted.data.id);
+      const posthog = getPostHogServer();
+      if (posthog) {
+        posthog.capture({ distinctId: user.id, event: "resume_uploaded", properties: { extraction_status: "failed", attached_to_profile: !!profileId } });
+        await posthog.flush();
+      }
       return json({ ok: true, resume: updated.data || inserted.data, warning });
     }
   } catch (error) {
@@ -105,6 +143,11 @@ export const DELETE: APIRoute = async (context) => {
     if (resume.data.storage_path) {
       const removed = await supabase.storage.from("resumes").remove([resume.data.storage_path]);
       if (removed.error) warning = "The resume record was deleted, but its stored file needs cleanup";
+    }
+    const posthog = getPostHogServer();
+    if (posthog) {
+      posthog.capture({ distinctId: user.id, event: "resume_deleted" });
+      await posthog.flush();
     }
     return json({ ok: true, warning });
   } catch (error) {
