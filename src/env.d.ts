@@ -19,6 +19,7 @@ interface ImportMetaEnv {
   readonly SUPABASE_SERVICE_ROLE_KEY?: string;
   readonly FIRSTAPPLY_API_URL?: string;
   readonly FIRSTAPPLY_API_TOKEN?: string;
+  readonly CRON_SECRET?: string;
 }
 
 interface ImportMeta {

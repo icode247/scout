@@ -8,14 +8,41 @@ let detectionGeneration = 0;
 let navigationTimer;
 let lastDetectedUrl = "";
 
-function show(id) { views.forEach((name) => $("#" + name).classList.toggle("hidden", name !== id)); }
-function message(type, payload) { return new Promise((resolve, reject) => chrome.runtime.sendMessage({ type, ...payload }, (response) => {
-  if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
-  response?.ok ? resolve(response.data) : reject(Object.assign(new Error(response?.error || "Scout did not respond."), { status: response?.status, code: response?.code }));
-})); }
+const REQUEST_TIMEOUT_MS = 12000;
+function show(id) {
+  views.forEach((name) => $("#" + name).classList.toggle("hidden", name !== id));
+  $("#app").dataset.view = id;
+}
+function message(type, payload) {
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const finish = (callback, value) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      callback(value);
+    };
+    const timer = setTimeout(() => finish(reject, Object.assign(new Error("Scout took too long to respond. Please try again."), { code: "request_timeout" })), REQUEST_TIMEOUT_MS);
+    try {
+      chrome.runtime.sendMessage({ type, ...payload }, (response) => {
+        if (chrome.runtime.lastError) return finish(reject, new Error(chrome.runtime.lastError.message));
+        if (response?.ok) return finish(resolve, response.data);
+        finish(reject, Object.assign(new Error(response?.error || "Scout did not respond."), { status: response?.status, code: response?.code }));
+      });
+    } catch (error) {
+      finish(reject, error);
+    }
+  });
+}
 
 function extractionScript() {
   const clean = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  const cleanLocation = (value) => [...new Set(clean(value).split(/\s*[,|•]\s*/).map(clean).filter((part) => part && !/^(?:unavailable|unknown|not available|not specified|n\/a|null|undefined|-)$/i.test(part)).map((part) => part.toUpperCase() === "USA" ? "US" : part))].join(", ");
+  const cleanEmploymentType = (value) => {
+    const raw = clean(value);
+    const key = raw.toLowerCase().replace(/[\s_]+/g, "-");
+    return ({ "full-time": "Full-time", "part-time": "Part-time", contract: "Contract", contractor: "Contract", temporary: "Temporary", intern: "Internship", internship: "Internship", volunteer: "Volunteer", "per-diem": "Per diem", other: "Other" })[key] || raw.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  };
   const firstText = (selectors) => { for (const selector of selectors) { const node = document.querySelector(selector); const value = clean(node?.textContent || node?.getAttribute?.("content")); if (value) return value; } return ""; };
   const jsonLd = [...document.querySelectorAll('script[type="application/ld+json"]')].flatMap((node) => {
     try { const data = JSON.parse(node.textContent || "null"); return Array.isArray(data) ? data : data?.["@graph"] || [data]; } catch { return []; }
@@ -23,36 +50,116 @@ function extractionScript() {
   const address = jsonLd?.jobLocation?.address || jsonLd?.jobLocation?.[0]?.address;
   const remote = String(jsonLd?.jobLocationType || "").toUpperCase().includes("TELECOMMUTE");
   const host = location.hostname.replace(/^www\./, "");
-  let title = clean(jsonLd?.title) || firstText(["[data-testid='job-title']",".posting-headline h2",".app-title",".job-title","h1"]);
-  let company = clean(jsonLd?.hiringOrganization?.name) || firstText(["[data-testid='company-name']",".posting-headline .company",".company-name",".employer","[class*='company']"]);
-  let jobLocation = remote ? "Remote" : clean([address?.addressLocality, address?.addressRegion, address?.addressCountry].filter(Boolean).join(", ")) || firstText(["[data-testid='job-location']",".posting-categories .location",".location","[class*='location']"]);
-  let description = clean(jsonLd?.description ? new DOMParser().parseFromString(jsonLd.description, "text/html").body.textContent : "") || firstText(["[data-testid='job-description']","#content",".posting-page .content",".job-description","[class*='jobDescription']","[class*='job-description']","main"]);
-  if (!company) company = clean(document.querySelector('meta[property="og:site_name"]')?.content) || host.split(".")[0];
+  let title = clean(jsonLd?.title) || firstText(["h1.iCIMS_Header","#iCIMS_Header h1","[data-testid='job-title']",".posting-headline h2",".app-title",".job-title","h1"]);
+  let company = clean(jsonLd?.hiringOrganization?.name) || firstText([".iCIMS_CompanyName",".iCIMS_JobHeaderCompany","[data-testid='company-name']",".posting-headline .company",".company-name",".employer","[class*='company']"]);
+  let jobLocation = remote ? "Remote" : clean([address?.addressLocality, address?.addressRegion, address?.addressCountry].filter(Boolean).join(", ")) || firstText([".iCIMS_JobHeaderTag .iCIMS_JobHeaderData span","[data-testid='inlineHeader-companyLocation']","[data-testid='jobsearch-JobInfoHeader-companyLocation']","#jobLocationText","[data-testid='job-location']",".posting-categories .location",".location","[class*='location']"]);
+  let description = clean(jsonLd?.description ? new DOMParser().parseFromString(jsonLd.description, "text/html").body.textContent : "") || firstText([".iCIMS_JobContent","[data-testid='job-description']","#content",".posting-page .content",".job-description","[class*='jobDescription']","[class*='job-description']","main"]);
+  if (!company) company = clean(document.querySelector('meta[property="og:site_name"]')?.content);
+  if (!company && host.includes(".icims.com")) {
+    const tenant = host.split(".")[0].replace(/^(?:us|uk|eu|ca|au)[-_]/i, "").replace(/^careers[-_]?/i, "").replace(/[-_]+/g, " ");
+    company = tenant.length <= 5 ? tenant.toUpperCase() : tenant.replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+  if (!company) company = host.split(".")[0];
   const ogTitle = clean(document.querySelector('meta[property="og:title"]')?.content);
   if (!title && ogTitle) title = ogTitle.split(/\s+[|–—-]\s+/)[0];
   if (company && title.toLowerCase().includes(company.toLowerCase())) title = clean(title.replace(new RegExp(company.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "").replace(/^[\s|–—-]+|[\s|–—-]+$/g, ""));
   if (description.length > 50000) description = description.slice(0, 50000);
-  return { title, company, location: jobLocation, description, url: location.href, host, detected: { title: Boolean(title), company: Boolean(company), description: Boolean(description) } };
+  const employmentType = cleanEmploymentType(jsonLd?.employmentType);
+  jobLocation = cleanLocation(jobLocation);
+  return { title, company, location: jobLocation, employmentType, description, platform: host.includes("icims.com") ? "icims" : "generic", url: location.href, host, detected: { title: Boolean(title), company: Boolean(company), location: Boolean(jobLocation), employmentType: Boolean(employmentType), description: Boolean(description) } };
+}
+
+function hasJobValue(value) {
+  const text = String(value || "").trim();
+  return Boolean(text) && !/^(?:unavailable|unknown|not available|not specified|n\/a|null|undefined)$/i.test(text);
+}
+
+function jobQuality(job) {
+  if (!job) return -1;
+  let score = 0;
+  if (hasJobValue(job.title)) score += 5;
+  if (hasJobValue(job.company)) score += 3;
+  if (hasJobValue(job.location)) score += 2;
+  if (hasJobValue(job.employmentType)) score += 1;
+  if (hasJobValue(job.salary)) score += 1;
+  const descriptionLength = String(job.description || "").trim().length;
+  if (descriptionLength >= 120) score += 4;
+  if (descriptionLength >= 800) score += 3;
+  if (job.platform && job.platform !== "generic") score += 2;
+  return score;
+}
+
+function selectBestJob(candidates) {
+  const jobs = candidates.filter(Boolean).sort((a, b) => jobQuality(b) - jobQuality(a));
+  if (!jobs.length) return null;
+  const best = { ...jobs[0] };
+  for (const key of ["title", "company", "location", "employmentType", "salary", "description", "postedDate", "experienceLevel"]) {
+    if (!hasJobValue(best[key])) {
+      const source = jobs.find((job) => hasJobValue(job[key]));
+      if (source) best[key] = source[key];
+    }
+  }
+  best.detected = Object.fromEntries(
+    ["title", "company", "location", "employmentType", "salary", "description"]
+      .map((key) => [key, hasJobValue(best[key])])
+  );
+  return best;
+}
+
+function requestFrameJob(tabId, frameId) {
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const timer = setTimeout(() => {
+      finished = true;
+      reject(new Error("The job frame took too long to respond."));
+    }, 6500);
+    chrome.tabs.sendMessage(tabId, { type: "SCOUT_EXTRACT_ACTIVE_JOB" }, { frameId }, (response) => {
+      const runtimeError = chrome.runtime.lastError;
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      if (runtimeError) reject(new Error(runtimeError.message));
+      else if (!response?.ok) reject(new Error(response?.error || "The frame did not return job details."));
+      else resolve(response.job);
+    });
+  });
 }
 
 async function detectJob() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTab = tabs[0];
-  if (!currentTab?.id || !/^https?:/i.test(currentTab.url || "")) throw Object.assign(new Error("Open a public job page, then try again."), { kind: "unsupported" });
-  try {
-    const bridged = await new Promise((resolve, reject) => chrome.tabs.sendMessage(currentTab.id, { type: "SCOUT_EXTRACT_ACTIVE_JOB" }, (response) => {
-      if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
-      else if (!response?.ok) reject(new Error(response?.error || "The page did not return job details."));
-      else resolve(response.job);
-    }));
-    return bridged;
-  } catch {
-    try {
-      const [result] = await chrome.scripting.executeScript({ target: { tabId: currentTab.id }, func: extractionScript });
-      if (result?.result) return result.result;
-    } catch {}
-    throw Object.assign(new Error("Scout cannot read this page yet. Refresh the job page once, then open Scout again."), { kind: "blocked" });
+  if (!currentTab?.id || !/^https?:/i.test(currentTab.url || "")) {
+    throw Object.assign(new Error("Open a public job page, then try again."), { kind: "unsupported" });
   }
+
+  const candidates = [];
+  try {
+    const frames = await chrome.webNavigation.getAllFrames({ tabId: currentTab.id });
+    const frameIds = [...new Set((frames || []).map((frame) => frame.frameId))];
+    const responses = await Promise.allSettled(frameIds.map((frameId) => requestFrameJob(currentTab.id, frameId)));
+    for (const response of responses) {
+      if (response.status === "fulfilled" && response.value) candidates.push(response.value);
+    }
+  } catch { /* fall through to one-time frame injection */ }
+
+  if (!candidates.length) {
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: currentTab.id, allFrames: true },
+        func: extractionScript,
+      });
+      for (const result of results || []) {
+        if (result?.result) candidates.push(result.result);
+      }
+    } catch { /* handled below */ }
+  }
+
+  const job = selectBestJob(candidates);
+  if (job) return job;
+  throw Object.assign(
+    new Error("Scout cannot read this page yet. Refresh the job page once, then open Scout again."),
+    { kind: "blocked" }
+  );
 }
 
 function renderAssistant(account) {

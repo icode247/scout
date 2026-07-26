@@ -1,4 +1,7 @@
 {
+  "crons": [
+    { "path": "/api/cron/reconcile", "schedule": "*/5 * * * *" }
+  ],
   "redirects": [
     {
       "source": "/first-apply",

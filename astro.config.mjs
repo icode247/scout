@@ -14,6 +14,18 @@ export default defineConfig({
   adapter: vercel(),
   output: "server",
   trailingSlash: "never",
+  // Vercel terminates TLS at the edge and forwards the real host in `x-forwarded-host`.
+  // Astro only trusts that header for hosts listed here; with an empty list it discards
+  // both it and `Host`, and `context.url.origin` silently becomes `https://localhost`.
+  // That broke every POST form (origin check 403) and every auth redirect built from
+  // the request origin. Keep this in sync with the project's Vercel aliases.
+  security: {
+    allowedDomains: [
+      { hostname: "applyscout.app", protocol: "https" },
+      { hostname: "*.applyscout.app", protocol: "https" },
+      { hostname: "**.vercel.app", protocol: "https" },
+    ],
+  },
   redirects: {
     "/first-apply": "/ai-job-application-assistant",
     "/swipe-apply": "/human-job-application-service",

@@ -23,15 +23,30 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["src/content.js"],
-      "run_at": "document_idle"
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/job-extractor.js",
+        "src/content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ],
   "side_panel": {
     "default_path": "src/sidepanel.html"
   },
-  "permissions": ["activeTab", "identity", "scripting", "sidePanel", "storage", "tabs"],
+  "permissions": [
+    "activeTab",
+    "identity",
+    "scripting",
+    "sidePanel",
+    "storage",
+    "tabs",
+    "webNavigation"
+  ],
   "host_permissions": [
     "http://*/*",
     "https://*/*",

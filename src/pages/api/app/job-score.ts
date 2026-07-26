@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { assertSameOrigin, errorMessage, json, readBody, requireUser } from "../../../lib/api";
 import { scoreAndPersistJob } from "../../../lib/job-match";
+import { rateLimit, tooManyRequests } from "../../../lib/rate-limit";
 
 export const prerender = false;
 export const maxDuration = 60;
@@ -14,6 +15,7 @@ export const POST: APIRoute = async (context) => {
     if (!id) return json({ error: "Job id is required" }, { status: 400 });
     if (context.locals.demoMode) return json({ error: "Live scoring is unavailable in demo mode" }, { status: 400 });
     const supabase = context.locals.supabase!;
+    if (!(await rateLimit(supabase, `job-score:${user.id}`, { max: 30, windowSeconds: 60 })).allowed) return tooManyRequests();
     const result = await supabase.from("jobs").select("*").eq("id", id).eq("user_id", user.id).single();
     if (result.error) return json({ error: "Job not found" }, { status: 404 });
     const job = await scoreAndPersistJob(supabase, user.id, result.data);

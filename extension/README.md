@@ -12,7 +12,11 @@ The Scout extension sends a job from the active browser tab to a member’s assi
 
 The extension ID must remain stable while testing because Chrome uses it in the protected sign-in callback. Pin the unpacked extension in Chrome for easy access.
 
-The open side panel automatically re-detects after a full reload, active-tab switch, browser back/forward navigation, or a single-page job-site route change. Salary and employment type are included when the source page publishes them.
+The open side panel automatically re-detects after a full reload, active-tab switch, browser back/forward navigation, or a single-page job-site route change. Embedded ATS frames are scanned and the most complete job result is selected. Salary and employment type are included when the source page publishes them.
+
+## Job extraction coverage
+
+Scout uses structured JobPosting data first, then production-tested platform selectors, then safe generic fallbacks. Dedicated coverage includes LinkedIn, Indeed, Glassdoor, ZipRecruiter, Monster, Dice, SimplyHired, Greenhouse, Lever, Workday, Workable, iCIMS, Ashby, Rippling, and Recruitee. It extracts the title, company, location, job type, salary, description, posted date, and experience level when the page exposes them.
 
 Apply `supabase/migrations/202607190001_job_details.sql` before deploying this version so Scout can store the extracted salary and employment type.
 
@@ -30,5 +34,6 @@ Run `npm run extension:check && npm run extension:build`, then zip the contents 
 - `identity`: complete Scout sign-in through Chrome’s protected callback.
 - `storage`: retain the session and the selected profile for each job website.
 - `tabs`: identify the active page and its original URL.
+- `webNavigation`: enumerate embedded ATS frames so Scout can read job content hosted inside iCIMS and similar cross-origin frames.
 
 No remote code is loaded. Job details are editable before they are sent.

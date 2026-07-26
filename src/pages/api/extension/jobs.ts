@@ -14,7 +14,7 @@ export const GET: APIRoute = async (context) => {
   try {
     const user = requireUser(context);
     if (context.locals.scoutProfile?.assistant_type === "ai") return json({ error: "The Chrome extension is not available for AI Agent accounts." }, { status: 403, headers: cors });
-    const data = await loadScoutData(user, context.locals.supabase, context.locals.demoMode);
+    const data = await loadScoutData(user, context.locals.supabase, context.locals.demoMode, context.locals.scoutProfile);
     const assistant = assignedHumanAssistant(user.id, data.profile.assistant_name);
     return json({
       account: {

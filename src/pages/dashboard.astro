@@ -5,7 +5,7 @@ import { applicationRows, loadScoutData } from "../lib/scout-data";
 import { assignedHumanAssistant } from "../lib/human-assistants";
 export const prerender = false;
 const user = Astro.locals.user!;
-const data = await loadScoutData(user, Astro.locals.supabase, Astro.locals.demoMode);
+const data = await loadScoutData(user, Astro.locals.supabase, Astro.locals.demoMode, Astro.locals.scoutProfile);
 const activeProfiles = data.jobProfiles.filter((profile) => profile.active);
 const rows = applicationRows(data);
 const firstName = data.profile.full_name.split(" ")[0] || "there";

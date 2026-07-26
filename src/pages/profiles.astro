@@ -6,7 +6,7 @@ import { loadScoutData } from "../lib/scout-data";
 import { fastApplyProfilePayload } from "../lib/fastapply-applicant";
 export const prerender = false;
 const user = Astro.locals.user!;
-const data = await loadScoutData(user, Astro.locals.supabase, Astro.locals.demoMode);
+const data = await loadScoutData(user, Astro.locals.supabase, Astro.locals.demoMode, Astro.locals.scoutProfile);
 const resumesForProfile = (profile: (typeof data.jobProfiles)[number]) => data.resumes.filter((resume) => (profile.resume_ids || []).includes(resume.id));
 const extractionLabel = (status?: string) => status === "complete" ? "Analyzed" : status === "processing" ? "Analyzing" : status === "failed" ? "Needs review" : "Pending";
 const applicantKeys = ["firstName","middleName","lastName","email","phoneCountryCode","phoneNumber","streetAddress","currentCity","state","zipcode","country","timezone","dateOfBirth","headline","summary","yearsOfExperience","noticePeriod","skills","languages","certifications","education","experience","coverLetter","desiredSalary","desiredSalaryCurrency","desiredSalaryNegotiable","currentSalary","currentSalaryCurrency","workAuthorization","requiresSponsorship","remotePreference","willingToRelocate","securityClearance","linkedinURL","githubURL","website","twitterURL","additionalLinks","references","gender","ethnicity","race","veteranStatus","disabilityStatus"];

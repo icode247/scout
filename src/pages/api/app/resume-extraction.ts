@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { assertSameOrigin, errorMessage, json, requireUser } from "../../../lib/api";
 import { extractResume, validateResumeFile } from "../../../lib/resume";
+import { rateLimit, tooManyRequests } from "../../../lib/rate-limit";
 
 export const prerender = false;
 export const maxDuration = 60;
@@ -34,6 +35,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     const supabase = context.locals.supabase!;
+    if (!(await rateLimit(supabase, `resume-extract:${user.id}`, { max: 10, windowSeconds: 60 })).allowed) return tooManyRequests();
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
     const path = user.id + "/" + crypto.randomUUID() + "-" + safeName;
     const upload = await supabase.storage.from("resumes").upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });

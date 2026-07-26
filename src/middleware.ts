@@ -77,6 +77,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
 
     if (needsAuth && !user) {
+      if (pathname.startsWith("/api/")) {
+        return new Response(JSON.stringify({ error: "Your session has expired. Sign in again." }), {
+          status: 401,
+          headers: { "content-type": "application/json", "cache-control": "no-store" },
+        });
+      }
       const nextPath = encodeURIComponent(pathname + context.url.search);
       return context.redirect("/login?next=" + nextPath, 303);
     }

@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { assertSameOrigin, safeNext } from "../../../lib/api";
 import { createSupabaseServerClient, demoModeEnabled, getSupabaseConfig, publicSiteUrl } from "../../../lib/supabase";
+import { rateLimit, clientIp } from "../../../lib/rate-limit";
 
 export const prerender = false;
 
@@ -17,6 +18,14 @@ export const POST: APIRoute = async (context) => {
   }
 
   const supabase = createSupabaseServerClient(context);
+
+  // Throttle unauthenticated magic-link sends: per-IP against bulk abuse, and per-email so a
+  // single address cannot be bombed. Both fail open if the limiter errors.
+  const ip = clientIp(context.request);
+  const ipAllowed = (await rateLimit(supabase, `auth-otp-ip:${ip}`, { max: 10, windowSeconds: 60 })).allowed;
+  const emailAllowed = (await rateLimit(supabase, `auth-otp-email:${email}`, { max: 5, windowSeconds: 600 })).allowed;
+  if (!ipAllowed || !emailAllowed) return context.redirect(`/login?error=rate&next=${encodeURIComponent(next)}`, 303);
+
   const callback = new URL("/auth/callback", publicSiteUrl(context.request));
   callback.searchParams.set("next", next);
   const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: callback.href, shouldCreateUser: true } });
