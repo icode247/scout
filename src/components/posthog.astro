@@ -2,8 +2,10 @@
 // PostHog analytics snippet for client-side tracking
 // Uses is:inline to prevent Astro from processing the script
 ---
-<script is:inline define:vars={{ apiKey: import.meta.env.PUBLIC_POSTHOG_PROJECT_TOKEN, apiHost: import.meta.env.PUBLIC_POSTHOG_HOST }}>
-  if (!apiKey && import.meta.env.DEV) {
+<script is:inline define:vars={{ apiKey: import.meta.env.PUBLIC_POSTHOG_PROJECT_TOKEN, apiHost: import.meta.env.PUBLIC_POSTHOG_HOST, isDev: import.meta.env.DEV }}>
+  // `isDev` comes via define:vars (server-evaluated); never reference module-only syntax in
+  // this is:inline classic script or the browser SyntaxErrors and the whole snippet dies.
+  if (!apiKey && isDev) {
     console.error("PUBLIC_POSTHOG_PROJECT_TOKEN variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once PUBLIC_POSTHOG_PROJECT_TOKEN is configured");
   }
   if (apiKey) {
