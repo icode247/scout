@@ -12,7 +12,9 @@ import { PLANS } from "../src/config/plans.ts";
 
 const key = process.env.DODO_API_KEY;
 if (!key) {
-  console.error("Set DODO_API_KEY before running this script.");
+  // Run via `npm run dodo:setup`, which loads .env / .env.local for you —
+  // a bare `node scripts/dodo-setup.mjs` gets no environment file at all.
+  console.error("DODO_API_KEY is not set.\n\nRun this through npm so the env files load:\n  npm run dodo:setup\n\nOr pass it inline:\n  DODO_API_KEY=... npm run dodo:setup");
   process.exit(1);
 }
 
