@@ -91,11 +91,15 @@ export async function loadEntitlement(
       applications_quota: 200, applications_used: 0, current_period_end: null,
     });
   }
+  // past_due rows are fetched too, otherwise a member whose card failed is told
+  // to "choose a plan" instead of to fix their billing. Active sorts first so a
+  // member who repurchased after a failure is not held back by the stale row.
   const { data } = await supabase
     .from("subscriptions")
     .select("plan_code,lane,status,applications_quota,applications_used,current_period_end")
     .eq("user_id", userId)
-    .eq("status", "active")
+    .in("status", ["active", "past_due"])
+    .order("status", { ascending: true })
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();

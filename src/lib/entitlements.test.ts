@@ -4,6 +4,7 @@ import {
   assertCanActivateAgent,
   assertCanApply,
   evaluateEntitlement,
+  loadEntitlement,
   type SubscriptionRow,
 } from "./entitlements";
 
@@ -90,6 +91,42 @@ describe("evaluateEntitlement", () => {
   it("does not grant a human assistant on an unpaid row", () => {
     const e = evaluateEntitlement({ ...base, lane: "human", status: "canceled" });
     expect(e.hasHumanAssistant).toBe(false);
+  });
+});
+
+describe("loadEntitlement", () => {
+  /** Minimal PostgREST-ish stub that records the status filter it was given. */
+  function stubClient(row: SubscriptionRow | null) {
+    const calls: { statuses?: string[] } = {};
+    const builder: any = {
+      select: () => builder,
+      eq: () => builder,
+      in: (_column: string, values: string[]) => { calls.statuses = values; return builder; },
+      order: () => builder,
+      limit: () => builder,
+      maybeSingle: async () => ({ data: row, error: null }),
+    };
+    return { client: { from: () => builder } as any, calls };
+  }
+
+  it("surfaces a past_due subscription instead of reporting no plan", async () => {
+    // Regression: filtering on status='active' hid failed payments, so a member
+    // whose card bounced was told to choose a plan rather than fix billing.
+    const { client, calls } = stubClient({
+      plan_code: "human_full", lane: "human", status: "past_due",
+      applications_quota: 500, applications_used: 10, current_period_end: null,
+    });
+    const entitlement = await loadEntitlement("user-1", client, false);
+    expect(calls.statuses).toContain("past_due");
+    expect(entitlement.reason).toBe("past_due");
+    expect(entitlement.lane).toBe("human");
+    expect(entitlement.canApply).toBe(false);
+  });
+
+  it("grants a usable plan in demo mode, which has no billing backend", async () => {
+    const entitlement = await loadEntitlement("demo", undefined, true);
+    expect(entitlement.paid).toBe(true);
+    expect(entitlement.canApply).toBe(true);
   });
 });
 

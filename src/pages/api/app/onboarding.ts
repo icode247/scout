@@ -19,7 +19,6 @@ export const POST: APIRoute = async (context) => {
     const salary = Number(String(form.get("salary_min") || "").replace(/[^0-9]/g, "")) || null;
     const resumeBehavior = form.get("resume_behavior") === "original" ? "original" : "tailor";
     const resumeId = String(form.get("resume_id") || "").trim();
-    const humanAssistant = assignedHumanAssistant(user.id);
     const whatsappPhone = String(form.get("whatsapp_phone") || "").trim();
 
     if (!roles.length) return json({ error: "Add at least one target role" }, { status: 400 });
@@ -30,7 +29,8 @@ export const POST: APIRoute = async (context) => {
       const state = getDemoState(user.id, user.email);
       state.profile.assistant_type = assistant;
       state.profile.onboarding_complete = true;
-      state.profile.assistant_name = assistant === "ai" ? "Scout AI" : humanAssistant.name;
+      // Demo mode has no billing backend, so it keeps its assistant to stay usable.
+      state.profile.assistant_name = assistant === "ai" ? "Scout AI" : assignedHumanAssistant(user.id).name;
       state.profile.whatsapp_phone = assistant === "human" ? whatsappPhone : null;
       state.jobProfiles.unshift({ id: crypto.randomUUID(), name, assistant_type: assistant, target_roles: roles, locations, salary_min: salary, resume_behavior: resumeBehavior, active: true, resume_ids: [resumeId] });
       const posthog = getPostHogServer();
@@ -69,9 +69,13 @@ export const POST: APIRoute = async (context) => {
       throw linked.error;
     }
 
+    // Onboarding records the lane the member *wants*; it does not grant an
+    // assistant. A named Human Assistant is only assigned once payment clears,
+    // in the Dodo webhook — otherwise anyone could sign up and land on a real
+    // person's desk for free.
     const profileUpdate = await supabase.from("profiles").update({
       assistant_type: assistant, onboarding_complete: true,
-      assistant_name: assistant === "ai" ? "Scout AI" : humanAssistant.name,
+      assistant_name: assistant === "ai" ? "Scout AI" : null,
       whatsapp_phone: assistant === "human" ? whatsappPhone : null,
       updated_at: new Date().toISOString(),
     }).eq("user_id", user.id);
@@ -83,7 +87,10 @@ export const POST: APIRoute = async (context) => {
       await posthog.flush();
     }
 
-    return json({ ok: true, redirect: "/dashboard" });
+    // Send members straight to the plan that unlocks the lane they chose; the
+    // dashboard is reachable either way, but this is the conversion moment.
+    const redirect = context.locals.entitlement?.paid ? "/dashboard" : `/pricing?lane=${assistant}`;
+    return json({ ok: true, redirect });
   } catch (error) {
     if (error instanceof Response) return error;
     return json({ error: errorMessage(error) }, { status: 400 });
