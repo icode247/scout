@@ -1,0 +1,59 @@
+---
+import { PLANS, savings } from "../config/plans";
+
+interface Props {
+  /** "light" sits on a dark background, "dark" on a light one. */
+  tone?: "light" | "dark";
+  class?: string;
+}
+const { tone = "dark", class: cls = "" } = Astro.props;
+
+// The headline discount, taken from the catalog rather than hardcoded, so the
+// badge can never claim a saving the prices do not actually deliver.
+const percents = PLANS.filter((plan) => plan.term === "quarterly")
+  .map((plan) => savings(plan)?.percent ?? 0)
+  .filter(Boolean);
+const headlinePercent = percents.length ? Math.min(...percents) : 10;
+
+const track = tone === "light" ? "bg-white/10" : "bg-surface-sunken/70";
+const idle = tone === "light" ? "text-white/70 hover:text-white" : "text-ink-soft hover:text-ink";
+const active = tone === "light" ? "bg-white text-ink shadow-sm" : "bg-white text-ink shadow-sm";
+---
+<div class={`term-switcher inline-flex flex-col items-center gap-2 ${cls}`}>
+  <div class={`inline-flex rounded-full p-1 ${track}`} role="radiogroup" aria-label="Billing term">
+    <button
+      type="button"
+      data-term-option="standard"
+      role="radio"
+      aria-checked="true"
+      class={`term-option min-h-10 rounded-full px-5 text-sm font-extrabold transition ${active}`}
+    >Standard</button>
+    <button
+      type="button"
+      data-term-option="quarterly"
+      role="radio"
+      aria-checked="false"
+      class={`term-option min-h-10 rounded-full px-5 text-sm font-extrabold transition ${idle}`}
+    >
+      90 days
+      <span class="ml-1.5 rounded-full bg-signal-500 px-2 py-0.5 text-[0.65rem] font-black text-white">−{headlinePercent}%</span>
+    </button>
+  </div>
+  <p class={`text-xs font-semibold ${tone === "light" ? "text-white/55" : "text-ink-muted"}`} data-term-hint>
+    Monthly billing · bundles never expire
+  </p>
+</div>
+
+<style>
+  /* Every switcher on the page stays in sync, so style purely from the shared
+     data-term attribute rather than per-instance state. */
+  :global([data-term="quarterly"]) .term-option[data-term-option="standard"] {
+    background: transparent;
+    box-shadow: none;
+  }
+  :global([data-term="quarterly"]) .term-option[data-term-option="quarterly"] {
+    background: #fff;
+    color: #14210f;
+    box-shadow: 0 1px 2px rgb(13 27 42 / 0.08);
+  }
+</style>

@@ -33,6 +33,11 @@ interface ImportMetaEnv {
   readonly DODO_PRODUCT_HUMAN_CAMPAIGN?: string;
   readonly DODO_PRODUCT_AI_ESSENTIAL?: string;
   readonly DODO_PRODUCT_AI_PLUS?: string;
+  readonly DODO_PRODUCT_HUMAN_FOCUSED_90?: string;
+  readonly DODO_PRODUCT_HUMAN_FULL_90?: string;
+  readonly DODO_PRODUCT_HUMAN_CAMPAIGN_90?: string;
+  readonly DODO_PRODUCT_AI_ESSENTIAL_90?: string;
+  readonly DODO_PRODUCT_AI_PLUS_90?: string;
 }
 
 interface ImportMeta {

@@ -1,10 +1,22 @@
 ---
-import { PLANS } from "../config/plans";
+import { PLANS, savings, standardSibling } from "../config/plans";
 
 interface Props { defaultLane?: "human" | "ai" }
 const { defaultLane = "ai" } = Astro.props;
-const plans = PLANS.map(({ code, lane, name, priceLabel, cadenceLabel, applications, blurb, features, featured }) =>
-  ({ code, lane, name, priceLabel, cadenceLabel, applications, blurb, features, featured: Boolean(featured) }));
+const plans = PLANS.map((plan) => ({
+  code: plan.code, lane: plan.lane, term: plan.term, name: plan.name,
+  priceLabel: plan.priceLabel, cadenceLabel: plan.cadenceLabel,
+  applications: plan.applications, blurb: plan.blurb, features: plan.features,
+  featured: Boolean(plan.featured),
+  savingsLabel: savings(plan)?.label ?? null,
+  savingsPercent: savings(plan)?.percent ?? null,
+  comparePrice: standardSibling(plan)
+    ? (standardSibling(plan)!.billing === "recurring"
+        ? `$${Math.round(standardSibling(plan)!.priceCents * 3 / 100)}`
+        : standardSibling(plan)!.priceLabel)
+    : null,
+}));
+const discountPercent = Math.min(...PLANS.filter((p) => p.term === "quarterly").map((p) => savings(p)?.percent ?? 10));
 ---
 <dialog id="pricing-modal" class="w-[min(94vw,62rem)] rounded-2xl bg-white p-0 text-ink shadow-lift backdrop:bg-ink/60" aria-labelledby="pricing-modal-title">
   <div class="relative">
@@ -12,13 +24,25 @@ const plans = PLANS.map(({ code, lane, name, priceLabel, cadenceLabel, applicati
 
     <header class="rounded-t-2xl bg-brand-950 px-6 py-7 text-white sm:px-9">
       <p id="pricing-modal-kicker" class="text-sm font-bold text-brand-300">Unlock applications</p>
-      <h2 id="pricing-modal-title" class="mt-2 max-w-2xl text-balance font-display text-3xl font-extrabold leading-tight sm:text-4xl">Choose how Scout applies for you.</h2>
+      <!-- text-white is explicit: global.css sets a dark colour on every h1-h4,
+           which beats the inherited colour and made this unreadable on the dark header. -->
+      <h2 id="pricing-modal-title" class="mt-2 max-w-2xl text-balance font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl">Choose how Scout applies for you.</h2>
       <p id="pricing-modal-body" class="mt-3 max-w-xl text-pretty text-white/70">Browsing and saving jobs is free. Pick a plan when you are ready for Scout to start applying.</p>
 
-      <div class="mt-6 inline-flex rounded-full bg-white/10 p-1" role="tablist" aria-label="Assistant type">
-        <button type="button" data-lane-tab="ai" role="tab" class="lane-tab rounded-full px-5 py-2 text-sm font-extrabold transition">AI Assistant</button>
-        <button type="button" data-lane-tab="human" role="tab" class="lane-tab rounded-full px-5 py-2 text-sm font-extrabold transition">Human Assistant</button>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <div class="inline-flex rounded-full bg-white/10 p-1" role="tablist" aria-label="Assistant type">
+          <button type="button" data-lane-tab="ai" role="tab" class="lane-tab rounded-full px-5 py-2 text-sm font-extrabold transition">AI Assistant</button>
+          <button type="button" data-lane-tab="human" role="tab" class="lane-tab rounded-full px-5 py-2 text-sm font-extrabold transition">Human Assistant</button>
+        </div>
+
+        <div class="inline-flex rounded-full bg-white/10 p-1" role="radiogroup" aria-label="Billing term">
+          <button type="button" data-modal-term="standard" role="radio" aria-checked="true" class="modal-term rounded-full px-4 py-2 text-sm font-extrabold transition">Standard</button>
+          <button type="button" data-modal-term="quarterly" role="radio" aria-checked="false" class="modal-term rounded-full px-4 py-2 text-sm font-extrabold transition">
+            90 days<span class="ml-1.5 rounded-full bg-signal-500 px-2 py-0.5 text-[0.65rem] font-black text-white">−{discountPercent}%</span>
+          </button>
+        </div>
       </div>
+      <p id="pricing-term-hint" class="mt-3 text-sm text-white/55"></p>
     </header>
 
     <div class="px-6 py-7 sm:px-9">
@@ -43,7 +67,14 @@ const plans = PLANS.map(({ code, lane, name, priceLabel, cadenceLabel, applicati
     const errorBox = document.getElementById("pricing-error");
     const humanNote = document.getElementById("pricing-human-note");
     const tabs = [...document.querySelectorAll("[data-lane-tab]")];
+    const termButtons = [...document.querySelectorAll("[data-modal-term]")];
+    const termHint = document.getElementById("pricing-term-hint");
+    const TERM_HINTS = {
+      standard: "Monthly billing. Human bundles never expire.",
+      quarterly: "Prepay for 90 days and pay less. Human allowances are used within the 90-day window.",
+    };
     let lane = defaultLane;
+    let term = "standard";
 
     function paintTabs() {
       tabs.forEach((tab) => {
@@ -51,22 +82,37 @@ const plans = PLANS.map(({ code, lane, name, priceLabel, cadenceLabel, applicati
         tab.setAttribute("aria-selected", active ? "true" : "false");
         tab.className = "lane-tab rounded-full px-5 py-2 text-sm font-extrabold transition " + (active ? "bg-white text-ink" : "text-white/70 hover:text-white");
       });
+      termButtons.forEach((button) => {
+        const active = button.dataset.modalTerm === term;
+        button.setAttribute("aria-checked", active ? "true" : "false");
+        button.className = "modal-term rounded-full px-4 py-2 text-sm font-extrabold transition " + (active ? "bg-white text-ink" : "text-white/70 hover:text-white");
+      });
+      if (termHint) termHint.textContent = TERM_HINTS[term];
     }
 
     function renderPlans() {
-      const visible = plans.filter((plan) => plan.lane === lane);
+      const visible = plans.filter((plan) => plan.lane === lane && plan.term === term);
       list.className = visible.length === 2 ? "grid gap-4 md:grid-cols-2" : "grid gap-4 md:grid-cols-3";
       list.replaceChildren(...visible.map((plan) => {
         const card = document.createElement("article");
         card.className = "flex flex-col rounded-2xl p-6 " + (plan.featured ? "bg-brand-100 ring-2 ring-brand-500" : "bg-surface");
 
         const heading = document.createElement("div");
+        const tags = document.createElement("div");
+        tags.className = "mb-3 flex flex-wrap items-center gap-2";
         if (plan.featured) {
           const tag = document.createElement("span");
-          tag.className = "mb-3 inline-block rounded-full bg-brand-950 px-3 py-1 text-[0.65rem] font-extrabold text-white";
+          tag.className = "inline-block rounded-full bg-brand-950 px-3 py-1 text-[0.65rem] font-extrabold text-white";
           tag.textContent = "MOST CHOSEN";
-          heading.append(tag);
+          tags.append(tag);
         }
+        if (plan.savingsLabel) {
+          const save = document.createElement("span");
+          save.className = "inline-block rounded-full bg-signal-500 px-3 py-1 text-[0.65rem] font-black text-white";
+          save.textContent = plan.savingsLabel.toUpperCase();
+          tags.append(save);
+        }
+        if (tags.childElementCount) heading.append(tags);
         const name = document.createElement("h3");
         name.className = "text-xl font-extrabold";
         name.textContent = plan.name;
@@ -84,6 +130,14 @@ const plans = PLANS.map(({ code, lane, name, priceLabel, cadenceLabel, applicati
         cadence.className = "text-sm text-ink-muted";
         cadence.textContent = " " + plan.cadenceLabel;
         price.append(amount, cadence);
+
+        const compare = document.createElement("p");
+        compare.className = "mt-1 text-xs text-ink-muted";
+        if (plan.comparePrice) {
+          const struck = document.createElement("s");
+          struck.textContent = plan.comparePrice;
+          compare.append(struck, document.createTextNode(` · ${plan.savingsPercent}% off`));
+        }
 
         const quota = document.createElement("p");
         quota.className = "mt-1 text-sm font-bold text-brand-800";
@@ -109,7 +163,9 @@ const plans = PLANS.map(({ code, lane, name, priceLabel, cadenceLabel, applicati
           features.append(item);
         });
 
-        card.append(heading, price, quota, button, features);
+        card.append(heading, price);
+        if (plan.comparePrice) card.append(compare);
+        card.append(quota, button, features);
         return card;
       }));
       humanNote.classList.toggle("hidden", lane !== "human");
@@ -142,6 +198,13 @@ const plans = PLANS.map(({ code, lane, name, priceLabel, cadenceLabel, applicati
       lane = tab.dataset.laneTab;
       paintTabs();
       renderPlans();
+    }));
+
+    termButtons.forEach((button) => button.addEventListener("click", () => {
+      term = button.dataset.modalTerm;
+      paintTabs();
+      renderPlans();
+      window.scoutTrack?.("Pricing Term Changed", { term, lane, surface: "modal" });
     }));
 
     dialog.querySelectorAll("[data-close-pricing]").forEach((button) => button.addEventListener("click", () => dialog.close()));

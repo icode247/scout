@@ -5,40 +5,156 @@ import Button from "../components/Button.astro";
 import FAQ from "../components/FAQ.astro";
 import MarketingCTA from "../components/MarketingCTA.astro";
 
-import { plansForLane } from "../config/plans";
+import TermSwitcher from "../components/TermSwitcher.astro";
+import { plansForLane, savings, type Plan, type Term } from "../config/plans";
 
 // Prices, quotas, and features come from the shared catalog so this page, the
 // in-app pricing modal, and the Dodo products can never drift apart.
-const humanPlans = plansForLane("human");
-const aiPlans = plansForLane("ai");
+//
+// Both terms render server-side and the switcher toggles which set is visible,
+// so the page still shows real prices with JavaScript disabled.
+const terms: Term[] = ["standard", "quarterly"];
+const humanPlans = (term: Term) => plansForLane("human", term);
+const aiPlans = (term: Term) => plansForLane("ai", term);
+const saved = (plan: Plan) => savings(plan);
 const signedIn = Boolean(Astro.locals.sessionEmail);
 
 const faqs=[
- {q:"Why are Human and AI priced differently?",a:"Human service includes labor, a dedicated WhatsApp relationship, judgment on application questions, and detailed evidence. AI uses automated fulfillment and is priced monthly at a lower cost."},
- {q:"Does a Human bundle expire?",a:"The application allowance is a campaign bundle rather than a monthly software subscription. Confirm the final campaign window and rollover policy before launch."},
+ {q:"Why are Human and AI priced differently?",a:"Human service includes labor, a dedicated WhatsApp relationship, judgment on application questions, and detailed evidence. AI uses automated fulfillment and is priced as a subscription at a lower cost."},
+ {q:"What is the 90-day option?",a:"It is the same plan, prepaid for 90 days at about 10% less. On AI, you pay once for three months and receive three months of applications up front instead of being billed monthly. On Human, you pay less for the same application allowance in exchange for using it within 90 days of purchase."},
+ {q:"Does a Human bundle expire?",a:"On the standard term, no. The allowance stays available until you have used it. On the discounted 90-day term it expires 90 days after purchase, which is what the lower price pays for."},
+ {q:"Can I switch between the standard and 90-day terms?",a:"Yes. AI subscriptions can be changed from Settings, and the new term begins at your next renewal. Human bundles are separate purchases, so you simply choose the term you want when you buy."},
  {q:"Can I start without booking a call?",a:"Yes. Create an account, choose Human or AI, and import your resume. Human members can schedule the kickoff call during onboarding."},
  {q:"What evidence do I receive?",a:"Both lanes show the job, status, and resume used. Human Assistant bundles also include screenshots or records of important form answers."},
  {q:"Can I use different profiles for different roles?",a:"Yes. Plan limits determine how many job profiles can be active at the same time."},
 ];
 ---
 <Base title="Scout pricing: Human and AI job application assistants" description="Compare dedicated Human Assistant application bundles with lower-cost monthly AI Assistant plans.">
+  <style>
+    /* Both terms are rendered server-side so prices are real without JS.
+       The document-level data-term attribute decides which set is visible. */
+    [data-term-panel="quarterly"], [data-term-note="quarterly"] { display: none; }
+    :global(html[data-term="quarterly"]) [data-term-panel="standard"],
+    :global(html[data-term="quarterly"]) [data-term-note="standard"] { display: none; }
+    :global(html[data-term="quarterly"]) [data-term-panel="quarterly"] { display: grid; }
+    :global(html[data-term="quarterly"]) [data-term-note="quarterly"] { display: block; }
+  </style>
+
+  <script is:inline>
+    (function () {
+      var HINTS = {
+        standard: "Monthly billing · bundles never expire",
+        quarterly: "Prepay 90 days and save ~10%",
+      };
+
+      // Set the term before anything else runs so the correct prices are the
+      // first thing painted — no flash of the wrong price set. ?term=90 lets
+      // campaigns deep-link straight to the discounted view.
+      var initial = "standard";
+      try {
+        var requested = new URLSearchParams(window.location.search).get("term");
+        if (requested === "90" || requested === "quarterly") initial = "quarterly";
+      } catch (error) { /* default stands */ }
+      document.documentElement.setAttribute("data-term", initial);
+
+      function apply(term) {
+        document.documentElement.setAttribute("data-term", term);
+        document.querySelectorAll("[data-term-option]").forEach(function (button) {
+          button.setAttribute("aria-checked", button.getAttribute("data-term-option") === term ? "true" : "false");
+        });
+        document.querySelectorAll("[data-term-hint]").forEach(function (hint) {
+          hint.textContent = HINTS[term];
+        });
+      }
+
+      document.addEventListener("click", function (event) {
+        var option = event.target instanceof Element ? event.target.closest("[data-term-option]") : null;
+        if (!option) return;
+        var term = option.getAttribute("data-term-option");
+        apply(term);
+        if (window.scoutTrack) window.scoutTrack("Pricing Term Changed", { term: term });
+      });
+
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { apply(initial); }, { once: true });
+      else apply(initial);
+    })();
+  </script>
   <section class="bg-brand-950 py-20 text-white sm:py-28">
-    <Container><div class="mx-auto max-w-4xl text-center"><p class="text-lg font-bold text-brand-300">Two services. Two honest pricing models.</p><h1 class="mt-4 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.035em] text-white sm:text-7xl">Pay a person for service. Pay monthly for AI throughput.</h1><p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">Human Assistant is sold as an application campaign because real people do the work. AI Assistant is a lower-cost monthly plan.</p><div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row"><a href="#human" class="rounded-full bg-brand-300 px-7 py-3.5 font-extrabold text-ink">Human Assistant bundles</a><a href="#ai" class="rounded-full bg-white/10 px-7 py-3.5 font-extrabold text-white">AI monthly plans</a></div></div></Container>
+    <Container><div class="mx-auto max-w-4xl text-center"><p class="text-lg font-bold text-brand-300">Two services. Two honest pricing models.</p><h1 class="mt-4 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.035em] text-white sm:text-7xl">Pay a person for service. Pay a subscription for AI throughput.</h1><p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">Human Assistant is sold as an application campaign because real people do the work. AI Assistant is a lower-cost subscription. Prepay for 90 days on either and save around 10%.</p><div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row"><a href="#human" class="rounded-full bg-brand-300 px-7 py-3.5 font-extrabold text-ink">Human Assistant bundles</a><a href="#ai" class="rounded-full bg-white/10 px-7 py-3.5 font-extrabold text-white">AI plans</a></div></div></Container>
   </section>
 
   <section id="human" class="bg-white py-20 sm:py-28">
     <Container>
       <div class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p class="text-lg font-bold text-human-700">Human Assistant</p><h2 class="mt-3 max-w-3xl font-display text-4xl font-extrabold sm:text-6xl">A managed application campaign with a person you can reach.</h2></div><p class="max-w-md text-ink-soft">One-time campaign pricing includes assistant labor, WhatsApp access, dashboard tracking, and application evidence.</p></div>
-      <div class="mt-12 grid gap-5 lg:grid-cols-3">
-        {humanPlans.map(plan => <article class={`relative flex flex-col rounded-2xl p-7 ${plan.featured?"bg-brand-200 ring-2 ring-brand-600":"bg-surface"}`}>{plan.featured&&<span class="mb-5 w-fit rounded-full bg-brand-950 px-3 py-1.5 text-xs font-bold text-white">Most useful for an active search</span>}<h3 class="text-2xl font-extrabold">{plan.name}</h3><p class="mt-3 min-h-12 text-ink-soft">{plan.blurb}</p><p class="mt-7"><span class="font-display text-5xl font-extrabold">{plan.priceLabel}</span><span class="text-ink-muted"> {plan.cadenceLabel}</span></p><p class="mt-2 font-bold text-brand-800">{plan.applications}</p>{signedIn ? <button type="button" data-checkout-plan={plan.code} class="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-ink px-6 font-extrabold text-white transition hover:bg-brand-950 disabled:opacity-60">Get {plan.name}</button> : <Button href="/book-call" class="mt-7 w-full rounded-full bg-ink text-white">Book a strategy call</Button>}<a href="/book-call" class="mt-3 text-center text-sm font-bold text-brand-800 hover:text-brand-950">Or book a strategy call first →</a><ul class="mt-7 space-y-3 text-sm font-semibold text-ink-soft">{plan.features.map(f=><li class="flex gap-2"><span class="text-signal-700">✓</span>{f}</li>)}</ul></article>)}
-      </div>
-      <p class="mt-5 text-center text-sm text-ink-muted">Application limits and campaign windows should be validated against assistant capacity before launch.</p>
+
+      <div class="mt-10 flex justify-center"><TermSwitcher /></div>
+
+      {terms.map(term => (
+        <div class="mt-8 grid gap-5 lg:grid-cols-3" data-term-panel={term}>
+          {humanPlans(term).map(plan => <article class={`relative flex flex-col rounded-2xl p-7 ${plan.featured?"bg-brand-200 ring-2 ring-brand-600":"bg-surface"}`}>
+            <div class="flex flex-wrap items-center gap-2">
+              {plan.featured && <span class="w-fit rounded-full bg-brand-950 px-3 py-1.5 text-xs font-bold text-white">Most useful for an active search</span>}
+              {saved(plan) && <span class="w-fit rounded-full bg-signal-500 px-3 py-1.5 text-xs font-black text-white">{saved(plan)!.label}</span>}
+            </div>
+            <h3 class="mt-5 text-2xl font-extrabold">{plan.name}</h3>
+            <p class="mt-3 min-h-12 text-ink-soft">{plan.blurb}</p>
+            <p class="mt-7">
+              <span class="font-display text-5xl font-extrabold">{plan.priceLabel}</span>
+              <span class="text-ink-muted"> {plan.cadenceLabel}</span>
+            </p>
+            {saved(plan) && <p class="mt-1 text-sm text-ink-muted"><s>{plansForLane("human","standard").find(p=>p.family===plan.family)!.priceLabel}</s> · {saved(plan)!.percent}% off</p>}
+            <p class="mt-2 font-bold text-brand-800">{plan.applications}</p>
+            {signedIn ? <>
+              <button type="button" data-checkout-plan={plan.code} class="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-ink px-6 font-extrabold text-white transition hover:bg-brand-950 disabled:opacity-60">Get {plan.name}</button>
+              <a href="/book-call" class="mt-3 text-center text-sm font-bold text-brand-800 hover:text-brand-950">Or book a strategy call first →</a>
+            </> : <>
+              <Button href="/book-call" class="mt-7 w-full rounded-full bg-ink text-white">Book a strategy call</Button>
+              <a href="/login?next=/pricing" class="mt-3 text-center text-sm font-bold text-brand-800 hover:text-brand-950">Or buy now →</a>
+            </>}
+            <ul class="mt-7 space-y-3 text-sm font-semibold text-ink-soft">{plan.features.map(f=><li class="flex gap-2"><span class="text-signal-700">✓</span>{f}</li>)}</ul>
+          </article>)}
+        </div>
+      ))}
+
+      <p class="mt-5 text-center text-sm text-ink-muted" data-term-note="standard">Bundles do not expire. Applications remain available until the allowance is used.</p>
+      <p class="mt-5 text-center text-sm text-ink-muted" data-term-note="quarterly">The 90-day price is lower because the allowance is used inside a 90-day window, starting the day you pay.</p>
     </Container>
   </section>
 
   <section id="ai" class="bg-brand-100 py-20 sm:py-28">
     <Container>
-      <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start"><div><p class="text-lg font-bold text-brand-800">AI Assistant</p><h2 class="mt-3 font-display text-4xl font-extrabold sm:text-6xl">Lower-cost application help that starts immediately.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">Create an account, import your resume, review the extracted data, and let Scout prepare the first job profile. No strategy call is required.</p><Button href={signedIn ? "/dashboard" : "/login?intent=ai"} size="lg" class="mt-8 rounded-full bg-ink text-white">{signedIn ? "Go to my dashboard" : "Start with AI Assistant"}</Button></div><div class="grid gap-5 md:grid-cols-2">{aiPlans.map((plan,i)=><article class={`flex flex-col rounded-2xl p-7 ${i===1?"bg-brand-950 text-white":"bg-white"}`}><h3 class={`text-2xl font-extrabold ${i===1?"text-white":""}`}>{plan.name}</h3><p class={`mt-3 min-h-12 ${i===1?"text-white/65":"text-ink-soft"}`}>{plan.blurb}</p><p class="mt-7"><span class={`font-display text-5xl font-extrabold ${i===1?"text-white":""}`}>{plan.priceLabel}</span><span class={i===1?"text-white/55":"text-ink-muted"}> {plan.cadenceLabel}</span></p><p class={`mt-2 font-bold ${i===1?"text-brand-300":"text-brand-800"}`}>{plan.applications}</p>{signedIn ? <button type="button" data-checkout-plan={plan.code} class={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 font-extrabold transition disabled:opacity-60 ${i===1?"bg-brand-300 text-brand-950 hover:bg-brand-200":"bg-ink text-white hover:bg-brand-950"}`}>Get {plan.name}</button> : <a href="/login?next=/pricing" class={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 font-extrabold transition ${i===1?"bg-brand-300 text-brand-950 hover:bg-brand-200":"bg-ink text-white hover:bg-brand-950"}`}>Get {plan.name}</a>}<ul class={`mt-7 space-y-3 text-sm font-semibold ${i===1?"text-white/70":"text-ink-soft"}`}>{plan.features.map(f=><li class="flex gap-2"><span class={i===1?"text-brand-300":"text-signal-700"}>✓</span>{f}</li>)}</ul></article>)}</div></div>
+      <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+        <div>
+          <p class="text-lg font-bold text-brand-800">AI Assistant</p>
+          <h2 class="mt-3 font-display text-4xl font-extrabold sm:text-6xl">Lower-cost application help that starts immediately.</h2>
+          <p class="mt-5 text-lg leading-relaxed text-ink-soft">Create an account, import your resume, review the extracted data, and let Scout prepare the first job profile. No strategy call is required.</p>
+          <div class="mt-8"><TermSwitcher /></div>
+          <Button href={signedIn ? "/dashboard" : "/login?intent=ai"} size="lg" class="mt-8 rounded-full bg-ink text-white">{signedIn ? "Go to my dashboard" : "Start with AI Assistant"}</Button>
+        </div>
+        <div>
+          {terms.map(term => (
+            <div class="grid gap-5 md:grid-cols-2" data-term-panel={term}>
+              {aiPlans(term).map((plan,i)=><article class={`flex flex-col rounded-2xl p-7 ${i===1?"bg-brand-950 text-white":"bg-white"}`}>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class={`text-2xl font-extrabold ${i===1?"text-white":""}`}>{plan.name}</h3>
+                  {saved(plan) && <span class="rounded-full bg-signal-500 px-2.5 py-1 text-[0.7rem] font-black text-white">{saved(plan)!.label}</span>}
+                </div>
+                <p class={`mt-3 min-h-12 ${i===1?"text-white/65":"text-ink-soft"}`}>{plan.blurb}</p>
+                <p class="mt-7">
+                  <span class={`font-display text-5xl font-extrabold ${i===1?"text-white":""}`}>{plan.priceLabel}</span>
+                  <span class={i===1?"text-white/55":"text-ink-muted"}> {plan.cadenceLabel}</span>
+                </p>
+                {saved(plan) && <p class={`mt-1 text-sm ${i===1?"text-white/55":"text-ink-muted"}`}><s>${Math.round(plansForLane("ai","standard").find(p=>p.family===plan.family)!.priceCents*3/100)}</s> billed monthly · {saved(plan)!.percent}% off</p>}
+                <p class={`mt-2 font-bold ${i===1?"text-brand-300":"text-brand-800"}`}>{plan.applications}</p>
+                {signedIn
+                  ? <button type="button" data-checkout-plan={plan.code} class={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 font-extrabold transition disabled:opacity-60 ${i===1?"bg-brand-300 text-brand-950 hover:bg-brand-200":"bg-ink text-white hover:bg-brand-950"}`}>Get {plan.name}</button>
+                  : <a href="/login?next=/pricing" class={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 font-extrabold transition ${i===1?"bg-brand-300 text-brand-950 hover:bg-brand-200":"bg-ink text-white hover:bg-brand-950"}`}>Get {plan.name}</a>}
+                <ul class={`mt-7 space-y-3 text-sm font-semibold ${i===1?"text-white/70":"text-ink-soft"}`}>{plan.features.map(f=><li class="flex gap-2"><span class={i===1?"text-brand-300":"text-signal-700"}>✓</span>{f}</li>)}</ul>
+              </article>)}
+            </div>
+          ))}
+        </div>
+      </div>
     </Container>
   </section>
 
@@ -46,6 +162,7 @@ const faqs=[
   <MarketingCTA />
 
   <p id="pricing-page-error" class="fixed inset-x-4 bottom-6 z-50 mx-auto hidden max-w-md rounded-xl bg-red-700 px-5 py-3 text-center text-sm font-bold text-white shadow-lift" role="alert"></p>
+
 
   <script is:inline>
     document.querySelectorAll("[data-checkout-plan]").forEach(function (button) {

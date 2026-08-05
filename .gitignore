@@ -16,3 +16,4 @@ dist/
 supabase/.temp/
 .vercel
 .env*.local
+.playwright-mcp/

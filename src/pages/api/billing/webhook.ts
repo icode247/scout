@@ -70,7 +70,14 @@ export const POST: APIRoute = async (context) => {
       dodo_customer_id: data.customer?.customer_id ? String(data.customer.customer_id) : null,
       dodo_subscription_id: subscriptionId,
       dodo_payment_id: data.payment_id ? String(data.payment_id) : null,
-      current_period_end: plan.billing === "recurring" ? (data.next_billing_date || null) : null,
+      // Recurring plans expire when Dodo says the next charge is due. One-time
+      // bundles normally never expire, except the discounted 90-day term, whose
+      // whole premise is that the allowance has to be used inside that window.
+      current_period_end: plan.billing === "recurring"
+        ? (data.next_billing_date || null)
+        : plan.validityDays
+          ? new Date(Date.now() + plan.validityDays * 86400000).toISOString()
+          : null,
       applications_quota: plan.applicationsQuota,
       applications_used: 0,
       updated_at: new Date().toISOString(),

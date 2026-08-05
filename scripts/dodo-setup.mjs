@@ -22,6 +22,15 @@ const headers = { authorization: `Bearer ${key}`, "content-type": "application/j
 
 console.error(`Creating products against ${live ? "LIVE" : "TEST"} mode (${base})\n`);
 
+/**
+ * Both terms of a product share a display name ("Full Search"), so the Dodo
+ * product name has to disambiguate them — otherwise the reuse-by-name lookup
+ * below would hand the quarterly plan the standard plan's product id.
+ */
+function productName(plan) {
+  return plan.term === "quarterly" ? `${plan.name} (90 days)` : plan.name;
+}
+
 async function existingProducts() {
   const response = await fetch(`${base}/products?page_size=100`, { headers });
   if (!response.ok) return new Map();
@@ -36,9 +45,9 @@ const lines = [];
 let failures = 0;
 
 for (const plan of plans) {
-  const already = existing.get(plan.name);
+  const already = existing.get(productName(plan));
   if (already) {
-    console.error(`· ${plan.name} — already exists, reusing`);
+    console.error(`· ${productName(plan)} — already exists, reusing`);
     lines.push(`${plan.productEnvKey}=${already}`);
     continue;
   }
@@ -46,8 +55,9 @@ for (const plan of plans) {
   const price = plan.billing === "recurring"
     ? {
         type: "recurring_price", price: plan.priceCents, currency: "USD",
-        payment_frequency_count: 1, payment_frequency_interval: "Month",
-        subscription_period_count: 1, subscription_period_interval: "Month",
+        // billingMonths is 1 for the monthly term and 3 for the prepaid 90-day term.
+        payment_frequency_count: plan.billingMonths, payment_frequency_interval: "Month",
+        subscription_period_count: plan.billingMonths, subscription_period_interval: "Month",
         discount: 0, purchasing_power_parity: false, tax_inclusive: false,
       }
     : {
@@ -58,16 +68,16 @@ for (const plan of plans) {
   const response = await fetch(`${base}/products`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ name: plan.name, description: plan.blurb, tax_category: "saas", price }),
+    body: JSON.stringify({ name: productName(plan), description: plan.blurb, tax_category: "saas", price }),
   });
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {
     failures += 1;
-    console.error(`✗ ${plan.name} — ${response.status} ${JSON.stringify(body)}`);
+    console.error(`✗ ${productName(plan)} — ${response.status} ${JSON.stringify(body)}`);
     continue;
   }
-  console.error(`✓ ${plan.name}`);
+  console.error(`✓ ${productName(plan)}`);
   lines.push(`${plan.productEnvKey}=${body.product_id || body.id}`);
 }
 
