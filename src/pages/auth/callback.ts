@@ -11,6 +11,9 @@ export const GET: APIRoute = async (context) => {
   const tokenHash = context.url.searchParams.get("token_hash");
   const type = context.url.searchParams.get("type") as "email" | "magiclink" | null;
   const supabase = createSupabaseServerClient(context);
+  // Seal cookie writes before sending the response so Supabase's async post-sign-in cookie
+  // re-write (which fires after this redirect) does not warn about writing after headers are sent.
+  const finish = (to: string) => { supabase.sealCookies(); return context.redirect(to, 303); };
 
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -24,7 +27,7 @@ export const GET: APIRoute = async (context) => {
           await posthog.flush();
         }
       }
-      return context.redirect(next, 303);
+      return finish(next);
     }
   } else if (tokenHash && type) {
     const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
@@ -38,8 +41,8 @@ export const GET: APIRoute = async (context) => {
           await posthog.flush();
         }
       }
-      return context.redirect(next, 303);
+      return finish(next);
     }
   }
-  return context.redirect("/login?error=callback", 303);
+  return finish("/login?error=callback");
 };

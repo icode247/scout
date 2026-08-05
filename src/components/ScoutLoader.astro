@@ -1,0 +1,63 @@
+---
+interface Props {
+  variant?: "page" | "inline" | "skeleton";
+  label?: string;
+  rows?: number;
+  id?: string;
+  class?: string;
+}
+const { variant = "inline", label = "Loading Scout", rows = 4, id, class: cls = "" } = Astro.props;
+---
+{variant === "skeleton" ? (
+  <div id={id} class={`scout-skeleton ${cls}`} aria-hidden="true">
+    {Array.from({ length: rows }).map(() => (
+      <div class="sk-row"><span class="sk-mark"></span><span class="sk-lines"><i></i><i></i><i></i></span></div>
+    ))}
+  </div>
+) : (
+  <div id={id} class={`scout-loader ${variant === "page" ? "is-page" : "is-inline"} ${cls}`} role="status" aria-live="polite">
+    <span class="scout-loader-mark" aria-hidden="true">
+      <svg width="44" height="44" viewBox="0 0 32 32" fill="none">
+        <path class="mark-leaf" fill="#9DDE47" d="M4.5 9.2c0-1.2 1.2-2 2.3-1.6l6.7 2.7v12.8l-6.7 2.7a1.7 1.7 0 0 1-2.3-1.6v-15Z" />
+        <path class="mark-body" fill="#10210D" d="m15.9 8.8 9.2-3.7c1.1-.5 2.4.4 2.4 1.6v18.6c0 1.2-1.3 2.1-2.4 1.6l-8.6-3.4V13.3l-1.2-.5c-1.8-.7-1.7-3.2.1-3.8l.5-.2Z" />
+      </svg>
+      <span class="scout-loader-ring"></span>
+    </span>
+    <span class="scout-loader-label">{label}</span>
+  </div>
+)}
+
+<style>
+  .scout-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; }
+  .scout-loader.is-page { position: fixed; inset: 0; z-index: 200; background: #f7faf5; }
+  .scout-loader.is-inline { padding: 2.5rem 1rem; }
+  .scout-loader-mark { position: relative; display: grid; place-items: center; width: 4.5rem; height: 4.5rem; }
+  .scout-loader-ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 2px solid rgb(127 201 43 / 0.25); border-top-color: #5fa11d;
+  }
+  .scout-loader-label { color: #69735f; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.01em; }
+
+  .scout-skeleton { display: block; }
+  .sk-row { display: flex; gap: 0.8rem; align-items: flex-start; padding: 1rem 0.9rem; border-top: 1px solid rgb(20 33 15 / 0.06); }
+  .sk-mark { width: 2.7rem; height: 2.7rem; flex: none; border-radius: 0.65rem; }
+  .sk-lines { display: flex; flex: 1; flex-direction: column; gap: 0.5rem; padding-top: 0.25rem; }
+  .sk-lines i { height: 0.6rem; border-radius: 999px; }
+  .sk-lines i:nth-child(1) { width: 72%; }
+  .sk-lines i:nth-child(2) { width: 46%; }
+  .sk-lines i:nth-child(3) { width: 30%; }
+  .sk-mark, .sk-lines i {
+    background: linear-gradient(90deg, #eef2ec 25%, #e3e9e0 37%, #eef2ec 63%);
+    background-size: 400% 100%;
+  }
+
+  /* Motion is opt-in: everything above renders as a static, legible state. */
+  @media (prefers-reduced-motion: no-preference) {
+    .scout-loader-ring { animation: scout-spin 0.9s linear infinite; }
+    .mark-leaf { animation: scout-pulse 1.6s ease-in-out infinite; transform-origin: center; }
+    .sk-mark, .sk-lines i { animation: scout-shimmer 1.4s ease infinite; }
+  }
+  @keyframes scout-spin { to { transform: rotate(360deg); } }
+  @keyframes scout-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  @keyframes scout-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+</style>

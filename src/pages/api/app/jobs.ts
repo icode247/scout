@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { assertSameOrigin, errorMessage, json, readBody, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
 import { scoreAndPersistJob } from "../../../lib/job-match";
+import { assertCanApply } from "../../../lib/entitlements";
 
 export const prerender = false;
 export const maxDuration = 60;
@@ -62,6 +63,8 @@ export const POST: APIRoute = async (context) => {
     const profileId = String(body.job_profile_id || "");
     const profile = await ownedProfile(context, user.id, profileId);
     const status = body.status === "saved" ? "saved" as const : "delegated" as const;
+    // Saving a job is free; handing it to an assistant is the paid action.
+    if (status === "delegated") assertCanApply(context.locals.entitlement);
     const record = { ...jobFields(body), status, is_saved: status === "saved", assistant_type: profile.assistant_type, job_profile_id: profileId };
 
     if (context.locals.demoMode) {
@@ -75,7 +78,10 @@ export const POST: APIRoute = async (context) => {
     const result = await supabase.from("jobs").insert({ user_id: user.id, source: String(body.source || "dashboard").slice(0, 60), ...record }).select("*").single();
     if (result.error) throw result.error;
     try {
-      if (status === "delegated") await createApplication(context, user.id, result.data);
+      if (status === "delegated") {
+        await createApplication(context, user.id, result.data);
+        await supabase.rpc("increment_application_usage", { p_user_id: user.id });
+      }
     } catch (error) {
       await supabase.from("jobs").delete().eq("id", result.data.id).eq("user_id", user.id);
       throw error;
@@ -134,6 +140,8 @@ export const PATCH: APIRoute = async (context) => {
     }
 
     if (body.status !== "delegated") return json({ error: "Members can only delegate a job from this endpoint" }, { status: 400 });
+    // Everything above this line (saving, un-saving, editing) stays free.
+    assertCanApply(context.locals.entitlement);
     if (context.locals.demoMode) {
       const job = getDemoState(user.id, user.email).jobs.find((item) => item.id === id);
       if (!job) return json({ error: "Job not found" }, { status: 404 });
@@ -148,6 +156,7 @@ export const PATCH: APIRoute = async (context) => {
     await createApplication(context, user.id, current.data);
     const result = await supabase.from("jobs").update({ status: "delegated", updated_at: new Date().toISOString() }).eq("id", id).eq("user_id", user.id).select("*").single();
     if (result.error) throw result.error;
+    await supabase.rpc("increment_application_usage", { p_user_id: user.id });
     return json({ ok: true, job: result.data });
   } catch (error) {
     if (error instanceof Response) return error;

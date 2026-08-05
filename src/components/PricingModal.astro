@@ -1,0 +1,190 @@
+---
+import { PLANS } from "../config/plans";
+
+interface Props { defaultLane?: "human" | "ai" }
+const { defaultLane = "ai" } = Astro.props;
+const plans = PLANS.map(({ code, lane, name, priceLabel, cadenceLabel, applications, blurb, features, featured }) =>
+  ({ code, lane, name, priceLabel, cadenceLabel, applications, blurb, features, featured: Boolean(featured) }));
+---
+<dialog id="pricing-modal" class="w-[min(94vw,62rem)] rounded-2xl bg-white p-0 text-ink shadow-lift backdrop:bg-ink/60" aria-labelledby="pricing-modal-title">
+  <div class="relative">
+    <button type="button" data-close-pricing class="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-surface text-lg hover:bg-surface-sunken" aria-label="Close pricing">×</button>
+
+    <header class="rounded-t-2xl bg-brand-950 px-6 py-7 text-white sm:px-9">
+      <p id="pricing-modal-kicker" class="text-sm font-bold text-brand-300">Unlock applications</p>
+      <h2 id="pricing-modal-title" class="mt-2 max-w-2xl text-balance font-display text-3xl font-extrabold leading-tight sm:text-4xl">Choose how Scout applies for you.</h2>
+      <p id="pricing-modal-body" class="mt-3 max-w-xl text-pretty text-white/70">Browsing and saving jobs is free. Pick a plan when you are ready for Scout to start applying.</p>
+
+      <div class="mt-6 inline-flex rounded-full bg-white/10 p-1" role="tablist" aria-label="Assistant type">
+        <button type="button" data-lane-tab="ai" role="tab" class="lane-tab rounded-full px-5 py-2 text-sm font-extrabold transition">AI Assistant</button>
+        <button type="button" data-lane-tab="human" role="tab" class="lane-tab rounded-full px-5 py-2 text-sm font-extrabold transition">Human Assistant</button>
+      </div>
+    </header>
+
+    <div class="px-6 py-7 sm:px-9">
+      <div id="pricing-plans" class="grid gap-4 md:grid-cols-3"></div>
+      <p id="pricing-error" class="mt-5 hidden rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-800" role="alert"></p>
+      <p id="pricing-human-note" class="mt-5 hidden rounded-xl bg-human-50 px-4 py-3 text-sm text-human-700">
+        Prefer to talk first? <a href="/book-call" class="font-extrabold underline underline-offset-2">Book a 15-minute strategy call</a> and we will help you choose.
+      </p>
+      <p class="mt-5 text-center text-xs text-ink-muted">Secure checkout. Cancel a monthly plan any time from Settings.</p>
+    </div>
+  </div>
+</dialog>
+
+<script define:vars={{ plans, defaultLane }}>
+  (function () {
+    const dialog = document.getElementById("pricing-modal");
+    if (!dialog) return;
+    const list = document.getElementById("pricing-plans");
+    const kicker = document.getElementById("pricing-modal-kicker");
+    const title = document.getElementById("pricing-modal-title");
+    const body = document.getElementById("pricing-modal-body");
+    const errorBox = document.getElementById("pricing-error");
+    const humanNote = document.getElementById("pricing-human-note");
+    const tabs = [...document.querySelectorAll("[data-lane-tab]")];
+    let lane = defaultLane;
+
+    function paintTabs() {
+      tabs.forEach((tab) => {
+        const active = tab.dataset.laneTab === lane;
+        tab.setAttribute("aria-selected", active ? "true" : "false");
+        tab.className = "lane-tab rounded-full px-5 py-2 text-sm font-extrabold transition " + (active ? "bg-white text-ink" : "text-white/70 hover:text-white");
+      });
+    }
+
+    function renderPlans() {
+      const visible = plans.filter((plan) => plan.lane === lane);
+      list.className = visible.length === 2 ? "grid gap-4 md:grid-cols-2" : "grid gap-4 md:grid-cols-3";
+      list.replaceChildren(...visible.map((plan) => {
+        const card = document.createElement("article");
+        card.className = "flex flex-col rounded-2xl p-6 " + (plan.featured ? "bg-brand-100 ring-2 ring-brand-500" : "bg-surface");
+
+        const heading = document.createElement("div");
+        if (plan.featured) {
+          const tag = document.createElement("span");
+          tag.className = "mb-3 inline-block rounded-full bg-brand-950 px-3 py-1 text-[0.65rem] font-extrabold text-white";
+          tag.textContent = "MOST CHOSEN";
+          heading.append(tag);
+        }
+        const name = document.createElement("h3");
+        name.className = "text-xl font-extrabold";
+        name.textContent = plan.name;
+        const blurb = document.createElement("p");
+        blurb.className = "mt-2 min-h-10 text-sm text-ink-soft";
+        blurb.textContent = plan.blurb;
+        heading.append(name, blurb);
+
+        const price = document.createElement("p");
+        price.className = "mt-5";
+        const amount = document.createElement("span");
+        amount.className = "font-display text-4xl font-extrabold";
+        amount.textContent = plan.priceLabel;
+        const cadence = document.createElement("span");
+        cadence.className = "text-sm text-ink-muted";
+        cadence.textContent = " " + plan.cadenceLabel;
+        price.append(amount, cadence);
+
+        const quota = document.createElement("p");
+        quota.className = "mt-1 text-sm font-bold text-brand-800";
+        quota.textContent = plan.applications;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "mt-5 min-h-11 w-full rounded-full bg-ink px-5 text-sm font-extrabold text-white transition hover:bg-brand-950 disabled:opacity-60";
+        button.textContent = "Choose " + plan.name;
+        button.addEventListener("click", () => startCheckout(plan.code, button));
+
+        const features = document.createElement("ul");
+        features.className = "mt-5 space-y-2 text-sm text-ink-soft";
+        plan.features.forEach((feature) => {
+          const item = document.createElement("li");
+          item.className = "flex gap-2";
+          const tick = document.createElement("span");
+          tick.className = "text-signal-700";
+          tick.textContent = "✓";
+          const text = document.createElement("span");
+          text.textContent = feature;
+          item.append(tick, text);
+          features.append(item);
+        });
+
+        card.append(heading, price, quota, button, features);
+        return card;
+      }));
+      humanNote.classList.toggle("hidden", lane !== "human");
+    }
+
+    async function startCheckout(planCode, button) {
+      errorBox.classList.add("hidden");
+      const original = button.textContent;
+      button.disabled = true;
+      button.textContent = "Opening secure checkout…";
+      try {
+        const response = await fetch("/api/billing/checkout", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ planCode }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Checkout could not be started.");
+        window.scoutTrack?.("Checkout Started", { plan_code: planCode });
+        window.location.assign(data.url);
+      } catch (error) {
+        errorBox.textContent = error instanceof Error ? error.message : "Checkout could not be started.";
+        errorBox.classList.remove("hidden");
+        button.disabled = false;
+        button.textContent = original;
+      }
+    }
+
+    tabs.forEach((tab) => tab.addEventListener("click", () => {
+      lane = tab.dataset.laneTab;
+      paintTabs();
+      renderPlans();
+    }));
+
+    dialog.querySelectorAll("[data-close-pricing]").forEach((button) => button.addEventListener("click", () => dialog.close()));
+    dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+
+    window.scoutRequirePlan = function (payload) {
+      const options = payload || {};
+      if (options.lane === "human" || options.lane === "ai") lane = options.lane;
+
+      if (options.reason === "quota_exhausted") {
+        kicker.textContent = "You have used every application";
+        title.textContent = "Top up to keep applying.";
+        body.textContent = "Your plan's applications are all used. Choose a plan to continue where you left off.";
+      } else if (options.reason === "past_due") {
+        kicker.textContent = "Payment problem";
+        title.textContent = "Update your billing to continue.";
+        body.textContent = "Your last payment did not go through, so applications are paused.";
+      } else if (options.context) {
+        kicker.textContent = "Unlock applications";
+        title.textContent = "Scout is ready to apply to " + options.context + ".";
+        body.textContent = "Browsing and saving jobs is free. Choose a plan and Scout takes it from here.";
+      } else {
+        kicker.textContent = "Unlock applications";
+        title.textContent = "Choose how Scout applies for you.";
+        body.textContent = "Browsing and saving jobs is free. Pick a plan when you are ready for Scout to start applying.";
+      }
+
+      errorBox.classList.add("hidden");
+      paintTabs();
+      renderPlans();
+      if (!dialog.open) dialog.showModal();
+      window.scoutTrack?.("Pricing Modal Opened", { lane, reason: options.reason || null });
+    };
+
+    /** Turns a 402 from any endpoint into the modal. Returns true if it handled the response. */
+    window.scoutHandle402 = async function (response, payload) {
+      if (!response || response.status !== 402) return false;
+      const data = await response.clone().json().catch(() => ({}));
+      window.scoutRequirePlan({ ...(payload || {}), lane: data.lane || undefined, reason: data.reason || undefined });
+      return true;
+    };
+
+    paintTabs();
+    renderPlans();
+  })();
+</script>

@@ -5,16 +5,13 @@ import Button from "../components/Button.astro";
 import FAQ from "../components/FAQ.astro";
 import MarketingCTA from "../components/MarketingCTA.astro";
 
-const humanPlans = [
-  { name:"Focused Search", price:"$299", applications:"250 applications", blurb:"A dedicated person runs one clearly defined job search.", featured:false, features:["1 Human Assistant","1 active job profile","Dedicated WhatsApp group","Dashboard tracking","Resume used for every job","Screenshots of important form answers"] },
-  { name:"Full Search", price:"$499", applications:"500 applications", blurb:"The complete Human Assistant service for an active search.", featured:true, features:["1 dedicated Human Assistant","Up to 2 active job profiles","Dedicated WhatsApp group","Tailored resume for each job","Detailed answer screenshots","Jobs added from dashboard or Chrome"] },
-  { name:"Career Campaign", price:"$999", applications:"1,000 applications", blurb:"More capacity and coordination for a broad or multi-role search.", featured:false, features:["2 Human Assistants","Up to 4 active job profiles","Priority WhatsApp support","Tailored resumes and cover notes","Detailed answer screenshots","Weekly campaign review"] },
-];
+import { plansForLane } from "../config/plans";
 
-const aiPlans = [
-  { name:"AI Essential", price:"$39", applications:"75 applications / month", blurb:"A lower-cost assistant for one focused search.", features:["1 active job profile","Tailored resume per job","Job and status tracking","Resume-used record","Add jobs from Chrome","No form-answer screenshots"] },
-  { name:"AI Plus", price:"$79", applications:"200 applications / month", blurb:"More profiles and volume for an active multi-role search.", features:["Up to 3 active job profiles","Tailored resumes and cover notes","Priority AI queue","Job and status tracking","Resume-used record","No form-answer screenshots"] },
-];
+// Prices, quotas, and features come from the shared catalog so this page, the
+// in-app pricing modal, and the Dodo products can never drift apart.
+const humanPlans = plansForLane("human");
+const aiPlans = plansForLane("ai");
+const signedIn = Boolean(Astro.locals.sessionEmail);
 
 const faqs=[
  {q:"Why are Human and AI priced differently?",a:"Human service includes labor, a dedicated WhatsApp relationship, judgment on application questions, and detailed evidence. AI uses automated fulfillment and is priced monthly at a lower cost."},
@@ -33,7 +30,7 @@ const faqs=[
     <Container>
       <div class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p class="text-lg font-bold text-human-700">Human Assistant</p><h2 class="mt-3 max-w-3xl font-display text-4xl font-extrabold sm:text-6xl">A managed application campaign with a person you can reach.</h2></div><p class="max-w-md text-ink-soft">One-time campaign pricing includes assistant labor, WhatsApp access, dashboard tracking, and application evidence.</p></div>
       <div class="mt-12 grid gap-5 lg:grid-cols-3">
-        {humanPlans.map(plan => <article class={`relative flex flex-col rounded-2xl p-7 ${plan.featured?"bg-brand-200 ring-2 ring-brand-600":"bg-surface"}`}>{plan.featured&&<span class="mb-5 w-fit rounded-full bg-brand-950 px-3 py-1.5 text-xs font-bold text-white">Most useful for an active search</span>}<h3 class="text-2xl font-extrabold">{plan.name}</h3><p class="mt-3 min-h-12 text-ink-soft">{plan.blurb}</p><p class="mt-7"><span class="font-display text-5xl font-extrabold">{plan.price}</span><span class="text-ink-muted"> one time</span></p><p class="mt-2 font-bold text-brand-800">{plan.applications}</p><Button href="/book-call" class="mt-7 w-full rounded-full bg-ink text-white">Book a strategy call</Button><ul class="mt-7 space-y-3 text-sm font-semibold text-ink-soft">{plan.features.map(f=><li class="flex gap-2"><span class="text-signal-700">✓</span>{f}</li>)}</ul></article>)}
+        {humanPlans.map(plan => <article class={`relative flex flex-col rounded-2xl p-7 ${plan.featured?"bg-brand-200 ring-2 ring-brand-600":"bg-surface"}`}>{plan.featured&&<span class="mb-5 w-fit rounded-full bg-brand-950 px-3 py-1.5 text-xs font-bold text-white">Most useful for an active search</span>}<h3 class="text-2xl font-extrabold">{plan.name}</h3><p class="mt-3 min-h-12 text-ink-soft">{plan.blurb}</p><p class="mt-7"><span class="font-display text-5xl font-extrabold">{plan.priceLabel}</span><span class="text-ink-muted"> {plan.cadenceLabel}</span></p><p class="mt-2 font-bold text-brand-800">{plan.applications}</p>{signedIn ? <button type="button" data-checkout-plan={plan.code} class="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-ink px-6 font-extrabold text-white transition hover:bg-brand-950 disabled:opacity-60">Get {plan.name}</button> : <Button href="/book-call" class="mt-7 w-full rounded-full bg-ink text-white">Book a strategy call</Button>}<a href="/book-call" class="mt-3 text-center text-sm font-bold text-brand-800 hover:text-brand-950">Or book a strategy call first →</a><ul class="mt-7 space-y-3 text-sm font-semibold text-ink-soft">{plan.features.map(f=><li class="flex gap-2"><span class="text-signal-700">✓</span>{f}</li>)}</ul></article>)}
       </div>
       <p class="mt-5 text-center text-sm text-ink-muted">Application limits and campaign windows should be validated against assistant capacity before launch.</p>
     </Container>
@@ -41,10 +38,40 @@ const faqs=[
 
   <section id="ai" class="bg-brand-100 py-20 sm:py-28">
     <Container>
-      <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start"><div><p class="text-lg font-bold text-brand-800">AI Assistant</p><h2 class="mt-3 font-display text-4xl font-extrabold sm:text-6xl">Lower-cost application help that starts immediately.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">Create an account, import your resume, review the extracted data, and let Scout prepare the first job profile. No strategy call is required.</p><Button href="/login?intent=ai" size="lg" class="mt-8 rounded-full bg-ink text-white">Start with AI Assistant</Button></div><div class="grid gap-5 md:grid-cols-2">{aiPlans.map((plan,i)=><article class={`rounded-2xl p-7 ${i===1?"bg-brand-950 text-white":"bg-white"}`}><h3 class={`text-2xl font-extrabold ${i===1?"text-white":""}`}>{plan.name}</h3><p class={`mt-3 min-h-12 ${i===1?"text-white/65":"text-ink-soft"}`}>{plan.blurb}</p><p class="mt-7"><span class={`font-display text-5xl font-extrabold ${i===1?"text-white":""}`}>{plan.price}</span><span class={i===1?"text-white/55":"text-ink-muted"}> / month</span></p><p class={`mt-2 font-bold ${i===1?"text-brand-300":"text-brand-800"}`}>{plan.applications}</p><ul class={`mt-7 space-y-3 text-sm font-semibold ${i===1?"text-white/70":"text-ink-soft"}`}>{plan.features.map(f=><li class="flex gap-2"><span class={i===1?"text-brand-300":"text-signal-700"}>✓</span>{f}</li>)}</ul></article>)}</div></div>
+      <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start"><div><p class="text-lg font-bold text-brand-800">AI Assistant</p><h2 class="mt-3 font-display text-4xl font-extrabold sm:text-6xl">Lower-cost application help that starts immediately.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">Create an account, import your resume, review the extracted data, and let Scout prepare the first job profile. No strategy call is required.</p><Button href={signedIn ? "/dashboard" : "/login?intent=ai"} size="lg" class="mt-8 rounded-full bg-ink text-white">{signedIn ? "Go to my dashboard" : "Start with AI Assistant"}</Button></div><div class="grid gap-5 md:grid-cols-2">{aiPlans.map((plan,i)=><article class={`flex flex-col rounded-2xl p-7 ${i===1?"bg-brand-950 text-white":"bg-white"}`}><h3 class={`text-2xl font-extrabold ${i===1?"text-white":""}`}>{plan.name}</h3><p class={`mt-3 min-h-12 ${i===1?"text-white/65":"text-ink-soft"}`}>{plan.blurb}</p><p class="mt-7"><span class={`font-display text-5xl font-extrabold ${i===1?"text-white":""}`}>{plan.priceLabel}</span><span class={i===1?"text-white/55":"text-ink-muted"}> {plan.cadenceLabel}</span></p><p class={`mt-2 font-bold ${i===1?"text-brand-300":"text-brand-800"}`}>{plan.applications}</p>{signedIn ? <button type="button" data-checkout-plan={plan.code} class={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 font-extrabold transition disabled:opacity-60 ${i===1?"bg-brand-300 text-brand-950 hover:bg-brand-200":"bg-ink text-white hover:bg-brand-950"}`}>Get {plan.name}</button> : <a href="/login?next=/pricing" class={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 font-extrabold transition ${i===1?"bg-brand-300 text-brand-950 hover:bg-brand-200":"bg-ink text-white hover:bg-brand-950"}`}>Get {plan.name}</a>}<ul class={`mt-7 space-y-3 text-sm font-semibold ${i===1?"text-white/70":"text-ink-soft"}`}>{plan.features.map(f=><li class="flex gap-2"><span class={i===1?"text-brand-300":"text-signal-700"}>✓</span>{f}</li>)}</ul></article>)}</div></div>
     </Container>
   </section>
 
   <section class="bg-white py-20 sm:py-28"><Container><div class="mx-auto max-w-3xl"><FAQ items={faqs} /></div></Container></section>
   <MarketingCTA />
+
+  <p id="pricing-page-error" class="fixed inset-x-4 bottom-6 z-50 mx-auto hidden max-w-md rounded-xl bg-red-700 px-5 py-3 text-center text-sm font-bold text-white shadow-lift" role="alert"></p>
+
+  <script is:inline>
+    document.querySelectorAll("[data-checkout-plan]").forEach(function (button) {
+      button.addEventListener("click", async function () {
+        var errorBox = document.getElementById("pricing-page-error");
+        var original = button.textContent;
+        button.disabled = true;
+        button.textContent = "Opening secure checkout…";
+        errorBox.classList.add("hidden");
+        try {
+          var response = await fetch("/api/billing/checkout", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ planCode: button.getAttribute("data-checkout-plan") }),
+          });
+          var data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Checkout could not be started.");
+          if (window.scoutTrack) window.scoutTrack("Checkout Started", { plan_code: button.getAttribute("data-checkout-plan"), source: "pricing_page" });
+          window.location.assign(data.url);
+        } catch (error) {
+          errorBox.textContent = error && error.message ? error.message : "Checkout could not be started.";
+          errorBox.classList.remove("hidden");
+          button.disabled = false;
+          button.textContent = original;
+        }
+      });
+    });
+  </script>
 </Base>

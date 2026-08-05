@@ -33,12 +33,19 @@ export function createSupabaseServerClient(context: ServerContext): any {
     throw new Error("Supabase is not configured. Add PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
   }
 
-  return (createServerClient as any)(config.url, config.publishableKey, {
+  // Supabase fires an async SIGNED_IN / token-refresh notification that re-writes the session
+  // cookies on a later tick. Once a route has returned its response (e.g. the OAuth callback's 303),
+  // that late write lands after headers are sent — Astro logs a warning and the write is a no-op
+  // anyway, since the real cookies already shipped with the response. `sealCookies()` lets a route
+  // mark the response committed so these redundant late writes are skipped cleanly.
+  let sealed = false;
+  const client = (createServerClient as any)(config.url, config.publishableKey, {
     cookies: {
       getAll() {
         return requestCookies(context.request);
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+        if (sealed) return;
         cookiesToSet.forEach(({ name, value, options }) => {
           context.cookies.set(name, value, {
             ...options,
@@ -50,6 +57,8 @@ export function createSupabaseServerClient(context: ServerContext): any {
       },
     },
   });
+  client.sealCookies = () => { sealed = true; };
+  return client;
 }
 
 export function createSupabaseTokenClient(token: string): SupabaseClient {
@@ -61,6 +70,63 @@ export function createSupabaseTokenClient(token: string): SupabaseClient {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+/**
+ * Service-role client. Bypasses RLS, so it is only for server-side work that has
+ * no authenticated user to act as: the Dodo webhook, anonymous booking leads, and
+ * the board ingest cron. Never construct this from a request path a visitor controls.
+ */
+export function createSupabaseServiceClient(): SupabaseClient {
+  const config = getSupabaseConfig();
+  const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!config.url || !serviceKey || serviceKey.includes("REPLACE_ME")) {
+    throw new Error("Supabase service role is not configured. Set SUPABASE_SERVICE_ROLE_KEY.");
+  }
+  return createClient(config.url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/**
+ * Reads the email out of the Supabase auth cookie WITHOUT verifying the JWT.
+ *
+ * This exists only so marketing pages can decide whether to render "Sign in" or
+ * "Go to dashboard" without paying for a `getUser()` round-trip on every pageview.
+ * It is NOT an authorization check and must never gate access to anything —
+ * protected routes continue to verify through `supabase.auth.getUser()`.
+ */
+export function decodeSessionEmail(request: Request): string | null {
+  const config = getSupabaseConfig();
+  if (!config.url) return null;
+  let projectRef = "";
+  try { projectRef = new URL(config.url).hostname.split(".")[0]; } catch { return null; }
+
+  const cookies = requestCookies(request);
+  const prefix = `sb-${projectRef}-auth-token`;
+  const chunks = cookies
+    .filter((cookie) => cookie.name === prefix || cookie.name.startsWith(`${prefix}.`))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+    .map((cookie) => cookie.value);
+  if (!chunks.length) return null;
+
+  let raw = chunks.join("");
+  if (raw.startsWith("base64-")) {
+    try { raw = Buffer.from(raw.slice(7), "base64").toString("utf8"); } catch { return null; }
+  }
+
+  try {
+    const session = JSON.parse(raw);
+    const token = String(session?.access_token || "");
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    // An expired token means the nav should render as signed out.
+    if (typeof claims.exp === "number" && claims.exp * 1000 < Date.now()) return null;
+    return typeof claims.email === "string" ? claims.email : null;
+  } catch {
+    return null;
+  }
 }
 
 export function demoModeEnabled() {

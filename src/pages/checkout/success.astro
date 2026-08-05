@@ -1,0 +1,78 @@
+---
+import Auth from "../../layouts/Auth.astro";
+import ScoutLoader from "../../components/ScoutLoader.astro";
+import { planByCode } from "../../config/plans";
+export const prerender = false;
+const plan = planByCode(Astro.url.searchParams.get("plan") || "");
+---
+<Auth title="Activating your Scout plan" description="Scout is confirming your payment and preparing your desk." noindex={true}>
+  <section class="grid min-h-[calc(100dvh-5rem)] place-items-center bg-[#f7faf5] px-5 py-16">
+    <div class="w-full max-w-lg rounded-2xl bg-white p-8 text-center shadow-card sm:p-12">
+      <div id="activating">
+        <ScoutLoader label="Confirming your payment" />
+        <h1 class="mt-2 text-balance font-display text-3xl font-extrabold">Setting up your Scout desk.</h1>
+        <p class="mt-3 text-pretty leading-relaxed text-ink-soft">
+          {plan ? `Your ${plan.name} plan is being activated.` : "Your plan is being activated."} This usually takes a few seconds.
+        </p>
+      </div>
+
+      <div id="activated" class="hidden">
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-signal-50 text-2xl text-signal-700" aria-hidden="true">✓</span>
+        <p class="mt-6 text-sm font-bold text-signal-700">Payment confirmed</p>
+        <h2 class="mt-2 text-balance font-display text-3xl font-extrabold">You are all set.</h2>
+        <p id="activated-detail" class="mx-auto mt-3 max-w-sm text-pretty leading-relaxed text-ink-soft"></p>
+        <a href="/dashboard" class="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-ink px-7 font-extrabold text-white">Open my dashboard</a>
+      </div>
+
+      <div id="pending" class="hidden">
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-human-50 text-2xl text-human-700" aria-hidden="true">✓</span>
+        <p class="mt-6 text-sm font-bold text-human-700">Payment received</p>
+        <h2 class="mt-2 text-balance font-display text-3xl font-extrabold">We are still activating your plan.</h2>
+        <p class="mx-auto mt-3 max-w-sm text-pretty leading-relaxed text-ink-soft">
+          Your payment went through. Activation is taking a little longer than usual — it will finish shortly and nothing further is needed from you.
+        </p>
+        <a href="/dashboard" class="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-ink px-7 font-extrabold text-white">Go to dashboard</a>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var deadline = Date.now() + 30000;
+      var activating = document.getElementById("activating");
+      var activated = document.getElementById("activated");
+      var pending = document.getElementById("pending");
+      var detail = document.getElementById("activated-detail");
+
+      function show(node) {
+        activating.classList.add("hidden");
+        node.classList.remove("hidden");
+      }
+
+      async function poll() {
+        try {
+          var response = await fetch("/api/billing/status", { headers: { "cache-control": "no-cache" } });
+          if (response.ok) {
+            var data = await response.json();
+            if (data.paid) {
+              detail.textContent = data.lane === "human"
+                ? "Your assistant has been assigned. Operations will open your WhatsApp group shortly."
+                : "Scout AI is ready. You have " + data.applicationsQuota + " applications available.";
+              show(activated);
+              if (window.scoutTrack) window.scoutTrack("Checkout Completed", { plan_code: data.planCode, lane: data.lane });
+              setTimeout(function () { window.location.assign("/dashboard"); }, 2500);
+              return;
+            }
+          }
+        } catch (error) { /* keep polling; a transient failure is not an error state */ }
+
+        // The webhook is asynchronous. Timing out is not a failure — the payment
+        // succeeded either way, so never show the member an error here.
+        if (Date.now() > deadline) { show(pending); return; }
+        setTimeout(poll, 1500);
+      }
+
+      poll();
+    })();
+  </script>
+</Auth>

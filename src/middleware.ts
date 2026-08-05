@@ -1,12 +1,15 @@
 import { defineMiddleware } from "astro:middleware";
 import type { User } from "@supabase/supabase-js";
-import { createSupabaseServerClient, createSupabaseTokenClient, demoModeEnabled, getSupabaseConfig } from "./lib/supabase";
+import { createSupabaseServerClient, createSupabaseTokenClient, decodeSessionEmail, demoModeEnabled, getSupabaseConfig } from "./lib/supabase";
 import { getDemoState } from "./lib/demo-store";
+import { EMPTY_ENTITLEMENT, loadEntitlement } from "./lib/entitlements";
 
 const memberPrefixes = ["/dashboard", "/agent", "/jobs", "/ai-jobs", "/applications", "/profiles", "/settings"];
 const adminPrefixes = ["/admin"];
 const protectedPrefixes = [...memberPrefixes, "/onboarding", "/extension/connect"];
-const protectedApiPrefixes = ["/api/app", "/api/admin", "/api/extension", "/_actions"];
+// /api/billing/webhook is deliberately absent: it is called by Dodo, not the
+// browser, and authenticates itself with a Standard Webhooks signature.
+const protectedApiPrefixes = ["/api/app", "/api/admin", "/api/extension", "/_actions", "/api/billing/checkout", "/api/billing/portal", "/api/billing/status"];
 const demoUserId = "00000000-0000-4000-8000-000000000001";
 const extensionCors = {
   "access-control-allow-origin": "*",
@@ -35,6 +38,7 @@ function configurationError(pathname: string) {
 
 export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.demoMode = false;
+  context.locals.entitlement = EMPTY_ENTITLEMENT;
   const pathname = context.url.pathname;
 
   if (pathname.startsWith("/api/extension") && context.request.method === "OPTIONS") {
@@ -43,7 +47,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const needsAuth = matchesPrefix(pathname, [...protectedPrefixes, ...adminPrefixes, ...protectedApiPrefixes]);
   const authRelated = pathname.startsWith("/api/auth") || pathname.startsWith("/auth/");
-  if (!needsAuth && !authRelated) return next();
+  if (!needsAuth && !authRelated) {
+    // Marketing pages skip the whole auth pipeline, so `locals.user` is never set
+    // here. The header still needs to know whether to show "Sign in" or "Go to
+    // dashboard", so decode the cookie's email without verifying the JWT. This is
+    // a rendering hint ONLY — it gates nothing, and every protected route above
+    // continues to verify through supabase.auth.getUser().
+    // Prerendered routes have no real request to read, and personalizing a page
+    // baked at build time is meaningless — reading headers there only produces
+    // an Astro warning. Every marketing page that matters is server-rendered.
+    if (context.request.method === "GET" && !pathname.startsWith("/api/") && !context.isPrerendered) {
+      try { context.locals.sessionEmail = decodeSessionEmail(context.request); } catch { context.locals.sessionEmail = null; }
+    }
+    return next();
+  }
 
   const config = getSupabaseConfig();
   if (config.configured) {
@@ -59,8 +76,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
       context.locals.supabase = supabase;
       context.locals.user = user;
-      const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
-      context.locals.scoutProfile = profile;
+      const [profileResult, entitlement] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+        loadEntitlement(user.id, supabase, false),
+      ]);
+      context.locals.scoutProfile = profileResult.data;
+      context.locals.entitlement = entitlement;
       return next();
     }
 
@@ -71,9 +92,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     let profile: any = null;
     if (user) {
-      const result = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
-      profile = result.data;
+      // One round-trip: the profile and the entitlement resolve together.
+      const [profileResult, entitlement] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+        loadEntitlement(user.id, supabase, false),
+      ]);
+      profile = profileResult.data;
       context.locals.scoutProfile = profile;
+      context.locals.entitlement = entitlement;
+      context.locals.sessionEmail = user.email ?? null;
     }
 
     if (needsAuth && !user) {
@@ -114,6 +141,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     } as unknown as User;
     context.locals.user = demoUser;
     context.locals.scoutProfile = getDemoState(demoUserId, email).profile;
+    context.locals.entitlement = await loadEntitlement(demoUserId, undefined, true);
+    context.locals.sessionEmail = email;
     return next();
   }
 
