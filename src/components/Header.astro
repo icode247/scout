@@ -5,6 +5,9 @@ import Logo from "./Logo.astro";
 import Button from "./Button.astro";
 const path = Astro.url.pathname;
 const isActive = (href: string) => path === href || (href !== "/" && path.startsWith(href));
+// Display-only session state, resolved in middleware from the auth cookie
+// without a verification round-trip. It decides which nav to show and nothing else.
+const signedIn = Boolean(Astro.locals.sessionEmail);
 ---
 <header class="sticky top-0 z-50 bg-surface/85 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-md">
   <Container>
@@ -19,8 +22,17 @@ const isActive = (href: string) => path === href || (href !== "/" && path.starts
         ))}
       </nav>
       <div class="hidden items-center gap-2 md:flex">
-        <a href="/login" class="px-2 py-2 text-sm font-bold text-ink-soft hover:text-ink">Sign in</a>
-        <Button href="/book-call" size="md" class="rounded-full bg-ink px-5 text-white hover:bg-brand-950">Book a call</Button>
+        {signedIn ? (
+          <>
+            <a href="/settings" class="px-2 py-2 text-sm font-bold text-ink-soft hover:text-ink">Settings</a>
+            <Button href="/dashboard" size="md" class="rounded-full bg-ink px-5 text-white hover:bg-brand-950">Go to dashboard</Button>
+          </>
+        ) : (
+          <>
+            <a href="/login" class="px-2 py-2 text-sm font-bold text-ink-soft hover:text-ink">Sign in</a>
+            <Button href="/book-call" size="md" class="rounded-full bg-ink px-5 text-white hover:bg-brand-950">Book a call</Button>
+          </>
+        )}
       </div>
 
       <!-- Mobile menu: JS-free disclosure -->
@@ -33,7 +45,17 @@ const isActive = (href: string) => path === href || (href !== "/" && path.starts
           {NAV.map((item) => (
             <a href={item.href} class="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm text-ink-soft hover:bg-surface-sunken hover:text-ink">{item.label}</a>
           ))}
-          <a href="/login" class="mt-1 block rounded-lg px-3 py-2 text-center text-sm font-bold text-ink-soft">Sign in</a><a href="/book-call" class="mt-1 block rounded-full bg-ink px-3 py-2 text-center text-sm font-medium text-white">Book a call</a>
+          {signedIn ? (
+            <>
+              <a href="/settings" class="mt-1 block rounded-lg px-3 py-2 text-center text-sm font-bold text-ink-soft">Settings</a>
+              <a href="/dashboard" class="mt-1 block rounded-full bg-ink px-3 py-2 text-center text-sm font-medium text-white">Go to dashboard</a>
+            </>
+          ) : (
+            <>
+              <a href="/login" class="mt-1 block rounded-lg px-3 py-2 text-center text-sm font-bold text-ink-soft">Sign in</a>
+              <a href="/book-call" class="mt-1 block rounded-full bg-ink px-3 py-2 text-center text-sm font-medium text-white">Book a call</a>
+            </>
+          )}
         </div>
       </details>
     </div>
