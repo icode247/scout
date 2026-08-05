@@ -80,7 +80,7 @@ export const POST: APIRoute = async (context) => {
     try {
       if (status === "delegated") {
         await createApplication(context, user.id, result.data);
-        await supabase.rpc("increment_application_usage", { p_user_id: user.id });
+        await supabase.rpc("increment_application_usage");
       }
     } catch (error) {
       await supabase.from("jobs").delete().eq("id", result.data.id).eq("user_id", user.id);
@@ -156,7 +156,7 @@ export const PATCH: APIRoute = async (context) => {
     await createApplication(context, user.id, current.data);
     const result = await supabase.from("jobs").update({ status: "delegated", updated_at: new Date().toISOString() }).eq("id", id).eq("user_id", user.id).select("*").single();
     if (result.error) throw result.error;
-    await supabase.rpc("increment_application_usage", { p_user_id: user.id });
+    await supabase.rpc("increment_application_usage");
     return json({ ok: true, job: result.data });
   } catch (error) {
     if (error instanceof Response) return error;

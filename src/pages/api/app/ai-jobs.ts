@@ -106,7 +106,7 @@ export const POST: APIRoute = async (c) => {
 
     // Quota is consumed only once the automation is genuinely queued, so a failed
     // submission never costs the member an application.
-    await db.rpc("increment_application_usage", { p_user_id: user.id });
+    await db.rpc("increment_application_usage");
 
     const phApply = getPostHogServer();
     if (phApply) {
