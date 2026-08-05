@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { assertSameOrigin, safeNext } from "../../../lib/api";
-import { createSupabaseServerClient, demoModeEnabled, getSupabaseConfig, publicSiteUrl } from "../../../lib/supabase";
+import { createSupabaseServerClient, demoModeEnabled, getSupabaseConfig, publicSiteUrl, sealSupabaseCookies } from "../../../lib/supabase";
 import { rateLimit, clientIp } from "../../../lib/rate-limit";
 
 export const prerender = false;
@@ -29,6 +29,9 @@ export const POST: APIRoute = async (context) => {
   const callback = new URL("/auth/callback", publicSiteUrl(context.request));
   callback.searchParams.set("next", next);
   const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: callback.href, shouldCreateUser: true } });
+  // See the note in api/auth/google.ts: seal before redirecting so Supabase's
+  // late cookie write does not land after headers are sent.
+  sealSupabaseCookies(supabase);
   if (error) return context.redirect("/login?error=send", 303);
   return context.redirect(`/login?sent=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}`, 303);
 };

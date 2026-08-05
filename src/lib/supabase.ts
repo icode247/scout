@@ -61,6 +61,16 @@ export function createSupabaseServerClient(context: ServerContext): any {
   return client;
 }
 
+/**
+ * Marks the response committed so Supabase's late SIGNED_IN / token-refresh
+ * notification stops trying to write cookies after headers have shipped. Call it
+ * immediately before returning a redirect from any route that triggers auth.
+ */
+export function sealSupabaseCookies(client: unknown) {
+  const seal = (client as { sealCookies?: () => void } | null | undefined)?.sealCookies;
+  if (typeof seal === "function") seal.call(client);
+}
+
 export function createSupabaseTokenClient(token: string): SupabaseClient {
   const config = getSupabaseConfig();
   if (!config.configured || !config.url || !config.publishableKey) {

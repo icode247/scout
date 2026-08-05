@@ -3,7 +3,7 @@ import App from "../layouts/App.astro";
 import AddJobDialog from "../components/AddJobDialog.astro";
 import JobSearchFilters from "../components/JobSearchFilters.astro";
 import { loadScoutData } from "../lib/scout-data";
-import { assignedHumanAssistant } from "../lib/human-assistants";
+import { savedHumanAssistant } from "../lib/human-assistants";
 import { sanitizeJobDescription } from "../lib/job-description";
 export const prerender = false;
 const user = Astro.locals.user!;
@@ -11,7 +11,7 @@ const isAi = Astro.locals.scoutProfile?.assistant_type === "ai";
 const entitlement = Astro.locals.entitlement;
 const canApply = entitlement.canApply;
 const data = await loadScoutData(user, Astro.locals.supabase, Astro.locals.demoMode, Astro.locals.scoutProfile);
-const humanAssistant = assignedHumanAssistant(user.id, data.profile.assistant_name);
+const humanAssistant = savedHumanAssistant(data.profile.assistant_name);
 const activeProfiles = data.jobProfiles.filter((profile) => profile.active);
 const activeSearchFilter = Astro.locals.demoMode || !Astro.locals.supabase ? null : (await Astro.locals.supabase.from("job_search_filters").select("id,job_profile_id,name").eq("user_id",user.id).eq("is_active",true).order("updated_at",{ascending:false}).limit(1).maybeSingle()).data;
 const visibleJobs = data.jobs.filter((job) => { const actedOn=["delegated","preparing","applied","interview"].includes(job.status); if(actedOn)return true; if(["fastapply_match","fastapply_job_board"].includes(String(job.source||"")))return false; if(job.source==="job_search"&&activeSearchFilter)return job.fit_analysis?.search_filter_id===activeSearchFilter.id; return true; });
@@ -58,7 +58,7 @@ const firstIsQueued = first ? ["delegated", "preparing", "applied", "interview"]
           <div class="assistant-identity">
             {isAi
               ? <span class="ai-mark" aria-hidden="true"><i></i><b>✦</b></span>
-              : <span class="human-mark"><img src={humanAssistant.avatar} alt="" /></span>}
+              : humanAssistant ? <span class="human-mark"><img src={humanAssistant.avatar} alt="" /></span> : <span class="locked-mark" aria-hidden="true">✦</span>}
             <div class="min-w-0">
               <div class="assistant-label-row"><p id="assistant-type" class="assistant-label">{isAi ? "AI ASSISTANT" : "HUMAN ASSISTANT"}</p><span class="assistant-status"><i></i>{firstIsQueued ? "In progress" : "Ready to apply"}</span></div>
               <h3><span id="assistant-name">{first.assistantName}</span> can take it from here.</h3>

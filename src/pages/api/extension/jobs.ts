@@ -3,7 +3,8 @@ import { errorMessage, json, readBody, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
 import { loadScoutData } from "../../../lib/scout-data";
 import { scoreAndPersistJob } from "../../../lib/job-match";
-import { assignedHumanAssistant } from "../../../lib/human-assistants";
+import { savedHumanAssistant } from "../../../lib/human-assistants";
+import { assertCanApply } from "../../../lib/entitlements";
 
 export const prerender = false;
 const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type", "access-control-allow-methods": "GET, POST, OPTIONS" };
@@ -15,12 +16,20 @@ export const GET: APIRoute = async (context) => {
     const user = requireUser(context);
     if (context.locals.scoutProfile?.assistant_type === "ai") return json({ error: "The Chrome extension is not available for AI Agent accounts." }, { status: 403, headers: cors });
     const data = await loadScoutData(user, context.locals.supabase, context.locals.demoMode, context.locals.scoutProfile);
-    const assistant = assignedHumanAssistant(user.id, data.profile.assistant_name);
+    const entitlement = context.locals.entitlement;
+    // Only report an assistant that was actually assigned; the hash fallback
+    // would show an unpaid member a real person's name and photo.
+    const assistant = entitlement.hasHumanAssistant ? savedHumanAssistant(data.profile.assistant_name) : null;
     return json({
       account: {
         assistant_type: data.profile.assistant_type,
-        assistant_name: assistant.name,
-        assistant_avatar: new URL(assistant.avatar, context.url.origin).toString(),
+        assistant_name: assistant?.name ?? null,
+        assistant_avatar: assistant ? new URL(assistant.avatar, context.url.origin).toString() : null,
+        // The extension uses these to prompt for a plan instead of failing on send.
+        paid: entitlement.paid,
+        can_apply: entitlement.canApply,
+        applications_remaining: entitlement.applicationsRemaining,
+        upgrade_url: new URL("/pricing?lane=human", context.url.origin).toString(),
       },
       profiles: data.jobProfiles.filter(profile => profile.active && profile.assistant_type === "human").map(profile => ({
         id: profile.id,
@@ -39,6 +48,9 @@ export const POST: APIRoute = async (context) => {
   try {
     const user = requireUser(context);
     if (context.locals.scoutProfile?.assistant_type === "ai") return json({ error: "The Chrome extension is not available for AI Agent accounts." }, { status: 403, headers: cors });
+    // Sending a job from the extension delegates it to an assistant, which is the
+    // paid action. Without this the extension was a way around the entire paywall.
+    assertCanApply(context.locals.entitlement);
     const body = await readBody(context.request);
     const profileId = String(body.job_profile_id || "").trim();
     const title = String(body.title || "").trim();
@@ -75,6 +87,7 @@ export const POST: APIRoute = async (context) => {
     if (result.error) throw result.error;
     const application = await supabase.from("applications").insert({ user_id: user.id, job_id: result.data.id, job_profile_id: profileId, resume_id: primary.data?.resume_id || null, assistant_type: assistant, status: "preparing", notes: "Added from the Scout browser extension." });
     if (application.error) { await supabase.from("jobs").delete().eq("id", result.data.id).eq("user_id", user.id); throw application.error; }
+    await supabase.rpc("increment_application_usage");
     let scoredJob = result.data;
     let scoring_warning: string | undefined;
     try { scoredJob = await scoreAndPersistJob(supabase, user.id, result.data); }
