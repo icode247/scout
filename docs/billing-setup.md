@@ -3,40 +3,67 @@
 Scout's paywall is already built and enforced. This is the one-time wiring
 needed before members can actually pay.
 
-## 1. Create the products
+## 1. Pick the brand
+
+A Dodo account can hold several brands, and every product belongs to one. The
+brand decides the logo on the checkout page, the support email shown there, and
+the descriptor on the buyer's card statement — so a product filed under the
+wrong brand bills people under someone else's name.
+
+Put the brand in `.env` before running the setup script:
+
+```
+DODO_BRAND_NAME="Scout AI"
+```
+
+Quote it — the value has a space in it, and while Node's env-file parser copes
+either way, any shell that `source`s `.env` would read `AI` as a command.
+
+The name is matched case-insensitively; `DODO_BRAND_ID=brnd_...` overrides it.
+If neither resolves, the script stops and prints the account's brands rather
+than quietly filing the products under the account default.
+
+## 2. Create the products
 
 Prices, quotas and product names all live in `src/config/plans.ts`. The script
 reads that file, so never type a price in twice.
 
 ```bash
-DODO_API_KEY=<your test key> npm run dodo:setup
+npm run dodo:setup
 ```
 
-It prints five env lines. It is safe to re-run — existing products are reused by
-name rather than duplicated.
+Run it through npm — that is what loads `.env`; a bare `node` invocation sees no
+environment file and will report a missing `DODO_API_KEY`.
+
+It prints ten env lines, one per plan and term. It is safe to re-run: products
+already on the brand are reused by name rather than duplicated, and a product an
+existing env var points at is moved onto the brand if it is on another one.
 
 ```
-DODO_PRODUCT_HUMAN_FOCUSED=pdt_...
-DODO_PRODUCT_HUMAN_FULL=pdt_...
-DODO_PRODUCT_HUMAN_CAMPAIGN=pdt_...
-DODO_PRODUCT_AI_ESSENTIAL=pdt_...
-DODO_PRODUCT_AI_PLUS=pdt_...
+DODO_PRODUCT_HUMAN_FOCUSED=pdt_...        DODO_PRODUCT_HUMAN_FOCUSED_90=pdt_...
+DODO_PRODUCT_HUMAN_FULL=pdt_...           DODO_PRODUCT_HUMAN_FULL_90=pdt_...
+DODO_PRODUCT_HUMAN_CAMPAIGN=pdt_...       DODO_PRODUCT_HUMAN_CAMPAIGN_90=pdt_...
+DODO_PRODUCT_AI_ESSENTIAL=pdt_...         DODO_PRODUCT_AI_ESSENTIAL_90=pdt_...
+DODO_PRODUCT_AI_PLUS=pdt_...              DODO_PRODUCT_AI_PLUS_90=pdt_...
 ```
 
-## 2. Set the environment variables
+## 3. Set the environment variables
 
-In Vercel → Settings → Environment Variables, add the five product ids plus:
+In Vercel → Settings → Environment Variables, add the ten product ids plus:
 
 | Variable | Value |
 |---|---|
 | `DODO_API_KEY` | Your Dodo API key |
-| `DODO_WEBHOOK_SECRET` | The signing secret from step 3 |
+| `DODO_WEBHOOK_SECRET` | The signing secret from step 4 |
 | `DODO_ENVIRONMENT` | `test_mode` until you have run a real test purchase |
 
-`DODO_ENVIRONMENT=live_mode` charges real cards. Leave it on `test_mode` until
-step 4 passes.
+`DODO_BRAND_NAME` / `DODO_BRAND_ID` are only read by the setup script, so they
+do not need to be set in Vercel.
 
-## 3. Register the webhook
+`DODO_ENVIRONMENT=live_mode` charges real cards. Leave it on `test_mode` until
+step 5 passes.
+
+## 4. Register the webhook
 
 In the Dodo dashboard, add a webhook endpoint pointing at:
 
@@ -54,7 +81,7 @@ subscription is activated and the only place a Human Assistant is assigned. If
 it is not reachable, members will pay and get nothing — `/checkout/success`
 will sit on its loader and then tell them activation is still in progress.
 
-## 4. Run one end-to-end test purchase
+## 5. Run one end-to-end test purchase
 
 1. Sign in on the deployed site and open `/pricing`.
 2. Choose an AI plan (cheapest, and exercises the subscription path).
@@ -71,10 +98,13 @@ from subscriptions where user_id = '<your uuid>';
 6. Repeat with a Human plan and confirm `profiles.assistant_name` is populated —
    that assignment only happens on payment.
 
-## 5. Flip to live
+## 6. Flip to live
 
 Set `DODO_ENVIRONMENT=live_mode`, re-run `npm run dodo:setup` against the live
-key to create live products, and replace the five product ids.
+key to create live products, and replace the ten product ids.
+
+Brands are per-environment: create the Scout brand in live mode too, or the
+script will stop and list the live account's brands.
 
 ## How the paywall behaves
 
