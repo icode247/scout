@@ -3,6 +3,7 @@ import { planByCode } from "../../../config/plans";
 import { verifyWebhookSignature } from "../../../lib/dodo";
 import { assignedHumanAssistant } from "../../../lib/human-assistants";
 import { createSupabaseServiceClient } from "../../../lib/supabase";
+import { serverEnv } from "../../../lib/server-env";
 import { getPostHogServer } from "../../../lib/posthog-server";
 
 export const prerender = false;
@@ -18,7 +19,9 @@ export const POST: APIRoute = async (context) => {
   // The raw body must be read before any parsing: re-serializing the parsed
   // object changes the bytes and the HMAC would never match.
   const rawBody = await context.request.text();
-  const secret = import.meta.env.DODO_WEBHOOK_SECRET?.trim() || "";
+  // Runtime read, so rotating the signing secret does not need a rebuild and
+  // the secret never lands in the deployed bundle.
+  const secret = serverEnv("DODO_WEBHOOK_SECRET") || "";
   const id = context.request.headers.get("webhook-id") || "";
   const timestamp = context.request.headers.get("webhook-timestamp") || "";
   const signature = context.request.headers.get("webhook-signature") || "";

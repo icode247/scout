@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Plan } from "../config/plans";
+import { serverEnv } from "./server-env";
 
 const TOLERANCE_SECONDS = 5 * 60;
 
@@ -13,23 +14,25 @@ export class DodoError extends Error {
 }
 
 function apiKey() {
-  const key = import.meta.env.DODO_API_KEY?.trim();
+  const key = serverEnv("DODO_API_KEY");
   if (!key) throw new DodoError("Payments are not configured yet.", 503);
   return key;
 }
 
 export function dodoConfigured() {
-  return Boolean(import.meta.env.DODO_API_KEY?.trim());
+  return Boolean(serverEnv("DODO_API_KEY"));
 }
 
 export function dodoBaseUrl() {
-  return import.meta.env.DODO_ENVIRONMENT?.trim() === "live_mode"
+  return serverEnv("DODO_ENVIRONMENT") === "live_mode"
     ? "https://live.dodopayments.com"
     : "https://test.dodopayments.com";
 }
 
 export function productIdForPlan(plan: Plan) {
-  const id = (import.meta.env as Record<string, string | undefined>)[plan.productEnvKey]?.trim();
+  // serverEnv, not import.meta.env: the key is computed, and Vite only inlines
+  // literal accesses — see the note in server-env.ts.
+  const id = serverEnv(plan.productEnvKey);
   if (!id) throw new DodoError(`${plan.name} is not available yet.`, 503);
   return id;
 }

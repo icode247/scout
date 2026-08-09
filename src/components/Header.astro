@@ -23,10 +23,9 @@ const signedIn = Boolean(Astro.locals.sessionEmail);
       </nav>
       <div class="hidden items-center gap-2 md:flex">
         {signedIn ? (
-          <>
-            <a href="/settings" class="px-2 py-2 text-sm font-bold text-ink-soft hover:text-ink">Settings</a>
-            <Button href="/dashboard" size="md" class="rounded-full bg-ink px-5 text-white hover:bg-brand-950">Go to dashboard</Button>
-          </>
+          // Just the one destination: Settings lives inside the app shell, and
+          // repeating it here split the marketing header's single call to action.
+          <Button href="/dashboard" size="md" class="rounded-full bg-ink px-5 text-white hover:bg-brand-950">Go to dashboard</Button>
         ) : (
           <>
             <a href="/login" class="px-2 py-2 text-sm font-bold text-ink-soft hover:text-ink">Sign in</a>
@@ -46,10 +45,7 @@ const signedIn = Boolean(Astro.locals.sessionEmail);
             <a href={item.href} class="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm text-ink-soft hover:bg-surface-sunken hover:text-ink">{item.label}</a>
           ))}
           {signedIn ? (
-            <>
-              <a href="/settings" class="mt-1 block rounded-lg px-3 py-2 text-center text-sm font-bold text-ink-soft">Settings</a>
-              <a href="/dashboard" class="mt-1 block rounded-full bg-ink px-3 py-2 text-center text-sm font-medium text-white">Go to dashboard</a>
-            </>
+            <a href="/dashboard" class="mt-1 block rounded-full bg-ink px-3 py-2 text-center text-sm font-medium text-white">Go to dashboard</a>
           ) : (
             <>
               <a href="/login" class="mt-1 block rounded-lg px-3 py-2 text-center text-sm font-bold text-ink-soft">Sign in</a>
