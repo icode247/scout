@@ -6,7 +6,9 @@ import { rateLimit, clientIp } from "../../../lib/rate-limit";
 export const prerender = false;
 
 export const POST: APIRoute = async (context) => {
-  assertSameOrigin(context);
+  // assertSameOrigin throws a Response; returning it keeps a rejected origin a
+  // clean 403 instead of an unhandled throw surfacing as a 500.
+  try { assertSameOrigin(context); } catch (error) { if (error instanceof Response) return error; throw error; }
   const form = await context.request.formData();
   const email = String(form.get("email") || "").trim().toLowerCase();
   const next = safeNext(form.get("next"));

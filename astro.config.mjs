@@ -20,6 +20,21 @@ export default defineConfig({
   // That broke every POST form (origin check 403) and every auth redirect built from
   // the request origin. Keep this in sync with the project's Vercel aliases.
   security: {
+    // Astro's built-in CSRF check 403s any non-GET request whose `origin` header
+    // is missing or mismatched, but only for form-ish content types
+    // (x-www-form-urlencoded, multipart/form-data, text/plain). Dodo posts the
+    // billing webhook server-to-server with one of those and no origin header,
+    // so every delivery was rejected before reaching the handler — meaning paid
+    // subscriptions never activated. Astro has no per-route opt-out.
+    //
+    // Turning it off costs nothing here: every mutating endpoint already calls
+    // assertSameOrigin (lib/api.ts), which is strictly stronger — it applies to
+    // all content types, not just forms, and rejects a missing origin outright.
+    // The only endpoints without it are the ones that must not have it, and each
+    // authenticates another way: the webhook by HMAC signature, the cron routes
+    // by CRON_SECRET, /api/extension by CORS plus session, and /api/book-call is
+    // deliberately public behind a rate limit and honeypot.
+    checkOrigin: false,
     allowedDomains: [
       { hostname: "applyscout.app", protocol: "https" },
       { hostname: "*.applyscout.app", protocol: "https" },

@@ -6,7 +6,9 @@ import { sealSupabaseCookies } from "../../../lib/supabase";
 export const prerender = false;
 
 export const POST: APIRoute = async (context) => {
-  assertSameOrigin(context);
+  // Returning the thrown Response keeps a rejected origin a clean 403 rather
+  // than an unhandled throw surfacing as a 500.
+  try { assertSameOrigin(context); } catch (error) { if (error instanceof Response) return error; throw error; }
   const userId = context.locals.user?.id;
   if (userId) {
     const posthog = getPostHogServer();
