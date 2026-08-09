@@ -7,8 +7,7 @@ export const SITE = {
   name: "Scout",
   // Brand always pairs the generic word "Scout" with a descriptor (ASO/trademark crowding).
   tagline: "Human + AI Job Application Service",
-  // TODO(founder): confirm final domain. Placeholder until purchased.
-  url: "https://getscout.app",
+  url: "https://applyscout.app",
   description:
     "Scout is a done-for-you job application service. Choose a dedicated Human Assistant or a lower-cost AI Assistant to find roles, tailor resumes, apply on your behalf, and track every submission.",
   locale: "en_US",
@@ -21,7 +20,7 @@ export const STORE = {
   appStore: "https://apps.apple.com/app/scout-ai-job-apply/id000000000",
   playStore: "https://play.google.com/store/apps/details?id=com.fastapply.app",
   // Single smart link that routes by device (used by QR + /download).
-  smartLink: "https://getscout.app/download",
+  smartLink: "https://applyscout.app/download",
 } as const;
 
 export type NavItem = { label: string; href: string };
