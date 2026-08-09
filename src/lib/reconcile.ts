@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { firstApply } from "./first-apply";
+import { firstApply, FirstApplyError } from "./first-apply";
 import { fastApplyExternalId } from "./fastapply-applicant";
 import { scoreAndPersistJob } from "./job-match";
 
@@ -147,6 +147,12 @@ export async function reconcileAutomations(admin: SupabaseClient): Promise<Recon
     try {
       items = historyItems(await firstApply.getApplicantApplications(externalId, 1, HISTORY_PAGE_SIZE));
     } catch (error) {
+      // An applicant that does not exist upstream has no history to reconcile.
+      // That is a normal state before the first apply, and it also happens when
+      // the applicant was created under a different api key. Treating it as a
+      // failure logged the same line every five minutes forever; the next apply
+      // recreates the applicant, so skip quietly instead.
+      if (error instanceof FirstApplyError && error.status === 404) continue;
       errors += Math.max(1, applicant.openRows.length);
       console.error(`[reconcile] history for ${externalId}: ${error instanceof Error ? error.message : String(error)}`);
       continue;
