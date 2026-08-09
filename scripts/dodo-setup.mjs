@@ -49,10 +49,20 @@ async function resolveBrandId() {
   const items = Array.isArray(body?.items) ? body.items : Array.isArray(body?.data) ? body.data : [];
   const brands = items.map((item) => ({ id: String(item.brand_id || item.id), name: String(item.name || "") }));
 
-  const match = explicit
-    ? brands.find((brand) => brand.id === explicit)
-    : brands.find((brand) => brand.name.toLowerCase() === wanted.toLowerCase());
+  const matches = explicit
+    ? brands.filter((brand) => brand.id === explicit)
+    : brands.filter((brand) => brand.name.toLowerCase() === wanted.toLowerCase());
 
+  // Brand names are not unique — this account has two live brands both called
+  // "Scout". Picking the first silently would file the products under whichever
+  // one happens to sort first, so an ambiguous name has to stop the run.
+  if (matches.length > 1) {
+    console.error(`\n"${wanted}" matches ${matches.length} brands. Set DODO_BRAND_ID to the one you want:\n`);
+    matches.forEach((brand) => console.error(`  ${brand.id}  ${brand.name}`));
+    process.exit(1);
+  }
+
+  const match = matches[0];
   if (!match) {
     const label = explicit ? `DODO_BRAND_ID=${explicit}` : `brand named "${wanted}"`;
     console.error(`\nNo ${label} in this Dodo account. Available brands:\n`);
