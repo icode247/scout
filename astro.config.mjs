@@ -72,5 +72,13 @@ export default defineConfig({
     define: {
       __PLAUSIBLE_DOMAIN__: JSON.stringify(process.env.PUBLIC_PLAUSIBLE_DOMAIN || ""),
     },
+    server: {
+      // Dev server only; production is served by Vercel and never runs this.
+      // Vite 6 rejects any request whose Host header is not local with a bare
+      // 403 "Blocked request", before Astro sees it. A tunnel forwards its own
+      // hostname, so webhook deliveries to an ngrok or cloudflared URL were
+      // being dropped at the Vite layer. A leading dot matches subdomains.
+      allowedHosts: [".ngrok-free.app", ".ngrok.io", ".ngrok.app", ".trycloudflare.com", ".loca.lt"],
+    },
   },
 });
