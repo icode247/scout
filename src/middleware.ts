@@ -36,7 +36,25 @@ function configurationError(pathname: string) {
   });
 }
 
+/**
+ * Astro's router logs "Error while trying to render the route <path>" and drops the cause,
+ * so a production 500 gives no message, no stack and no file — which is exactly what
+ * happened to /jobs. Re-throw untouched; this only adds the detail to the log.
+ */
 export const onRequest = defineMiddleware(async (context, next) => {
+  try {
+    return await handle(context, next);
+  } catch (error) {
+    console.error(
+      `[middleware] ${context.request.method} ${context.url.pathname} threw:`,
+      error instanceof Error ? (error.stack || `${error.name}: ${error.message}`) : String(error),
+      error instanceof Error && error.cause ? `\ncause: ${error.cause}` : "",
+    );
+    throw error;
+  }
+});
+
+const handle = async (context: Parameters<Parameters<typeof defineMiddleware>[0]>[0], next: Parameters<Parameters<typeof defineMiddleware>[0]>[1]) => {
   context.locals.demoMode = false;
   context.locals.entitlement = EMPTY_ENTITLEMENT;
   const pathname = context.url.pathname;
@@ -147,4 +165,4 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   return configurationError(pathname);
-});
+};
