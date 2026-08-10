@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { firstApply, FirstApplyError } from "./first-apply";
 import { fastApplyExternalId } from "./fastapply-applicant";
-import { scoreAndPersistJob } from "./job-match";
+import { FIT_ANALYSIS_ENABLED, scoreAndPersistJob } from "./job-match";
 
 // Row-fetch caps. Kept generous; the real throttle is APPLICANT_BUDGET below.
 const RECONCILE_BATCH = 60; // in-flight local applications pulled per run
@@ -301,6 +301,9 @@ export interface ScoreResult { scored: number; failed: number }
  * safe to drive with the service-role client here.
  */
 export async function scorePendingJobs(admin: SupabaseClient): Promise<ScoreResult> {
+  // Fit analysis is off until the feature ships; skip the sweep entirely rather than
+  // re-reading the same pending rows every five minutes to do nothing with them.
+  if (!FIT_ANALYSIS_ENABLED) return { scored: 0, failed: 0 };
   const pending = await admin
     .from("jobs")
     .select("*")

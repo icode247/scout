@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { assertSameOrigin, errorMessage, json, readBody, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
 import { scoreAndPersistJob } from "../../../lib/job-match";
+import { resolveJobRow } from "../../../lib/board-job";
 import { assertCanApply } from "../../../lib/entitlements";
 
 export const prerender = false;
@@ -112,7 +113,11 @@ export const PATCH: APIRoute = async (context) => {
         job.is_saved = body.is_saved;
         return json({ ok: true, job });
       }
-      const saved = await context.locals.supabase!.from("jobs").update({ is_saved: body.is_saved, updated_at: new Date().toISOString() }).eq("id", id).eq("user_id", user.id).select("*").single();
+      const supabase = context.locals.supabase!;
+      // Saving a board search result is the moment it becomes a real row.
+      const target = await resolveJobRow(supabase, user.id, body, { is_saved: body.is_saved });
+      if (target.is_saved === body.is_saved) return json({ ok: true, job: target });
+      const saved = await supabase.from("jobs").update({ is_saved: body.is_saved, updated_at: new Date().toISOString() }).eq("id", target.id).eq("user_id", user.id).select("*").single();
       if (saved.error) return json({ error: "Job not found" }, { status: 404 });
       return json({ ok: true, job: saved.data });
     }
@@ -150,11 +155,11 @@ export const PATCH: APIRoute = async (context) => {
       return json({ ok: true, job });
     }
     const supabase = context.locals.supabase!;
-    const current = await supabase.from("jobs").select("*").eq("id", id).eq("user_id", user.id).single();
-    if (current.error) return json({ error: "Job not found" }, { status: 404 });
+    // Board results are materialized here too, so a Human Assistant can be handed one.
+    const current = { data: await resolveJobRow(supabase, user.id, body, { status: "delegated" }), error: null as any };
     if (["applied", "interview"].includes(current.data.status)) return json({ error: "This job has already been submitted" }, { status: 409 });
     await createApplication(context, user.id, current.data);
-    const result = await supabase.from("jobs").update({ status: "delegated", updated_at: new Date().toISOString() }).eq("id", id).eq("user_id", user.id).select("*").single();
+    const result = await supabase.from("jobs").update({ status: "delegated", updated_at: new Date().toISOString() }).eq("id", current.data.id).eq("user_id", user.id).select("*").single();
     if (result.error) throw result.error;
     await supabase.rpc("increment_application_usage");
     return json({ ok: true, job: result.data });

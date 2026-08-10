@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resumeExtractionProvider } from "./resume";
+import { normalizeResumeExtraction } from "./resume-extraction";
 
 export interface JobMatchAnalysis {
   score: number;
@@ -29,18 +30,18 @@ const schema = {
 } as const;
 
 function prompt(job: any, profile: any, resume: any) {
-  const extracted = resume?.extracted_data || {};
+  const extracted = normalizeResumeExtraction(resume?.extracted_data);
   const candidate = {
     target_roles: profile.target_roles || [],
     preferred_locations: profile.locations || [],
     salary_min: profile.salary_min,
-    headline: extracted.headline || "",
-    summary: extracted.summary || "",
-    roles: extracted.roles || [],
-    education: extracted.education || [],
-    skills: extracted.skills || [],
-    work_authorization: extracted.work_authorization || "",
-    sponsorship_required: extracted.sponsorship_required ?? null,
+    headline: extracted.headline,
+    summary: extracted.summary,
+    roles: extracted.experience,
+    education: extracted.education,
+    skills: extracted.skills,
+    work_authorization: extracted.workAuthorization,
+    sponsorship_required: extracted.requiresSponsorship,
   };
   const role = { title: job.title, company: job.company, location: job.location, description: job.description };
   return [
@@ -89,7 +90,20 @@ export async function calculateJobMatch(job: any, profile: any, resume: any): Pr
   return { ...result, score: Math.max(0, Math.min(100, Math.round(Number(result.score) || 0))) };
 }
 
+/**
+ * Fit analysis is switched off until the feature ships.
+ *
+ * Every scored job costs an LLM call, and the score is currently surfaced nowhere the
+ * member can act on, so the whole path is inert rather than deleted: flip this to true to
+ * bring it back, and un-hide the score ring in src/pages/jobs.astro.
+ *
+ * Callers keep working — scoreAndPersistJob returns the job untouched — and jobs stay at
+ * fit_status 'pending', which is what the background sweep looks for when it resumes.
+ */
+export const FIT_ANALYSIS_ENABLED = false;
+
 export async function scoreAndPersistJob(supabase: SupabaseClient, userId: string, job: any) {
+  if (!FIT_ANALYSIS_ENABLED) return job;
   if (!job.job_profile_id) throw new Error("Choose a job profile before scoring this role");
   await supabase.from("jobs").update({ fit_status: "processing", fit_error: null }).eq("id", job.id).eq("user_id", userId);
   try {
