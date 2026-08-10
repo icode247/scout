@@ -94,6 +94,24 @@ describe("nextCursor", () => {
     expect(nextCursor(OFFSET_CEILING, PAGE_SIZE)).toBe(0);
     expect(nextCursor(OFFSET_CEILING + 5000, PAGE_SIZE)).toBe(0);
   });
+
+  // The board caps every result set at 10,000 rows and serves an empty page at or
+  // beyond that offset. A ceiling above the cap makes the sweep page through
+  // nothing for hours instead of wrapping to pick up newly posted jobs, which is
+  // what let the corpus go stale.
+  it("matches the board's 10,000-row result cap", () => {
+    expect(OFFSET_CEILING).toBe(10000);
+  });
+
+  it("wraps within one run of reaching the cap", () => {
+    // A cursor stranded past the cap must come straight back to 0, not crawl.
+    expect(nextCursor(10000, PAGE_SIZE)).toBe(0);
+    expect(nextCursor(10100, PAGE_SIZE)).toBe(0);
+  });
+
+  it("still sweeps the whole reachable range before wrapping", () => {
+    expect(nextCursor(OFFSET_CEILING - PAGE_SIZE * 2, PAGE_SIZE)).toBe(OFFSET_CEILING - PAGE_SIZE);
+  });
 });
 
 describe("INGEST_AXES", () => {

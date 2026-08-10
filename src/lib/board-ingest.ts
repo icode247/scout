@@ -1,17 +1,34 @@
 /**
- * The upstream board API cannot serve the queries Scout needs. Measured against
- * the live service:
+ * RETIRED — the mirror this drove is no longer used, and its cron is off.
  *
- *   q= / location= / work_mode= / employment_type=  -> HTTP 500, Postgres
- *                                                      statement timeout
- *   title= / search= / posted= / sort= / order=     -> accepted but IGNORED
- *   offset > 100000                                 -> HTTP 500, timeout
+ * The board API used to 500 on q/location/work_mode/employment_type, so Scout swept the
+ * parameters that did work and searched its own `board_jobs` copy instead. Re-measured
+ * 2026-08-10: all four now return 200, and `posted` (Nh/Nd/Nw/Nm) works too, so
+ * /api/app/job-search queries the board directly.
  *
- * So Scout sweeps only the parameters that work, keeps its own indexed copy in
- * `board_jobs`, and searches that instead. Coverage is a subset of the ~4.5M
- * upstream rows, not all of it; the real fix is indexes on the board's database.
+ * The mirror was never a good trade — it held ~52k rows against a corpus where one saved
+ * search alone matches 2,257, because the 10,000-row cap below limits it to ~80k total.
+ *
+ * `normalizeBoardJob`, `initialsFor`, `logoUrlForDomain` and `salaryLabel` are still the
+ * shared shaping helpers and are used by the live search path. The sweep constants and
+ * `nextCursor` are kept only so /api/cron/ingest-jobs still compiles; delete both, the
+ * `board_jobs` table and `board_ingest_cursor` once live search is confirmed in production.
  */
-export const OFFSET_CEILING = 100000;
+/**
+ * The board caps every result set at 10,000 rows (`meta.total: 10000,
+ * totalIsCapped: true`) and serves an empty `data` array at or beyond that
+ * offset — measured against the live service:
+ *
+ *   offset 9000  -> 100 rows
+ *   offset 10000 -> 0 rows
+ *   offset 12000 -> 0 rows
+ *
+ * The ceiling has to match, or the sweep spends its runs paging through nothing
+ * instead of wrapping back to offset 0 to pick up newly posted jobs. At 100000 it
+ * took ~15 hours of empty pages per axis to come back around, which is why the
+ * corpus went stale and searches fell through to the unfiltered fallback.
+ */
+export const OFFSET_CEILING = 10000;
 export const PAGE_SIZE = 100;
 export const PAGES_PER_RUN = 10;
 
