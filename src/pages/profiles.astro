@@ -3,77 +3,209 @@ import App from "../layouts/App.astro";
 import AddJobDialog from "../components/AddJobDialog.astro";
 import ApplicantProfileFields from "../components/ApplicantProfileFields.astro";
 import { loadScoutData } from "../lib/scout-data";
-import { fastApplyProfilePayload } from "../lib/fastapply-applicant";
+import { applicantPrefill } from "../lib/applicant-profile";
+import { RESUMES_PER_PROFILE } from "../lib/entitlements";
 export const prerender = false;
 const user = Astro.locals.user!;
+const entitlement = Astro.locals.entitlement;
 const data = await loadScoutData(user, Astro.locals.supabase, Astro.locals.demoMode, Astro.locals.scoutProfile);
-const resumesForProfile = (profile: (typeof data.jobProfiles)[number]) => data.resumes.filter((resume) => (profile.resume_ids || []).includes(resume.id));
-const extractionLabel = (status?: string) => status === "complete" ? "Analyzed" : status === "processing" ? "Analyzing" : status === "failed" ? "Needs review" : "Pending";
-const applicantKeys = ["firstName","middleName","lastName","email","phoneCountryCode","phoneNumber","streetAddress","currentCity","state","zipcode","country","timezone","dateOfBirth","headline","summary","yearsOfExperience","noticePeriod","skills","languages","certifications","education","experience","coverLetter","desiredSalary","desiredSalaryCurrency","desiredSalaryNegotiable","currentSalary","currentSalaryCurrency","workAuthorization","requiresSponsorship","remotePreference","willingToRelocate","securityClearance","linkedinURL","githubURL","website","twitterURL","additionalLinks","references","gender","ethnicity","race","veteranStatus","disabilityStatus"];
-const resumePrefills = Object.fromEntries(data.resumes.map(resume => { const payload = fastApplyProfilePayload(user, {}, resume); return [resume.id, Object.fromEntries(applicantKeys.filter(key => payload[key] !== undefined).map(key => [key, payload[key]]))]; }));
+// resume_ids is ordered default-first, so mapping over it (rather than filtering the
+// account's resumes) keeps each profile's own ordering.
+const resumeById = new Map(data.resumes.map((resume) => [resume.id, resume]));
+const resumesForProfile = (profile: (typeof data.jobProfiles)[number]) =>
+  (profile.resume_ids || []).map((id) => resumeById.get(id)).filter(Boolean) as typeof data.resumes;
+// What each resume can fill in on its own. Newly uploaded resumes get the same object back
+// from POST /api/app/resumes, so both paths prefill identically.
+const resumePrefills = Object.fromEntries(data.resumes.map((resume) => [resume.id, applicantPrefill(user, {}, resume)]));
+// Resumes belong to a profile, so the editor is handed only that profile's own list.
+const profileResumes = Object.fromEntries(data.jobProfiles.map((profile) => [profile.id,
+  resumesForProfile(profile).map((resume) => ({ id: resume.id, name: resume.name, extraction_status: (resume as any).extraction_status || "pending" })),
+]));
+// Plan limits, mirrored in the UI so the ceiling is visible before a request is refused.
+const activeProfiles = data.jobProfiles.filter((profile) => profile.active).length;
+const atProfileLimit = activeProfiles >= entitlement.profileLimit;
 ---
 <App title="Scout job profiles" active="profiles">
-  <div class="flex flex-wrap items-end justify-between gap-4"><div><h1 class="text-3xl font-extrabold">Job profiles</h1><p class="mt-2 text-ink-soft">Keep role searches, locations, rules, and resumes from bleeding into each other.</p></div><button id="new-profile" class="rounded-full bg-ink px-5 py-3 text-sm font-extrabold text-white">+ New job profile</button></div>
+  <div class="flex flex-wrap items-end justify-between gap-4"><div><h1 class="text-3xl font-extrabold">Job profiles</h1><p class="mt-2 text-ink-soft">Keep role searches, locations, rules, and resumes from bleeding into each other.</p><p class="mt-1 text-sm font-bold text-ink-muted">{activeProfiles} of {entitlement.profileLimit} active {entitlement.profileLimit === 1 ? "profile" : "profiles"} used</p></div>{atProfileLimit ? <a href="/pricing" class="rounded-full bg-surface px-5 py-3 text-sm font-extrabold">Upgrade for more profiles</a> : <button id="new-profile" class="rounded-full bg-ink px-5 py-3 text-sm font-extrabold text-white">+ New job profile</button>}</div>
+  {atProfileLimit && <p class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900">{entitlement.paid ? `Your plan covers ${entitlement.profileLimit} active job ${entitlement.profileLimit === 1 ? "profile" : "profiles"}. Pause or delete one to add another, or upgrade for more.` : `Choose a plan to run more than ${entitlement.profileLimit} active job ${entitlement.profileLimit === 1 ? "profile" : "profiles"}.`}</p>}
   <div class="mt-7 grid gap-5 lg:grid-cols-3">{data.jobProfiles.map((profile,index)=><article class={`rounded-xl p-6 shadow-card ${index===0?"bg-brand-200":"bg-white"}`}><div class="flex items-start justify-between gap-3"><span class={`rounded-full px-2.5 py-1 text-xs font-bold ${profile.assistant_type==="human"?"bg-human-50 text-human-700":"bg-brand-100 text-brand-800"}`}>{profile.assistant_type === "human" ? "Human Assistant" : "AI Assistant"}</span>{!profile.active && <span class="rounded-full bg-surface px-2.5 py-1 text-xs font-bold text-ink-muted">Paused</span>}<div class="flex gap-3"><button data-edit-profile={profile.id} class="text-xs font-bold text-brand-800">Edit</button><button data-delete-profile={profile.id} class="text-xs font-bold text-ink-muted hover:text-red-700" aria-label={`Delete ${profile.name}`}>Delete</button></div></div><h2 class="mt-7 break-words text-2xl font-extrabold">{profile.name}</h2><p class="mt-2 text-sm text-ink-soft">Application details and resumes for this applicant.</p><div class="mt-5 border-t border-ink/10 pt-4"><p class="text-xs font-bold text-ink-muted">PROFILE RESUMES</p>{resumesForProfile(profile).length ? <div class="mt-2 space-y-1">{resumesForProfile(profile).map((resume,index)=><a href={`/api/app/resumes/${resume.id}`} target="_blank" class="flex items-center gap-2 text-xs font-bold text-brand-800"><span class="grid h-5 w-5 shrink-0 place-items-center rounded bg-brand-100 text-[0.55rem]">CV</span><span class="min-w-0 flex-1 truncate">{resume.name}</span>{index===0&&<span class="text-[0.6rem] text-ink-muted">PRIMARY</span>}</a>)}</div> : <p class="mt-2 text-xs text-red-700">No resume attached. Edit this profile before delegating jobs.</p>}</div><div class="mt-7">{data.profile.assistant_type === "ai" ? <a href={`/agent?profile=${profile.id}`} class="inline-block rounded-full bg-ink px-5 py-3 text-sm font-extrabold text-white">Configure Scout AI</a> : profile.active ? <AddJobDialog profiles={[profile]} triggerLabel="Add a job" id={`add-job-${profile.id}`}/> : <p class="text-xs font-bold text-ink-muted">Resume this profile before adding jobs.</p>}</div></article>)}</div>
   {!data.jobProfiles.length && <div class="mt-7 rounded-xl bg-white p-10 text-center shadow-card"><strong>Create your first job profile</strong><p class="mt-2 text-sm text-ink-muted">Profiles tell Scout which role, location, assistant, and resume rules to use.</p></div>}
 
-  <section id="resumes" class="mt-10 rounded-xl bg-white p-6 shadow-card"><div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="text-xl font-extrabold">Resume library</h2><p class="mt-1 text-sm text-ink-muted">Upload, rename, inspect, and safely remove resume versions.</p></div><label id="resume-upload-label" class="cursor-pointer rounded-full bg-surface px-4 py-2.5 text-sm font-bold"><input id="resume-upload" type="file" name="resume" accept=".pdf,.doc,.docx" class="sr-only"/>Upload resume</label></div><div class="mt-6 divide-y divide-ink/10">{data.resumes.length ? data.resumes.map(resume=><form data-resume-row={resume.id} class="flex flex-wrap items-center justify-between gap-4 py-4"><div class="min-w-0 flex-1"><label class="sr-only" for={`resume-name-${resume.id}`}>Resume name</label><input id={`resume-name-${resume.id}`} name="name" value={resume.name} maxlength="180" class="w-full max-w-xl rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-bold hover:border-ink/15 focus:border-ink/20 focus:outline-none"/><p class="mt-1 px-2 text-xs text-ink-muted">{new Intl.DateTimeFormat("en",{dateStyle:"medium"}).format(new Date(resume.created_at))} · {extractionLabel((resume as any).extraction_status)}</p></div><div class="flex flex-wrap items-center gap-2"><a href={`/api/app/resumes/${resume.id}`} target="_blank" class="rounded-full bg-brand-100 px-3 py-2 text-xs font-bold">Open</a><button type="submit" class="rounded-full bg-surface px-3 py-2 text-xs font-bold">Save name</button><button type="button" data-delete-resume={resume.id} class="rounded-full px-3 py-2 text-xs font-bold text-red-700">Delete</button></div><p data-resume-error class="hidden w-full text-xs font-bold text-red-700" role="alert"></p></form>) : <p class="py-8 text-center text-sm text-ink-muted">No resumes uploaded yet.</p>}</div></section>
+  <p class="mt-8 text-sm text-ink-muted">Resumes belong to the profile you upload them to. Open a profile to add, replace, or remove its resumes.</p>
 
-  <dialog id="profile-dialog" class="h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] w-[min(92vw,48rem)] overflow-hidden rounded-2xl p-0 shadow-lift backdrop:bg-ink/55"><form id="profile-form" class="h-full overflow-y-auto overscroll-contain p-7"><input type="hidden" name="id"/><div class="flex justify-between gap-4"><div><p class="text-xs font-bold text-brand-700">APPLICANT PROFILE</p><h2 id="profile-dialog-title" class="mt-2 text-2xl font-extrabold">New job profile</h2></div><button type="button" data-close class="grid h-10 w-10 place-items-center rounded-full bg-surface" aria-label="Close profile editor">×</button></div><div class="mt-6 grid gap-4 sm:grid-cols-2"><label class="text-sm font-bold sm:col-span-2">Profile name<input required maxlength="120" name="name" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal" placeholder="Product leadership"/></label><label class="text-sm font-bold">Assistant<input type="hidden" name="assistant_type" value={data.profile.assistant_type}/><span class="mt-2 block rounded-xl bg-surface px-4 py-3 font-normal">{data.profile.assistant_type === "human" ? "Human Assistant" : "Scout AI Agent"}</span></label><label class="text-sm font-bold">Profile status<select name="active" class="mt-2 w-full rounded-xl border border-ink/15 bg-white px-4 py-3 font-normal"><option value="true">Active</option><option value="false">Paused</option></select></label>
-      <fieldset class="sm:col-span-2"><legend class="text-sm font-bold">Default resume</legend><p class="mt-1 text-xs text-ink-muted">Scout AI uses this resume for applications from this profile.</p><div id="existing-resume-options" class="mt-3 grid gap-2 sm:grid-cols-2">{data.resumes.map(resume=><label class="flex min-w-0 items-center gap-2 rounded-lg bg-surface px-3 py-3 text-sm"><input type="radio" name="resume_ids" value={resume.id}/><span class="truncate">{resume.name}</span></label>)}</div>{!data.resumes.length && <p id="no-profile-resumes" class="mt-3 rounded-lg bg-surface p-3 text-sm text-ink-muted">Upload at least one resume below.</p>}</fieldset>
-      <label class="text-sm font-bold sm:col-span-2">Upload additional resumes <span class="font-normal text-ink-muted">(optional)</span><input id="profile-resumes" name="resumes" type="file" multiple accept=".pdf,.doc,.docx" class="mt-2 block w-full rounded-xl border border-dashed border-ink/20 bg-surface px-4 py-5 font-normal file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-xs file:font-bold file:text-white"/><span id="profile-resume-summary" class="mt-2 block text-xs font-normal text-ink-muted">PDF, DOC, or DOCX · Up to 10 MB each</span></label>
-      <ApplicantProfileFields/>
-    </div><p data-error class="mt-4 hidden rounded-lg bg-red-50 p-3 text-sm font-bold text-red-700" role="alert"></p><div class="mt-6 flex justify-end gap-3"><button type="button" data-close class="rounded-full px-5 py-3 font-bold">Cancel</button><button id="profile-submit" type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-extrabold">Create profile</button></div></form></dialog>
-  <script define:vars={{ profiles: data.jobProfiles, resumePrefills }}>
-    const dialog=document.getElementById("profile-dialog"),form=document.getElementById("profile-form"),profileResumes=document.getElementById("profile-resumes"),resumeSummary=document.getElementById("profile-resume-summary"),resumeOptions=document.getElementById("existing-resume-options"),title=document.getElementById("profile-dialog-title"),submit=document.getElementById("profile-submit"),error=form?.querySelector("[data-error]"),applicantEditor=form?.querySelector("[data-applicant-editor]");
-    const resumeChecks=()=>[...form.querySelectorAll("[name=resume_ids]")];
-    function openProfile(profile){
-      form.reset();error.classList.add("hidden");form.elements.id.value=profile?.id||"";
-      if(applicantEditor)applicantEditor.open=false;
-      form.elements.name.value=profile?.name||"";form.elements.assistant_type.value=profile?.assistant_type||"ai";form.elements.active.value=profile?.active===false?"false":"true";
-      const primaryId=profile?.resume_ids?.[0];resumeChecks().forEach((input,index)=>input.checked=profile?input.value===primaryId:index===0);
-      const selectedResumeId=profile?.resume_ids?.[0]||resumeChecks().find(input=>input.checked)?.value,extracted=resumePrefills[selectedResumeId]||{};
-      applicantEditor?.dispatchEvent(new CustomEvent("scout:set-applicant-profile",{detail:{...extracted,...(profile?.applicant_profile||{})}}));
-      title.textContent=profile?"Edit job profile":"New job profile";submit.textContent=profile?"Save changes":"Create profile";resumeSummary.textContent="PDF, DOC, or DOCX · Up to 10 MB each";dialog.showModal();document.documentElement.style.overflow="hidden";
+  <dialog id="profile-dialog" class="h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] w-[min(92vw,48rem)] overflow-hidden rounded-2xl p-0 shadow-lift backdrop:bg-ink/55"><form id="profile-form" class="h-full overflow-y-auto overscroll-contain p-7"><input type="hidden" name="id"/><div class="flex justify-between gap-4"><div><p class="text-xs font-bold text-brand-700">APPLICANT PROFILE</p><h2 id="profile-dialog-title" class="mt-2 text-2xl font-extrabold">New job profile</h2><p id="profile-dialog-copy" class="mt-1 text-sm text-ink-soft">Start with this profile's resume. Scout reads it and fills in everything it can.</p></div><button type="button" data-close class="grid h-10 w-10 place-items-center rounded-full bg-surface" aria-label="Close profile editor">×</button></div>
+
+      <section data-profile-step="resume" class="mt-6">
+        <label id="resume-drop" class="block cursor-pointer rounded-2xl border-2 border-dashed border-brand-500 bg-surface p-8 text-center"><input id="profile-resumes" type="file" multiple accept=".pdf,.docx" class="sr-only"/><span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-brand-100 text-xl">↑</span><strong id="profile-resume-label" class="mt-4 block">Drop this profile's resume or choose a file</strong><span id="profile-resume-summary" class="mt-1 block text-xs font-normal text-ink-muted">PDF or DOCX · Up to 10 MB each</span></label>
+        <p id="profile-resume-status" role="status" aria-live="polite" class="mt-3 hidden rounded-lg p-3 text-sm font-bold"></p>
+        <fieldset class="mt-6"><legend class="text-sm font-bold">This profile's resumes</legend><p class="mt-1 text-xs text-ink-muted">Scout applies with the default, and reads it to answer application questions. These resumes belong to this profile only.</p><div id="profile-resume-list" class="mt-3 space-y-2"></div></fieldset>
+      </section>
+
+      <section data-profile-step="details" class="mt-6 hidden"><div class="grid gap-4 sm:grid-cols-2"><label class="text-sm font-bold sm:col-span-2">Profile name<input required maxlength="120" name="name" class="mt-2 w-full rounded-xl border border-ink/15 px-4 py-3 font-normal" placeholder="Product leadership"/></label><label class="text-sm font-bold">Assistant<input type="hidden" name="assistant_type" value={data.profile.assistant_type}/><span class="mt-2 block rounded-xl bg-surface px-4 py-3 font-normal">{data.profile.assistant_type === "human" ? "Human Assistant" : "Scout AI Agent"}</span></label><label class="text-sm font-bold">Profile status<select name="active" class="mt-2 w-full rounded-xl border border-ink/15 bg-white px-4 py-3 font-normal"><option value="true">Active</option><option value="false">Paused</option></select></label>
+        <ApplicantProfileFields/>
+      </div></section>
+
+      <p data-error class="mt-4 hidden rounded-lg bg-red-50 p-3 text-sm font-bold text-red-700" role="alert"></p><div class="mt-6 flex flex-wrap items-center justify-between gap-3"><button type="button" data-close class="rounded-full px-5 py-3 font-bold">Cancel</button><div class="flex flex-wrap gap-3"><button type="button" id="profile-back" class="hidden rounded-full bg-surface px-5 py-3 font-bold">Back</button><button type="button" id="profile-next" class="hidden rounded-full bg-ink px-6 py-3 font-extrabold text-white">Continue</button><button id="profile-submit" type="submit" class="rounded-full bg-brand-500 px-6 py-3 font-extrabold">Create profile</button></div></div></form></dialog>
+  <script define:vars={{ profiles: data.jobProfiles, resumePrefills, profileResumes, resumeLimit: RESUMES_PER_PROFILE }}>
+    const dialog=document.getElementById("profile-dialog"),form=document.getElementById("profile-form"),profileResumesInput=document.getElementById("profile-resumes"),resumeSummary=document.getElementById("profile-resume-summary"),resumeLabel=document.getElementById("profile-resume-label"),resumeStatus=document.getElementById("profile-resume-status"),resumeList=document.getElementById("profile-resume-list"),title=document.getElementById("profile-dialog-title"),copy=document.getElementById("profile-dialog-copy"),submit=document.getElementById("profile-submit"),next=document.getElementById("profile-next"),back=document.getElementById("profile-back"),error=form?.querySelector("[data-error]"),applicantEditor=form?.querySelector("[data-applicant-editor]");
+    const resumeSection=form?.querySelector("[data-profile-step=resume]"),detailsSection=form?.querySelector("[data-profile-step=details]"),resumeDrop=document.getElementById("resume-drop");
+    // Resumes belong to one profile, so the dialog holds only this profile's list. `pending`
+    // tracks resumes uploaded for a profile that does not exist yet, so cancelling cleans up.
+    let editing=false,dialogResumes=[],defaultResumeId="",pending=[],saved=false,uploading=false;
+    const dropLabel=()=>editing?"Add another resume to this profile":"Drop this profile's resume or choose a file";
+    /** Extraction takes seconds and costs a model call, so the whole widget goes inert while it runs. */
+    function setUploading(busy){
+      uploading=busy;
+      const full=!busy&&dialogResumes.length>=resumeLimit;
+      const locked=busy||full;
+      profileResumesInput.disabled=locked;
+      resumeDrop.classList.toggle("pointer-events-none",locked);
+      resumeDrop.classList.toggle("opacity-60",locked);
+      resumeDrop.classList.toggle("cursor-pointer",!locked);
+      resumeDrop.setAttribute("aria-busy",busy?"true":"false");
+      resumeLabel.textContent=busy?"Analyzing your resume…":full?"This profile is full":dropLabel();
+      resumeSummary.textContent=busy?"This takes a few seconds. Do not close this window.":full?"Remove a resume to add another. A profile holds "+resumeLimit+".":"PDF or DOCX · Up to 10 MB each";
+      next.disabled=busy;submit.disabled=busy;
+      next.classList.toggle("opacity-50",busy);submit.classList.toggle("opacity-50",busy);
+      resumeList.classList.toggle("pointer-events-none",busy);
+      resumeList.classList.toggle("opacity-60",busy);
     }
+    const orderedResumeIds=()=>{const rest=dialogResumes.map(item=>item.id).filter(id=>id!==defaultResumeId);return defaultResumeId?[defaultResumeId,...rest]:rest};
+    const statusLabel=status=>status==="complete"?"Analyzed":status==="processing"?"Analyzing":status==="failed"?"Needs review":"Pending";
+    function setStatus(text,tone){resumeStatus.className="mt-3 rounded-lg p-3 text-sm font-bold "+(text?"":"hidden ")+(tone==="error"?"bg-red-50 text-red-800":tone==="busy"?"bg-surface text-ink-soft":"bg-signal-50 text-signal-800");resumeStatus.textContent=text||""}
+    // Creating walks resume → details so a new profile always starts from its own resume;
+    // editing shows both at once, since the resume is already chosen.
+    function setStep(step){
+      resumeSection.classList.toggle("hidden",!editing&&step!=="resume");
+      detailsSection.classList.toggle("hidden",!editing&&step!=="details");
+      next.classList.toggle("hidden",editing||step!=="resume");
+      back.classList.toggle("hidden",editing||step!=="details");
+      submit.classList.toggle("hidden",!editing&&step!=="details");
+      copy.textContent=editing?"Each profile keeps its own resume and application answers.":step==="resume"?"Start with this profile's resume. Scout reads it and fills in everything it can.":"Scout filled in what your resume covered. Complete the rest so it can apply.";
+      form.scrollTo({top:0});
+    }
+    /** Fill blank answers from a resume's extraction; never overwrites what is already there. */
+    function prefillFrom(resumeId,announce){
+      const profile=resumePrefills[resumeId];
+      if(!profile)return;
+      applicantEditor?.dispatchEvent(new CustomEvent("scout:fill-applicant-profile",{detail:{profile,onFilled:count=>{
+        if(!form.elements.name.value&&profile.headline)form.elements.name.value=profile.headline;
+        if(announce)setStatus(count?count+" answer"+(count===1?"":"s")+" filled in from this resume. Review and complete the rest.":"Nothing could be read from this resume. Enter this profile's details yourself.",count?"ok":"error");
+      }}}));
+    }
+    function openProfile(profile,expandApplicant=false){
+      form.reset();error.classList.add("hidden");form.elements.id.value=profile?.id||"";
+      editing=Boolean(profile);
+      if(applicantEditor)applicantEditor.open=expandApplicant||!editing;
+      form.elements.name.value=profile?.name||"";form.elements.assistant_type.value=profile?.assistant_type||"ai";form.elements.active.value=profile?.active===false?"false":"true";
+      // A new profile starts empty — it never inherits another profile's resumes.
+      dialogResumes=editing?(profileResumes[profile.id]||[]).map(item=>({...item})):[];
+      defaultResumeId=dialogResumes[0]?.id||"";pending=[];saved=false;renderResumeList();
+      const primaryId=profile?.resume_ids?.[0];
+      applicantEditor?.dispatchEvent(new CustomEvent("scout:set-applicant-profile",{detail:editing?{...(resumePrefills[primaryId]||{}),...(profile?.applicant_profile||{})}:{}}));
+      title.textContent=editing?"Edit job profile":"New job profile";submit.textContent=editing?"Save changes":"Create profile";
+      setUploading(false);setStatus("");
+      setStep("resume");dialog.showModal();document.documentElement.style.overflow="hidden";
+    }
+    next?.addEventListener("click",()=>{
+      if(!defaultResumeId){setStatus("Upload a resume for this profile to continue.","error");return}
+      setStep("details");
+    });
+    back?.addEventListener("click",()=>setStep("resume"));
+    // Enter on the resume step advances instead of submitting a form whose required
+    // fields are still on the hidden details step.
+    form?.addEventListener("keydown",event=>{if(event.key==="Enter"&&event.target.tagName!=="TEXTAREA"&&!editing&&detailsSection.classList.contains("hidden")){event.preventDefault();next.click()}});
     document.getElementById("new-profile")?.addEventListener("click",()=>openProfile(null));
     document.querySelectorAll("[data-edit-profile]").forEach(button=>button.addEventListener("click",()=>openProfile(profiles.find(profile=>profile.id===button.dataset.editProfile))));
+    // Scout AI's completeness gate links here as /profiles?edit=<id>; land on the open
+    // editor with the application answers expanded rather than on a collapsed section.
+    // Deferred to DOMContentLoaded because `define:vars` makes this an inline script that
+    // runs during parse, while ApplicantProfileFields ships a bundled module — opening the
+    // dialog now would dispatch scout:set-applicant-profile before anything is listening,
+    // and every field would render blank.
+    const requestedEdit=new URLSearchParams(location.search).get("edit"),requestedProfile=requestedEdit?profiles.find(profile=>profile.id===requestedEdit):null;
+    if(requestedProfile)document.addEventListener("DOMContentLoaded",()=>openProfile(requestedProfile,true));
     dialog?.querySelectorAll("[data-close]").forEach(button=>button.addEventListener("click",()=>dialog.close()));
-    dialog?.addEventListener("close",()=>{document.documentElement.style.overflow=""});
+    dialog?.addEventListener("close",()=>{document.documentElement.style.overflow="";if(!saved&&pending.length)discardPending()});
     dialog?.addEventListener("click",event=>{if(event.target===dialog)dialog.close()});
-    function addResumeOption(resume){
-      let input=resumeChecks().find(item=>item.value===resume.id);
-      if(input){input.checked=true;return}
-      const label=document.createElement("label");label.className="flex min-w-0 items-center gap-2 rounded-lg bg-surface px-3 py-3 text-sm";
-      input=document.createElement("input");input.type="radio";input.name="resume_ids";input.value=resume.id;input.checked=true;
-      const name=document.createElement("span");name.className="truncate";name.textContent=resume.name;
-      label.append(input,name);resumeOptions.append(label);document.getElementById("no-profile-resumes")?.remove();
+    function renderResumeList(){
+      resumeList.replaceChildren();
+      if(!dialogResumes.length){
+        const empty=document.createElement("p");empty.className="rounded-lg bg-surface p-4 text-center text-sm text-ink-muted";
+        empty.textContent="No resume yet. Upload one above for this profile.";resumeList.append(empty);return;
+      }
+      dialogResumes.forEach(resume=>{
+        const row=document.createElement("div");row.className="flex items-center gap-3 rounded-lg bg-surface px-3 py-3";
+        // Only the radio and name form the label, so Open and Remove cannot change the default.
+        const pick=document.createElement("label");pick.className="flex min-w-0 flex-1 cursor-pointer items-center gap-3";
+        const radio=document.createElement("input");radio.type="radio";radio.name="default_resume";radio.value=resume.id;radio.className="h-4 w-4 shrink-0 accent-brand-700";radio.checked=resume.id===defaultResumeId;
+        radio.addEventListener("change",()=>{defaultResumeId=resume.id;renderResumeList();prefillFrom(resume.id,true)});
+        const text=document.createElement("span");text.className="min-w-0 flex-1";
+        const name=document.createElement("span");name.className="block truncate text-sm font-bold";name.textContent=resume.name;
+        const meta=document.createElement("span");meta.className="block text-xs text-ink-muted";meta.textContent=(resume.id===defaultResumeId?"Default · ":"")+statusLabel(resume.extraction_status);
+        text.append(name,meta);pick.append(radio,text);
+        const open=document.createElement("a");open.href="/api/app/resumes/"+resume.id;open.target="_blank";open.className="shrink-0 rounded-full bg-brand-100 px-3 py-2 text-xs font-bold";open.textContent="Open";
+        const remove=document.createElement("button");remove.type="button";remove.className="shrink-0 rounded-full px-3 py-2 text-xs font-bold text-red-700";remove.textContent="Remove";
+        remove.addEventListener("click",()=>removeResume(resume.id));
+        row.append(pick,open,remove);resumeList.append(row);
+      });
     }
-    profileResumes?.addEventListener("change",async()=>{
-      const files=[...profileResumes.files],profileId=form.elements.id.value;
-      if(!files.length){resumeSummary.textContent="PDF, DOC, or DOCX · Up to 10 MB each";return}
-      if(!profileId){resumeSummary.textContent=files.length+" resume"+(files.length===1?"":"s")+" selected: "+files.map(file=>file.name).join(", ");return}
-      profileResumes.disabled=true;resumeSummary.textContent="Uploading and analyzing "+files.length+" resume"+(files.length===1?"…":"s…");
-      let uploaded=0;
+    function addResume(resume){
+      if(dialogResumes.some(item=>item.id===resume.id))return;
+      dialogResumes.push({id:resume.id,name:resume.name,extraction_status:resume.extraction_status||"complete"});
+      // The first resume a profile receives is its default.
+      if(!defaultResumeId)defaultResumeId=resume.id;
+      renderResumeList();setUploading(uploading);
+    }
+    async function removeResume(id){
+      if(uploading)return;
+      if(!confirm("Remove this resume from the profile? This deletes the file and cannot be undone."))return;
+      const response=await fetch("/api/app/resumes?id="+encodeURIComponent(id),{method:"DELETE"});
+      const data=await response.json();
+      if(!response.ok){setStatus(data.error||"Could not remove this resume.","error");return}
+      dialogResumes=dialogResumes.filter(item=>item.id!==id);pending=pending.filter(item=>item!==id);
+      if(defaultResumeId===id)defaultResumeId=dialogResumes[0]?.id||"";
+      renderResumeList();setUploading(false);setStatus(dialogResumes.length?"Resume removed.":"Resume removed. Upload one before saving this profile.",dialogResumes.length?"ok":"error");
+    }
+    /** Delete resumes uploaded for a profile that was never created. */
+    async function discardPending(){
+      const ids=pending;pending=[];
+      for(const id of ids)await fetch("/api/app/resumes?id="+encodeURIComponent(id),{method:"DELETE"}).catch(()=>{});
+    }
+    // Resumes upload and extract as soon as they are chosen, for new and existing profiles
+    // alike, so the details step can be prefilled from *this* profile's resume. The file
+    // input is cleared afterwards; the form submits resume ids, never the files again.
+    profileResumesInput?.addEventListener("change",async()=>{
+      const files=[...profileResumesInput.files],profileId=form.elements.id.value;
+      if(!files.length)return;
+      setUploading(true);setStatus("Uploading and analyzing "+files.length+" resume"+(files.length===1?"…":"s…"),"busy");
+      const wasEmpty=!dialogResumes.length;let uploaded=0,firstId="";
       try{
         for(const file of files){
-          const body=new FormData();body.append("resume",file);body.append("profile_id",profileId);
+          const body=new FormData();body.append("resume",file);if(profileId)body.append("profile_id",profileId);
           const response=await fetch("/api/app/resumes",{method:"POST",body}),data=await response.json();
           if(!response.ok)throw new Error(data.error||"Upload failed");
-          addResumeOption(data.resume);uploaded++;
-          const profile=profiles.find(item=>item.id===profileId);if(profile)profile.resume_ids=[data.resume.id];
+          addResume(data.resume);resumePrefills[data.resume.id]=data.prefill||{};
+          // Uploads for an unsaved profile are attached on submit; until then they are ours to clean up.
+          if(!profileId)pending.push(data.resume.id);
+          if(!firstId)firstId=data.resume.id;
+          uploaded++;
         }
-        window.scoutToast?.(uploaded+" resume"+(uploaded===1?"":"s")+" uploaded and attached to this profile");
-        resumeSummary.textContent="Uploaded and attached · PDF, DOC, or DOCX · Up to 10 MB each";
+        // Only the first resume of an empty profile drives the prefill; adding an extra
+        // resume to a profile that already has answers must not rewrite them.
+        if(wasEmpty)prefillFrom(firstId,true);
+        else setStatus(uploaded+" resume"+(uploaded===1?"":"s")+" added to this profile.","ok");
       }catch(reason){
-        resumeSummary.textContent=uploaded?uploaded+" uploaded; one upload failed":"Upload failed. Choose the file and try again.";
-        window.scoutToast?.(reason instanceof Error?reason.message:"Upload failed",true);
-      }finally{profileResumes.value="";profileResumes.disabled=false}
+        setStatus(uploaded?uploaded+" uploaded; one upload failed.":(reason instanceof Error?reason.message:"Upload failed. Choose the file and try again."),"error");
+      }finally{profileResumesInput.value="";setUploading(false)}
     });
-    form?.addEventListener("submit",async event=>{event.preventDefault();const editing=Boolean(form.elements.id.value);submit.disabled=true;submit.textContent=editing?"Saving…":"Uploading and creating…";error.classList.add("hidden");try{const response=await fetch("/api/app/profiles",{method:editing?"PATCH":"POST",body:new FormData(form)});const data=await response.json();if(!response.ok)throw new Error(data.error||"Could not save profile");location.reload()}catch(reason){error.textContent=reason instanceof Error?reason.message:"Could not save profile";error.classList.remove("hidden");submit.disabled=false;submit.textContent=editing?"Save changes":"Create profile"}});
+    form?.addEventListener("submit",async event=>{event.preventDefault();const isEdit=Boolean(form.elements.id.value);
+      if(!isEdit&&detailsSection.classList.contains("hidden")){next.click();return}
+      if(!defaultResumeId){setStep("resume");setStatus("Upload a resume for this profile before saving.","error");return}
+      // The server links resume_ids in order and makes the first one the default.
+      const body=new FormData(form);body.delete("resume_ids");body.delete("default_resume");
+      orderedResumeIds().forEach(id=>body.append("resume_ids",id));
+      submit.disabled=true;submit.textContent=isEdit?"Saving…":"Creating…";error.classList.add("hidden");try{const response=await fetch("/api/app/profiles",{method:isEdit?"PATCH":"POST",body});const data=await response.json();if(!response.ok)throw new Error(data.error||"Could not save profile");saved=true;pending=[];location.reload()}catch(reason){error.textContent=reason instanceof Error?reason.message:"Could not save profile";error.classList.remove("hidden");submit.disabled=false;submit.textContent=isEdit?"Save changes":"Create profile"}});
     document.querySelectorAll("[data-delete-profile]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm("Delete this job profile? Existing jobs and application records will remain."))return;button.disabled=true;const response=await fetch("/api/app/profiles?id="+encodeURIComponent(button.dataset.deleteProfile),{method:"DELETE"});const data=await response.json();if(response.ok)location.reload();else{button.disabled=false;window.scoutToast?.(data.error||"Could not delete profile",true)}}));
-    document.getElementById("resume-upload")?.addEventListener("change",async event=>{const file=event.target.files[0];if(!file)return;const body=new FormData();body.append("resume",file);const label=document.getElementById("resume-upload-label");label.classList.add("opacity-60","pointer-events-none");window.scoutToast?.("Uploading and analyzing resume…");try{const response=await fetch("/api/app/resumes",{method:"POST",body});const data=await response.json();if(!response.ok)throw new Error(data.error||"Upload failed");window.scoutToast?.(data.warning?"Resume uploaded; analysis needs review":"Resume uploaded and analyzed");location.reload()}catch(reason){label.classList.remove("opacity-60","pointer-events-none");window.scoutToast?.(reason instanceof Error?reason.message:"Upload failed",true)}});
-    document.querySelectorAll("[data-resume-row]").forEach(row=>row.addEventListener("submit",async event=>{event.preventDefault();const button=row.querySelector("[type=submit]"),error=row.querySelector("[data-resume-error]"),name=row.elements.name.value.trim();button.disabled=true;const response=await fetch("/api/app/resumes",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({id:row.dataset.resumeRow,name})});const data=await response.json();button.disabled=false;if(response.ok)window.scoutToast?.("Resume name saved");else{error.textContent=data.error||"Could not rename resume";error.classList.remove("hidden")}}));
-    document.querySelectorAll("[data-delete-resume]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm("Delete this resume? This cannot be undone."))return;button.disabled=true;const row=button.closest("[data-resume-row]"),error=row.querySelector("[data-resume-error]");const response=await fetch("/api/app/resumes?id="+encodeURIComponent(button.dataset.deleteResume),{method:"DELETE"});const data=await response.json();if(response.ok)location.reload();else{button.disabled=false;error.textContent=data.error||"Could not delete resume";error.classList.remove("hidden")}}));
   </script>
 </App>

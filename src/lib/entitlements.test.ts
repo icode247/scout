@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   EMPTY_ENTITLEMENT,
+  RESUMES_PER_PROFILE,
   assertCanActivateAgent,
   assertCanApply,
+  assertProfileLimit,
+  assertResumeLimit,
   evaluateEntitlement,
   loadEntitlement,
   type SubscriptionRow,
 } from "./entitlements";
+import { PLANS } from "../config/plans";
 
 const base: SubscriptionRow = {
   plan_code: "ai_essential", lane: "ai", status: "active",
@@ -161,5 +165,99 @@ describe("assertions", () => {
   it("blocks agent activation for a paid human member", () => {
     const human = evaluateEntitlement({ ...base, lane: "human", plan_code: "human_full" });
     expect(() => assertCanActivateAgent(human)).toThrow();
+  });
+});
+
+describe("profileLimit", () => {
+  it("takes the limit from the purchased plan", () => {
+    expect(evaluateEntitlement({ ...base, plan_code: "ai_essential" }).profileLimit).toBe(1);
+    expect(evaluateEntitlement({ ...base, plan_code: "ai_plus" }).profileLimit).toBe(3);
+    expect(evaluateEntitlement({ ...base, lane: "human", plan_code: "human_campaign" }).profileLimit).toBe(4);
+  });
+
+  it("matches every plan the pricing page sells", () => {
+    for (const plan of PLANS) {
+      const entitlement = evaluateEntitlement({
+        ...base, lane: plan.lane, plan_code: plan.code, applications_quota: plan.applicationsQuota,
+      });
+      expect(entitlement.profileLimit).toBe(plan.profileLimit);
+    }
+  });
+
+  it("gives an unpaid member one profile, so onboarding can create it", () => {
+    expect(evaluateEntitlement(null).profileLimit).toBe(1);
+  });
+
+  it("falls back to the free allowance for an unrecognised plan code", () => {
+    expect(evaluateEntitlement({ ...base, plan_code: "ai_retired_2019" }).profileLimit).toBe(1);
+  });
+
+  it("drops a lapsed plan back to the free allowance", () => {
+    const expired = evaluateEntitlement({ ...base, plan_code: "ai_plus", current_period_end: "2020-01-01T00:00:00.000Z" });
+    expect(expired.paid).toBe(false);
+    expect(expired.profileLimit).toBe(1);
+  });
+
+  it("keeps the full profile allowance when only the application quota is spent", () => {
+    const exhausted = evaluateEntitlement({ ...base, plan_code: "ai_plus", applications_used: 200, applications_quota: 200 });
+    expect(exhausted.canApply).toBe(false);
+    expect(exhausted.profileLimit).toBe(3);
+  });
+});
+
+describe("assertProfileLimit", () => {
+  const plus = evaluateEntitlement({ ...base, plan_code: "ai_plus" });
+
+  it("allows a profile below the limit", () => {
+    expect(() => assertProfileLimit(plus, 0)).not.toThrow();
+    expect(() => assertProfileLimit(plus, 2)).not.toThrow();
+  });
+
+  it("refuses the one that would exceed it", async () => {
+    let thrown: unknown;
+    try { assertProfileLimit(plus, 3); } catch (error) { thrown = error; }
+    expect(thrown).toBeInstanceOf(Response);
+    const response = thrown as Response;
+    expect(response.status).toBe(402);
+    const body = await response.json();
+    expect(body.code).toBe("profile_limit_reached");
+    expect(body.profileLimit).toBe(3);
+    expect(body.error).toContain("3 active job profiles");
+  });
+
+  it("tells an unpaid member to choose a plan rather than to upgrade", async () => {
+    let thrown: unknown;
+    try { assertProfileLimit(evaluateEntitlement(null), 1); } catch (error) { thrown = error; }
+    const body = await (thrown as Response).json();
+    expect(body.error).toContain("Choose a plan");
+  });
+
+  it("still refuses when a member is already over the limit after a downgrade", () => {
+    expect(() => assertProfileLimit(evaluateEntitlement({ ...base, plan_code: "ai_essential" }), 3)).toThrow();
+  });
+
+  it("uses the singular for a one-profile plan", async () => {
+    let thrown: unknown;
+    try { assertProfileLimit(evaluateEntitlement({ ...base, plan_code: "ai_essential" }), 1); } catch (error) { thrown = error; }
+    const body = await (thrown as Response).json();
+    expect(body.error).toContain("1 active job profile.");
+  });
+});
+
+describe("assertResumeLimit", () => {
+  it("allows resumes below the per-profile ceiling", () => {
+    expect(() => assertResumeLimit(0)).not.toThrow();
+    expect(() => assertResumeLimit(RESUMES_PER_PROFILE - 1)).not.toThrow();
+  });
+
+  it("refuses the one that would exceed it", async () => {
+    let thrown: unknown;
+    try { assertResumeLimit(RESUMES_PER_PROFILE); } catch (error) { thrown = error; }
+    expect(thrown).toBeInstanceOf(Response);
+    const response = thrown as Response;
+    expect(response.status).toBe(409);
+    const body = await response.json();
+    expect(body.code).toBe("resume_limit_reached");
+    expect(body.resumeLimit).toBe(RESUMES_PER_PROFILE);
   });
 });

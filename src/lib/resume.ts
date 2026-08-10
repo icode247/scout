@@ -1,68 +1,67 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import mammoth from "mammoth";
+import type { ResumeExtraction } from "./resume-extraction";
 
 export const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 export type ResumeKind = "pdf" | "docx";
 export type ResumeExtractionProvider = "anthropic" | "openai";
 
-export interface ResumeExtraction {
-  version: 1;
-  status: "complete";
-  contact: { name: string; email: string; phone: string; location: string };
-  headline: string;
-  summary: string;
-  roles: Array<{ title: string; company: string; location: string; start_date: string; end_date: string; achievements: string[] }>;
-  education: Array<{ institution: string; degree: string; field: string; graduation_date: string }>;
-  skills: string[];
-  target_roles: string[];
-  preferred_locations: string[];
-  salary_min: number | null;
-  work_authorization: string;
-  sponsorship_required: boolean | null;
-  extracted_at: string;
-}
+export type { ResumeExtraction } from "./resume-extraction";
+
+const text = { type: "string" } as const;
+const textList = { type: "array", items: { type: "string" } } as const;
 
 const extractionSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["contact", "headline", "summary", "roles", "education", "skills", "target_roles", "preferred_locations", "salary_min", "work_authorization", "sponsorship_required"],
+  required: [
+    "firstName", "middleName", "lastName", "email", "phoneCountryCode", "phoneNumber",
+    "streetAddress", "currentCity", "state", "zipcode", "country",
+    "headline", "summary", "yearsOfExperience", "skills", "languages", "certifications",
+    "linkedinURL", "githubURL", "website", "education", "experience",
+    "workAuthorization", "requiresSponsorship", "securityClearance",
+    "targetRoles", "preferredLocations", "desiredSalary",
+  ],
   properties: {
-    contact: {
-      type: "object", additionalProperties: false,
-      required: ["name", "email", "phone", "location"],
-      properties: { name: { type: "string" }, email: { type: "string" }, phone: { type: "string" }, location: { type: "string" } },
-    },
-    headline: { type: "string" },
-    summary: { type: "string" },
-    roles: {
-      type: "array", items: {
-        type: "object", additionalProperties: false,
-        required: ["title", "company", "location", "start_date", "end_date", "achievements"],
-        properties: {
-          title: { type: "string" }, company: { type: "string" }, location: { type: "string" },
-          start_date: { type: "string" }, end_date: { type: "string" },
-          achievements: { type: "array", items: { type: "string" } },
-        },
-      },
-    },
+    firstName: text, middleName: text, lastName: text, email: text,
+    phoneCountryCode: text, phoneNumber: text,
+    streetAddress: text, currentCity: text, state: text, zipcode: text, country: text,
+    headline: text, summary: text,
+    yearsOfExperience: { anyOf: [{ type: "integer" }, { type: "null" }] },
+    skills: textList, languages: textList, certifications: textList,
+    linkedinURL: text, githubURL: text, website: text,
     education: {
       type: "array", items: {
         type: "object", additionalProperties: false,
-        required: ["institution", "degree", "field", "graduation_date"],
-        properties: { institution: { type: "string" }, degree: { type: "string" }, field: { type: "string" }, graduation_date: { type: "string" } },
+        required: ["school", "degree", "major", "gpa", "startDate", "endDate", "location"],
+        properties: { school: text, degree: text, major: text, gpa: text, startDate: text, endDate: text, location: text },
       },
     },
-    skills: { type: "array", items: { type: "string" } },
-    target_roles: { type: "array", items: { type: "string" } },
-    preferred_locations: { type: "array", items: { type: "string" } },
-    salary_min: { anyOf: [{ type: "integer" }, { type: "null" }] },
-    work_authorization: { type: "string" },
-    sponsorship_required: { anyOf: [{ type: "boolean" }, { type: "null" }] },
+    experience: {
+      type: "array", items: {
+        type: "object", additionalProperties: false,
+        required: ["title", "company", "location", "startDate", "endDate", "description"],
+        properties: { title: text, company: text, location: text, startDate: text, endDate: text, description: text },
+      },
+    },
+    workAuthorization: text,
+    requiresSponsorship: { type: "string", enum: ["Yes", "No", ""] },
+    securityClearance: text,
+    targetRoles: textList, preferredLocations: textList, desiredSalary: text,
   },
 } as const;
 
-const extractionPrompt = "Extract only facts present in this resume. Do not invent missing values. Use empty strings or empty arrays for unknown text/list fields and null for unknown salary or sponsorship. Suggest target roles only when supported by the resume.";
+const extractionPrompt = [
+  "Extract only facts stated in this resume. Do not invent, infer, or guess missing values.",
+  "Use an empty string for unknown text, an empty array for unknown lists, and null for an unknown years of experience.",
+  "Split the candidate's name into firstName / middleName / lastName, and split their address into streetAddress, currentCity, state, zipcode, and country. Leave any part the resume does not state empty — never guess a city from an employer's location.",
+  "phoneCountryCode is the leading international dialling code (for example \"+1\"); phoneNumber is the rest of the number.",
+  "yearsOfExperience is the total years of professional experience the work history covers, rounded down. Use null when the dates are too incomplete to total.",
+  "Every startDate and endDate must be a full month name and a four-digit year, like \"March 2021\". Use just the year (\"2014\") when the resume gives no month, \"Present\" for a role or course still ongoing, and an empty string when there is no date at all. Never write a season, a quarter, a range, or an abbreviation.",
+  "workAuthorization, requiresSponsorship, and securityClearance must be left empty unless the resume states them outright.",
+  "Suggest targetRoles and preferredLocations only where the resume supports them. desiredSalary is only for a salary the resume itself states.",
+].join(" ");
 
 export function resumeExtractionProvider(): ResumeExtractionProvider {
   const provider = import.meta.env.RESUME_EXTRACTION_PROVIDER?.trim().toLowerCase() || "anthropic";
@@ -93,7 +92,7 @@ async function docxText(bytes: Uint8Array) {
 }
 
 function completeExtraction(parsed: Omit<ResumeExtraction, "version" | "status" | "extracted_at">): ResumeExtraction {
-  return { version: 1, status: "complete", ...parsed, extracted_at: new Date().toISOString() };
+  return { version: 2, status: "complete", ...parsed, extracted_at: new Date().toISOString() };
 }
 
 async function extractWithAnthropic(kind: ResumeKind, bytes: Uint8Array): Promise<ResumeExtraction> {

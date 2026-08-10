@@ -7,6 +7,7 @@
   </summary>
   <div class="border-t border-ink/10 p-4 sm:p-5">
     <p class="text-xs leading-relaxed text-ink-muted">Your primary resume supplies experience, education, projects, and achievements. Add or correct anything below that the resume does not contain.</p>
+    <p class="mt-2 text-xs leading-relaxed text-ink-muted">Scout AI cannot start applying until the personal, professional, work preference, and demographic answers are complete — employers refuse applications that leave them blank. Scout names anything still missing before you activate it.</p>
 
     <fieldset class="mt-6">
       <legend class="text-sm font-extrabold">Personal and contact</legend>
@@ -89,10 +90,10 @@
     </fieldset>
 
     <fieldset class="mt-7 border-t border-ink/10 pt-6">
-      <legend class="text-sm font-extrabold">Optional demographics</legend>
-      <p class="mt-1 text-xs text-ink-muted">Used only when an employer asks voluntary EEO questions.</p>
+      <legend class="text-sm font-extrabold">Demographics</legend>
+      <p class="mt-1 text-xs text-ink-muted">Used only when an employer asks voluntary EEO questions, but Scout needs an answer for each one before it can apply. “Prefer not to say” is a complete answer.</p>
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
-        <label class="field">Gender<select data-applicant-key="gender"><option value="">Prefer not to answer</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></label>
+        <label class="field">Gender<select data-applicant-key="gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></label>
         <label class="field">Are you Hispanic or Latino?<select data-applicant-key="ethnicity"><option value="">Select</option><option value="Hispanic or Latino">Hispanic or Latino</option><option value="Not Hispanic or Latino">Not Hispanic or Latino</option><option value="Prefer not to say">Prefer not to say</option></select></label>
         <label class="field">Race<select data-applicant-key="race"><option value="">Select</option><option value="White">White</option><option value="Black or African American">Black or African American</option><option value="Asian">Asian</option><option value="Native American or Alaska Native">Native American or Alaska Native</option><option value="Native Hawaiian or Pacific Islander">Native Hawaiian or Pacific Islander</option><option value="Two or More Races">Two or More Races</option><option value="Prefer not to say">Prefer not to say</option></select></label>
         <label class="field">Veteran status<select data-applicant-key="veteranStatus"><option value="">Select</option><option value="Yes">Yes, I am a protected veteran</option><option value="No">No, I am not a protected veteran</option><option value="Prefer not to say">Prefer not to say</option></select></label>
@@ -111,6 +112,7 @@
 
 <script>
 // @ts-nocheck
+import { MONTHS, PRESENT, formatMonthYear, parseMonthYear, yearOptions } from "../lib/month-year";
 const currencies=["USD","EUR","GBP","CAD","AUD","JPY","CNY","INR","CHF","SGD","HKD","NZD","SEK","NOK","DKK","ZAR","BRL","MXN","AED","SAR","NGN","KES","PLN","CZK","ILS","KRW","TWD","THB","MYR","PHP","IDR","VND","PKR","BDT","EGP","ARS","CLP","COP","PEN"];
 const timezones=["America/New_York (EST)","America/Chicago (CST)","America/Denver (MST)","America/Los_Angeles (PST)","America/Anchorage (AKST)","Pacific/Honolulu (HST)","Europe/London (GMT)","Europe/Paris (CET)","Europe/Helsinki (EET)","Asia/Dubai (GST)","Asia/Kolkata (IST)","Asia/Singapore (SGT)","Asia/Tokyo (JST)","Australia/Sydney (AEST)","Pacific/Auckland (NZST)","Pacific/Midway (SST)","America/Sao_Paulo (BRT)","America/Argentina/Buenos_Aires (ART)","Africa/Lagos (WAT)","Africa/Johannesburg (SAST)","Africa/Nairobi (EAT)","Europe/Moscow (MSK)","Asia/Riyadh (AST)","Asia/Tehran (IRST)","Asia/Karachi (PKT)","Asia/Kathmandu (NPT)","Asia/Dhaka (BST)","Asia/Yangon (MMT)","Asia/Bangkok (ICT)","Asia/Jakarta (WIB)","Asia/Manila (PHT)","Asia/Hong_Kong (HKT)","Asia/Seoul (KST)","Australia/Adelaide (ACST)"];
 document.querySelectorAll("[data-applicant-editor]").forEach(editor=>{
@@ -118,16 +120,43 @@ document.querySelectorAll("[data-applicant-editor]").forEach(editor=>{
   const linksContainer=editor.querySelector("[data-additional-links]"),referencesContainer=editor.querySelector("[data-references]"),linksValue=editor.querySelector('[data-applicant-key="additionalLinksText"]'),referencesValue=editor.querySelector('[data-applicant-key="referencesText"]');
   const educationContainer=editor.querySelector("[data-education]"),experienceContainer=editor.querySelector("[data-experience]"),educationValue=editor.querySelector('[data-applicant-key="educationJson"]'),experienceValue=editor.querySelector('[data-applicant-key="experienceJson"]');
   let linkEntries=[],referenceEntries=[],educationEntries=[],experienceEntries=[];
-  const dynamicControlClass="mt-1.5 w-full rounded-xl border border-ink/15 bg-white px-3 py-2.5 text-sm font-normal text-ink outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-200";
+  // Split so a control can be placed inside an already-spaced row. Appending "mt-0" would
+  // not work: Tailwind emits .mt-0 before .mt-1.5, so the larger margin wins regardless.
+  const controlClass="w-full rounded-xl border border-ink/15 bg-white px-3 py-2.5 text-sm font-normal text-ink outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-200";
+  const dynamicControlClass="mt-1.5 "+controlClass;
   const field=(label,type="text")=>{const wrapper=document.createElement("label");wrapper.className="block text-xs font-bold text-ink";wrapper.textContent=label;const input=document.createElement("input");input.type=type;input.className=dynamicControlClass;wrapper.append(input);return{wrapper,input}};
+  const years=yearOptions();
+  /**
+   * A month + year pair, so a date can only ever be "March 2021", a bare year,
+   * "Present", or empty. Two selects rather than <input type="month">, which
+   * Firefox and desktop Safari render as a free text box — exactly what this
+   * control exists to prevent. Choosing Present clears and disables the year.
+   */
+  const monthYearField=(label,value,allowPresent,onChange)=>{
+    const parts=parseMonthYear(value);
+    const wrapper=document.createElement("div");wrapper.className="block";
+    const caption=document.createElement("span");caption.className="block text-xs font-bold text-ink";caption.textContent=label;
+    const row=document.createElement("div");row.className="mt-1.5 grid grid-cols-2 gap-2";
+    const month=document.createElement("select"),year=document.createElement("select");
+    month.className=controlClass;year.className=controlClass;
+    month.setAttribute("aria-label",label+" month");year.setAttribute("aria-label",label+" year");
+    month.replaceChildren(new Option("Month",""),...(allowPresent?[new Option(PRESENT,PRESENT)]:[]),...MONTHS.map(name=>new Option(name,name)));
+    year.replaceChildren(new Option("Year",""),...years.map(value=>new Option(value,value)));
+    const syncDisabled=()=>{const present=month.value===PRESENT;year.disabled=present;year.classList.toggle("opacity-50",present);if(present)year.value=""};
+    month.value=parts.present?PRESENT:parts.month;year.value=parts.present?"":parts.year;syncDisabled();
+    const emit=()=>{syncDisabled();onChange(formatMonthYear({month:month.value===PRESENT?"":month.value,year:year.value,present:month.value===PRESENT}))};
+    month.addEventListener("change",emit);year.addEventListener("change",emit);
+    row.append(month,year);wrapper.append(caption,row);
+    return wrapper;
+  };
   const syncStructured=()=>{linksValue.value=linkEntries.filter(item=>item.label||item.url).map(item=>item.label+" | "+item.url).join("\n");referencesValue.value=referenceEntries.filter(item=>item.name||item.email||item.phone||item.type).map(item=>[item.name,item.email,item.phone,item.type].join(" | ")).join("\n");educationValue.value=JSON.stringify(educationEntries);experienceValue.value=JSON.stringify(experienceEntries)};
   const renderLinks=()=>{linksContainer.replaceChildren();linkEntries.forEach((item,index)=>{const row=document.createElement("div");row.className="grid gap-3 rounded-xl bg-white p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] sm:items-end";const label=field("Label"),url=field("URL","url"),remove=document.createElement("button");label.input.value=item.label;label.input.placeholder="Dribbble";url.input.value=item.url;url.input.placeholder="https://...";remove.type="button";remove.className="rounded-full px-3 py-2 text-xs font-bold text-red-700";remove.textContent="Remove";label.input.addEventListener("input",()=>{item.label=label.input.value;syncStructured()});url.input.addEventListener("input",()=>{item.url=url.input.value;syncStructured()});remove.addEventListener("click",()=>{linkEntries.splice(index,1);renderLinks();syncStructured()});row.append(label.wrapper,url.wrapper,remove);linksContainer.append(row)});if(!linkEntries.length){const empty=document.createElement("p");empty.className="rounded-lg bg-white px-3 py-4 text-center text-xs text-ink-muted";empty.textContent="No additional links yet.";linksContainer.append(empty)}};
   const renderReferences=()=>{referencesContainer.replaceChildren();referenceEntries.forEach((item,index)=>{const row=document.createElement("div");row.className="rounded-xl bg-white p-3";const top=document.createElement("div");top.className="mb-3 flex items-center justify-between";const title=document.createElement("strong");title.className="text-xs";title.textContent="Reference "+(index+1);const remove=document.createElement("button");remove.type="button";remove.className="text-xs font-bold text-red-700";remove.textContent="Remove";remove.addEventListener("click",()=>{referenceEntries.splice(index,1);renderReferences();syncStructured()});top.append(title,remove);const grid=document.createElement("div");grid.className="grid gap-3 sm:grid-cols-2";const name=field("Name"),email=field("Email","email"),phone=field("Phone"),typeWrap=document.createElement("label"),type=document.createElement("select");typeWrap.className="block text-xs font-bold text-ink";typeWrap.textContent="Reference type";type.className=dynamicControlClass;type.replaceChildren(new Option("Select",""),new Option("Personal","Personal"),new Option("Work","Work"));typeWrap.append(type);name.input.value=item.name;email.input.value=item.email;phone.input.value=item.phone;type.value=item.type;[[name.input,"name"],[email.input,"email"],[phone.input,"phone"],[type,"type"]].forEach(([control,key])=>control.addEventListener("input",()=>{item[key]=control.value;syncStructured()}));grid.append(name.wrapper,email.wrapper,phone.wrapper,typeWrap);row.append(top,grid);referencesContainer.append(row)});if(!referenceEntries.length){const empty=document.createElement("p");empty.className="rounded-lg bg-white px-3 py-4 text-center text-xs text-ink-muted";empty.textContent="No references yet.";referencesContainer.append(empty)}};
   const emptyState=(text)=>{const empty=document.createElement("p");empty.className="rounded-lg bg-white px-3 py-4 text-center text-xs text-ink-muted";empty.textContent=text;return empty};
   const cardHeader=(text,onRemove)=>{const top=document.createElement("div"),title=document.createElement("strong"),remove=document.createElement("button");top.className="mb-3 flex items-center justify-between gap-3";title.className="text-xs";title.textContent=text;remove.type="button";remove.className="text-xs font-bold text-red-700";remove.textContent="Remove";remove.addEventListener("click",onRemove);top.append(title,remove);return top};
   const bindEntry=(control,item,key)=>control.addEventListener("input",()=>{item[key]=control.value;syncStructured()});
-  const renderEducation=()=>{educationContainer.replaceChildren();educationEntries.forEach((item,index)=>{const card=document.createElement("div"),grid=document.createElement("div"),school=field("School"),major=field("Field of study / major"),gpa=field("GPA"),startDate=field("Start date"),endDate=field("End date"),location=field("Location"),degreeWrap=document.createElement("label"),degree=document.createElement("select");card.className="rounded-xl bg-white p-3 sm:p-4";grid.className="grid gap-3 sm:grid-cols-2";degreeWrap.className="block text-xs font-bold text-ink";degreeWrap.textContent="Degree";degree.className=dynamicControlClass;degree.replaceChildren(new Option("Select",""),...["High School Diploma","Associate Degree","Bachelor's Degree","Master's Degree","Doctorate/PhD","Other"].map(value=>new Option(value,value)));degreeWrap.append(degree);school.input.value=item.school||"";degree.value=item.degree||"";if(item.degree&&!Array.from(degree.options).some(option=>option.value===item.degree)){degree.add(new Option(item.degree,item.degree));degree.value=item.degree}major.input.value=item.major||item.field||item.fieldOfStudy||"";gpa.input.value=item.gpa||"";startDate.input.value=item.startDate||"";endDate.input.value=item.endDate||"";location.input.value=item.location||"";[[school.input,"school"],[degree,"degree"],[major.input,"major"],[gpa.input,"gpa"],[startDate.input,"startDate"],[endDate.input,"endDate"],[location.input,"location"]].forEach(([control,key])=>bindEntry(control,item,key));school.wrapper.classList.add("sm:col-span-2");location.wrapper.classList.add("sm:col-span-2");grid.append(school.wrapper,degreeWrap,major.wrapper,gpa.wrapper,startDate.wrapper,endDate.wrapper,location.wrapper);card.append(cardHeader("Education "+(index+1),()=>{educationEntries.splice(index,1);renderEducation();syncStructured()}),grid);educationContainer.append(card)});if(!educationEntries.length)educationContainer.append(emptyState("No education added yet."))};
-  const renderExperience=()=>{experienceContainer.replaceChildren();experienceEntries.forEach((item,index)=>{const card=document.createElement("div"),grid=document.createElement("div"),title=field("Job title"),company=field("Company"),location=field("Location"),startDate=field("Start date"),endDate=field("End date"),descriptionWrap=document.createElement("label"),description=document.createElement("textarea");card.className="rounded-xl bg-white p-3 sm:p-4";grid.className="grid gap-3 sm:grid-cols-2";descriptionWrap.className="block text-xs font-bold text-ink sm:col-span-2";descriptionWrap.textContent="Description";description.className=dynamicControlClass+" min-h-28 resize-y";descriptionWrap.append(description);title.input.value=item.title||item.role||item.position||"";company.input.value=item.company||"";location.input.value=item.location||"";startDate.input.value=item.startDate||"";endDate.input.value=item.endDate||"";description.value=item.description||"";[[title.input,"title"],[company.input,"company"],[location.input,"location"],[startDate.input,"startDate"],[endDate.input,"endDate"],[description,"description"]].forEach(([control,key])=>bindEntry(control,item,key));location.wrapper.classList.add("sm:col-span-2");grid.append(title.wrapper,company.wrapper,location.wrapper,startDate.wrapper,endDate.wrapper,descriptionWrap);card.append(cardHeader("Experience "+(index+1),()=>{experienceEntries.splice(index,1);renderExperience();syncStructured()}),grid);experienceContainer.append(card)});if(!experienceEntries.length)experienceContainer.append(emptyState("No experience added yet."))};
+  const renderEducation=()=>{educationContainer.replaceChildren();educationEntries.forEach((item,index)=>{const card=document.createElement("div"),grid=document.createElement("div"),school=field("School"),major=field("Field of study / major"),gpa=field("GPA"),location=field("Location"),degreeWrap=document.createElement("label"),degree=document.createElement("select");card.className="rounded-xl bg-white p-3 sm:p-4";grid.className="grid gap-3 sm:grid-cols-2";degreeWrap.className="block text-xs font-bold text-ink";degreeWrap.textContent="Degree";degree.className=dynamicControlClass;degree.replaceChildren(new Option("Select",""),...["High School Diploma","Associate Degree","Bachelor's Degree","Master's Degree","Doctorate/PhD","Other"].map(value=>new Option(value,value)));degreeWrap.append(degree);school.input.value=item.school||"";degree.value=item.degree||"";if(item.degree&&!Array.from(degree.options).some(option=>option.value===item.degree)){degree.add(new Option(item.degree,item.degree));degree.value=item.degree}major.input.value=item.major||item.field||item.fieldOfStudy||"";gpa.input.value=item.gpa||"";location.input.value=item.location||"";const startDate=monthYearField("Start date",item.startDate,false,value=>{item.startDate=value;syncStructured()}),endDate=monthYearField("End date",item.endDate,true,value=>{item.endDate=value;syncStructured()});[[school.input,"school"],[degree,"degree"],[major.input,"major"],[gpa.input,"gpa"],[location.input,"location"]].forEach(([control,key])=>bindEntry(control,item,key));school.wrapper.classList.add("sm:col-span-2");location.wrapper.classList.add("sm:col-span-2");grid.append(school.wrapper,degreeWrap,major.wrapper,gpa.wrapper,startDate,endDate,location.wrapper);card.append(cardHeader("Education "+(index+1),()=>{educationEntries.splice(index,1);renderEducation();syncStructured()}),grid);educationContainer.append(card)});if(!educationEntries.length)educationContainer.append(emptyState("No education added yet."))};
+  const renderExperience=()=>{experienceContainer.replaceChildren();experienceEntries.forEach((item,index)=>{const card=document.createElement("div"),grid=document.createElement("div"),title=field("Job title"),company=field("Company"),location=field("Location"),descriptionWrap=document.createElement("label"),description=document.createElement("textarea");card.className="rounded-xl bg-white p-3 sm:p-4";grid.className="grid gap-3 sm:grid-cols-2";descriptionWrap.className="block text-xs font-bold text-ink sm:col-span-2";descriptionWrap.textContent="Description";description.className=dynamicControlClass+" min-h-28 resize-y";descriptionWrap.append(description);title.input.value=item.title||item.role||item.position||"";company.input.value=item.company||"";location.input.value=item.location||"";description.value=item.description||"";const startDate=monthYearField("Start date",item.startDate,false,value=>{item.startDate=value;syncStructured()}),endDate=monthYearField("End date",item.endDate,true,value=>{item.endDate=value;syncStructured()});[[title.input,"title"],[company.input,"company"],[location.input,"location"],[description,"description"]].forEach(([control,key])=>bindEntry(control,item,key));location.wrapper.classList.add("sm:col-span-2");grid.append(title.wrapper,company.wrapper,location.wrapper,startDate,endDate,descriptionWrap);card.append(cardHeader("Experience "+(index+1),()=>{experienceEntries.splice(index,1);renderExperience();syncStructured()}),grid);experienceContainer.append(card)});if(!experienceEntries.length)experienceContainer.append(emptyState("No experience added yet."))};
   editor.querySelector("[data-add-link]").addEventListener("click",()=>{linkEntries.push({label:"",url:""});renderLinks()});editor.querySelector("[data-add-reference]").addEventListener("click",()=>{referenceEntries.push({name:"",email:"",phone:"",type:""});renderReferences()});
   editor.querySelector("[data-add-education]").addEventListener("click",()=>{educationEntries.push({school:"",degree:"",major:"",gpa:"",startDate:"",endDate:"",location:""});renderEducation();syncStructured()});
   editor.querySelector("[data-add-experience]").addEventListener("click",()=>{experienceEntries.push({title:"",company:"",location:"",startDate:"",endDate:"",description:""});renderExperience();syncStructured()});
@@ -135,20 +164,47 @@ document.querySelectorAll("[data-applicant-editor]").forEach(editor=>{
   salaryNegotiable.addEventListener("change",syncSalary);salaryAmount.addEventListener("input",()=>{if(salaryAmount.value){salaryNegotiable.checked=false;syncSalary()}});
   editor.querySelectorAll("[data-currency]").forEach(select=>select.innerHTML='<option value="">Select</option>'+currencies.map(code=>'<option>'+code+'</option>').join(""));
   editor.querySelectorAll("[data-timezone]").forEach(select=>select.replaceChildren(new Option("Select timezone",""),...timezones.map(value=>new Option(value,value))));
-  editor.querySelectorAll("[data-country]").forEach(select=>fetch("/data/countries-cities.json").then(response=>response.json()).then(data=>{const current=select.value;select.replaceChildren(new Option("Select country",""),...data.map(item=>new Option(item.country,item.country)));if(current&&!Array.from(select.options).some(option=>option.value===current))select.add(new Option(current,current));select.value=current}).catch(()=>{}));
-  editor.addEventListener("scout:set-applicant-profile",event=>{
-    const data=event.detail||{};
+  // The member's own country of residence — an ISO country list, not the job-search
+  // location options, which also contain cities, regions and remote wordings.
+  editor.querySelectorAll("[data-country]").forEach(select=>fetch("/data/countries.json").then(response=>response.json()).then(data=>{const current=select.value;select.replaceChildren(new Option("Select country",""),...data.map(country=>new Option(country,country)));if(current&&!Array.from(select.options).some(option=>option.value===current))select.add(new Option(current,current));select.value=current}).catch(()=>{}));
+  const isBlank=input=>input.type==="checkbox"?!input.checked:!String(input.value||"").trim();
+  // Hidden inputs that carry the dynamic sections; they are not answers a member sees.
+  const synthetic=new Set(["educationJson","experienceJson","referencesText","additionalLinksText"]);
+  // onlyEmpty backs the resume-driven prefill: swapping or uploading a resume fills the
+  // blanks and never overwrites an answer the member typed or previously saved.
+  function applyProfile(data,onlyEmpty){
+    let filled=0;
     editor.querySelectorAll("[data-applicant-key]").forEach(input=>{
       const key=input.dataset.applicantKey;
       let value=data[key];
+      if(onlyEmpty&&!isBlank(input))return;
       if(key==="skills"||key==="languages")value=Array.isArray(value)?value.join(", "):value;
       if(key==="certifications"&&Array.isArray(value))value=value.map(item=>typeof item==="string"?item:item.name).filter(Boolean).join(", ");
       if(key==="referencesText"&&Array.isArray(data.references))value=data.references.map(item=>[item.name,item.email,item.phone,item.type].filter(Boolean).join(" | ")).join("\n");
       if(key==="additionalLinksText"&&data.additionalLinks)value=Object.entries(data.additionalLinks).map(([label,url])=>label+" | "+url).join("\n");
+      if(onlyEmpty&&(value===undefined||value===null||value===""||(Array.isArray(value)&&!value.length)))return;
       if(input.type==="checkbox")input.checked=Boolean(value);else{const normalized=value??"";if(input.tagName==="SELECT"&&normalized&&!Array.from(input.options).some(option=>option.value===String(normalized)))input.add(new Option(String(normalized),String(normalized)));input.value=normalized}
+      if(!synthetic.has(key)&&!isBlank(input))filled++;
     });
-    linkEntries=data.additionalLinks?Object.entries(data.additionalLinks).map(([label,url])=>({label,url:String(url)})):[];referenceEntries=Array.isArray(data.references)?data.references.map(item=>({name:item.name||"",email:item.email||"",phone:item.phone||"",type:item.type||""})):[];educationEntries=Array.isArray(data.education)?data.education.map(item=>({...item,major:item.major||item.field||item.fieldOfStudy||""})):[];experienceEntries=Array.isArray(data.experience)?data.experience.map(item=>({...item,title:item.title||item.role||item.position||""})):[];renderLinks();renderReferences();renderEducation();renderExperience();syncStructured();
+    const links=data.additionalLinks?Object.entries(data.additionalLinks).map(([label,url])=>({label,url:String(url)})):[];
+    const references=Array.isArray(data.references)?data.references.map(item=>({name:item.name||"",email:item.email||"",phone:item.phone||"",type:item.type||""})):[];
+    const education=Array.isArray(data.education)?data.education.map(item=>({...item,major:item.major||item.field||item.fieldOfStudy||""})):[];
+    const experience=Array.isArray(data.experience)?data.experience.map(item=>({...item,title:item.title||item.role||item.position||""})):[];
+    if(!onlyEmpty||!linkEntries.length)linkEntries=links;
+    if(!onlyEmpty||!referenceEntries.length)referenceEntries=references;
+    if(!onlyEmpty||!educationEntries.length)educationEntries=education;
+    if(!onlyEmpty||!experienceEntries.length)experienceEntries=experience;
+    renderLinks();renderReferences();renderEducation();renderExperience();syncStructured();
     syncSalary();
+    return filled;
+  }
+  editor.addEventListener("scout:set-applicant-profile",event=>applyProfile(event.detail||{},false));
+  // Reports how many answers are now filled so the profile editor can tell the member
+  // what the resume covered.
+  editor.addEventListener("scout:fill-applicant-profile",event=>{
+    const detail=event.detail||{};
+    const filled=applyProfile(detail.profile||detail,true);
+    detail.onFilled?.(filled);
   });
   editor.closest("form")?.addEventListener("formdata",event=>{
     const profile={};
