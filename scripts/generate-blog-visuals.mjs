@@ -283,6 +283,70 @@ const posts = [
       { title: "Receipt + pause", body: "See the work and stop it fast.", tone: "lime" },
     ]},
   },
+  {
+    slug: "pay-someone-to-apply-for-jobs-for-you",
+    cover: { kicker: "Delegation guide", title: "Pay someone to apply for jobs for you", subtitle: "Choose the right scope, controls, and evidence before handing off your search.", cards: ["Define the search", "Protect your answers", "Review the proof"], accent: C.signal },
+    info1: { type: "cards", kicker: "Service levels", title: "Four ways to delegate applications", subtitle: "The right choice depends on which decisions you want to keep.", columns: 2, items: [
+      { title: "Freelance VA", body: "Flexible execution that needs your training and supervision." },
+      { title: "Managed service", body: "Defined profiles, records, and an operating process.", tone: "lime" },
+      { title: "AI assistant", body: "Lower-cost execution for clear, repeatable searches." },
+      { title: "Reverse recruiter", body: "Broader strategy, outreach, networking, and coaching.", tone: "amber" },
+    ]},
+    info2: { type: "cards", kicker: "Buyer checklist", title: "Settle this before the first application", subtitle: "A written operating brief protects speed and accuracy.", columns: 3, items: [
+      { title: "Target roles", body: "Titles, seniority, location, and exclusions." }, { title: "Hard answers", body: "Salary, sponsorship, clearance, travel.", tone: "amber" },
+      { title: "Resume rules", body: "Approved versions and truthful edits." }, { title: "Approval mode", body: "Review each job or permit strict profiles." },
+      { title: "Evidence", body: "Job, date, answers, file, and status.", tone: "lime" }, { title: "Stop control", body: "Pause or change direction quickly." },
+    ]},
+  },
+  {
+    slug: "best-job-application-services-2026",
+    cover: { kicker: "2026 buyer guide", title: "Best job application services in 2026", subtitle: "Compare human, AI, and reverse recruiting options by their actual work.", cards: ["Human service", "AI assistant", "Reverse recruiter"], accent: C.brand },
+    info1: { type: "cards", kicker: "Shortlist", title: "Match the service to the job", subtitle: "Best means best fit for your search, budget, and control.", columns: 3, items: [
+      { title: "Scout Human", body: "Human execution, communication, and detailed evidence.", tone: "lime" }, { title: "Scout AI", body: "Lower-cost throughput for clear job profiles." },
+      { title: "Scale.jobs", body: "Large one-time human application bundles." }, { title: "ApplyAll", body: "Managed packages with human review." },
+      { title: "JobCopilot", body: "AI discovery, applying, and career tools." }, { title: "LazyApply", body: "Bulk applications on supported sites.", tone: "amber" },
+    ]},
+    info2: { type: "split", kicker: "Decision guide", title: "Human service or automation?", subtitle: "Choose based on ambiguity, risk, and desired supervision.", rightTone: "amber", sides: [
+      { title: "Human-led fits when", items: ["Forms contain frequent exceptions", "You want direct communication", "Detailed evidence matters", "The search needs judgment"] },
+      { title: "Automation fits when", items: ["Profiles are narrow and repeatable", "Budget is the main constraint", "You will audit early results", "Supported sites cover targets"] },
+    ]},
+  },
+  {
+    slug: "job-application-service-cost",
+    cover: { kicker: "Pricing guide", title: "How much does a job application service cost?", subtitle: "Compare total cost per qualified application, not sticker price alone.", cards: ["Price model", "Work included", "Quality cost"], accent: C.amber },
+    info1: { type: "cards", kicker: "Price models", title: "How application services charge", subtitle: "Similar prices might include completely different work.", columns: 2, items: [
+      { title: "Subscription", body: "Recurring access tied to usage limits or features." }, { title: "Application bundle", body: "One payment for a stated number of submissions.", tone: "lime" },
+      { title: "Hourly assistant", body: "Labor time, including training and corrections." }, { title: "Full engagement", body: "Strategy, outreach, coaching, and applications.", tone: "amber" },
+    ]},
+    info2: { type: "cards", kicker: "True cost", title: "Cost per qualified application", subtitle: "Remove wrong-fit, duplicate, and unverifiable submissions.", columns: 3, items: [
+      { title: "Service fee", body: "Base plan plus required add-ons." }, { title: "Your time", body: "Setup, review, and correction hours." }, { title: "Wrong-fit loss", body: "Work outside the approved profile.", tone: "amber" },
+      { title: "Duplicate loss", body: "Repeated work on one requisition." }, { title: "Unused credits", body: "Volume that expires or stays idle." }, { title: "Qualified total", body: "Verified work that met your rules.", tone: "lime" },
+    ]},
+  },
+  {
+    slug: "virtual-assistant-for-job-applications",
+    cover: { kicker: "Hiring guide", title: "Virtual assistant for job applications", subtitle: "Understand costs, training, privacy risks, and managed alternatives.", cards: ["Write the brief", "Run a pilot", "Audit the evidence"], accent: C.signal },
+    info1: { type: "cards", kicker: "Operating system", title: "What an assistant needs before starting", subtitle: "A resume alone does not support safe delegation.", columns: 3, items: [
+      { title: "Search profiles", body: "Targets, exclusions, and eligibility." }, { title: "Answer library", body: "Verified recurring responses." }, { title: "Resume policy", body: "Approved files and edits." },
+      { title: "Escalation list", body: "Questions that return to you.", tone: "amber" }, { title: "Application log", body: "Job, status, answers, and file." }, { title: "Quality review", body: "Audit before raising volume.", tone: "lime" },
+    ]},
+    info2: { type: "split", kicker: "Tradeoffs", title: "Independent VA vs managed service", subtitle: "The difference is who builds and supervises the process.", rightTone: "amber", sides: [
+      { title: "Managed service", items: ["Provides a defined workflow", "Centralizes profiles and records", "Includes support coverage", "Reduces direct supervision"] },
+      { title: "Independent VA", items: ["Offers flexible task scope", "Needs candidate-led training", "Requires your security process", "Leaves quality control with you"] },
+    ]},
+  },
+  {
+    slug: "job-search-concierge-vs-reverse-recruiter",
+    cover: { kicker: "Service comparison", title: "Job search concierge vs reverse recruiter", subtitle: "Separate application execution from strategy, outreach, and coaching.", cards: ["Execution", "Strategy", "Outreach"], accent: C.brand },
+    info1: { type: "split", kicker: "Scope", title: "Where the two services differ", subtitle: "Names vary, so compare the written deliverables.", rightTone: "amber", sides: [
+      { title: "Job search concierge", items: ["Finds and submits suitable jobs", "Manages forms and records", "Handles recurring questions", "Focuses on operational workload"] },
+      { title: "Reverse recruiter", items: ["Builds a wider strategy", "Adds networking and outreach", "Often includes interview coaching", "Focuses on the whole campaign"] },
+    ]},
+    info2: { type: "cards", kicker: "Selection", title: "Questions that reveal the real scope", subtitle: "Ask for direct answers before comparing prices.", columns: 3, items: [
+      { title: "Who finds jobs?", body: "Candidate, assistant, or shared queue?" }, { title: "Who applies?", body: "Human, software, or both?" }, { title: "Who networks?", body: "Is outreach included?", tone: "amber" },
+      { title: "What is logged?", body: "Files, answers, status, proof." }, { title: "How is fit set?", body: "Written profiles or messages?" }, { title: "How is success judged?", body: "Work, interviews, or a promise?", tone: "lime" },
+    ]},
+  },
 ];
 
 for (const post of posts) {
