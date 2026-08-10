@@ -1,6 +1,26 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+
+/**
+ * Every file under src/pages is a route. `src/pages/jobs.test.ts` was built and served as
+ * a `/jobs.test` route, which collided with `/jobs` and returned 500 in production for
+ * every visitor. Vitest's include glob is `src/**\/*.test.ts`, so nothing else stops a
+ * test file being written there.
+ */
+function testFilesUnderPages(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) return testFilesUnderPages(path);
+    return /\.(test|spec)\.[cm]?[jt]sx?$/.test(entry.name) ? [path] : [];
+  });
+}
+
+describe("src/pages", () => {
+  it("contains no test files, because Astro serves everything there as a route", () => {
+    expect(testFilesUnderPages(resolve(import.meta.dirname, "../pages"))).toEqual([]);
+  });
+});
 
 /**
  * The jobs list filters itself by toggling Tailwind's `.hidden` on each card — that is
@@ -15,7 +35,10 @@ import { describe, expect, it } from "vitest";
  * This guards the fix: whatever `display` rules the page grows, the one that hides a
  * filtered card has to outrank them.
  */
-const source = readFileSync(resolve(import.meta.dirname, "jobs.astro"), "utf8");
+// Deliberately not in src/pages/: everything under that directory is a route, so a test
+// file there is built and served as one. `src/pages/jobs.test.ts` became a `/jobs.test`
+// route that collided with `/jobs` and took the page down in production.
+const source = readFileSync(resolve(import.meta.dirname, "../pages/jobs.astro"), "utf8");
 const styles = [...source.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((match) => match[1]).join("\n");
 
 /** Counts ids/classes/attributes/elements the way the cascade does, before Astro's scoping attribute. */
