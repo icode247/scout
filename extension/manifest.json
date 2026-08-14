@@ -39,7 +39,6 @@
     "default_path": "src/sidepanel.html"
   },
   "permissions": [
-    "activeTab",
     "identity",
     "scripting",
     "sidePanel",

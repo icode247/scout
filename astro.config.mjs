@@ -80,5 +80,23 @@ export default defineConfig({
       // being dropped at the Vite layer. A leading dot matches subdomains.
       allowedHosts: [".ngrok-free.app", ".ngrok.io", ".ngrok.app", ".trycloudflare.com", ".loca.lt"],
     },
+    ssr: {
+      // sanitize-html is CommonJS but depends on htmlparser2@12, which is
+      // ESM-only. Left external, the deployed function hits sanitize-html's
+      // require("htmlparser2") at module load and Vercel's runtime loader
+      // throws ERR_REQUIRE_ESM — which 500'd /jobs and /api/app/job-search
+      // before middleware ever ran. Bundling only sanitize-html is not
+      // enough either: Vite's CJS interop then emits default-imports of its
+      // still-external deps (`import x from "is-plain-object"`), which have
+      // no default export as ESM — the same crash one layer down. So the
+      // whole transitive dependency closure of sanitize-html is bundled;
+      // no runtime import of any of these may remain in the server output.
+      noExternal: [
+        "sanitize-html", "htmlparser2", "dayjs", "deepmerge", "dom-serializer",
+        "domelementtype", "domhandler", "domutils", "entities",
+        "escape-string-regexp", "is-plain-object", "launder", "nanoid",
+        "parse-srcset", "picocolors", "postcss", "source-map-js",
+      ],
+    },
   },
 });

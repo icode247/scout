@@ -12,7 +12,7 @@ if (contentScripts[0] !== "src/job-extractor.js" || contentScripts[1] !== "src/c
 if (manifest.content_scripts?.[0]?.all_frames !== true) {
   throw new Error("Embedded ATS pages require all-frame content extraction.");
 }
-for (const permission of ["activeTab", "identity", "scripting", "sidePanel", "storage", "webNavigation"]) {
+for (const permission of ["identity", "scripting", "sidePanel", "storage", "webNavigation"]) {
   if (!manifest.permissions.includes(permission)) throw new Error(`Missing permission: ${permission}`);
 }
 for (const file of ["src/background.js", "src/content.js", "src/sidepanel.js", "src/sidepanel.html", "src/sidepanel.css", "assets/logo-horizontal.svg", "assets/icon-128.png"]) await stat(resolve(root, file));

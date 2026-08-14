@@ -1,9 +1,8 @@
 ---
 import Legal from "../layouts/Legal.astro";
 ---
-<Legal title="Privacy Policy" description="Learn what personal, resume, and application data Scout collects, how we use it, and the choices you have about your information.">
-  <p><em>TODO(launch): have counsel review. Replace company entity and contact below with final details.</em></p>
-  <p>This Privacy Policy explains how Scout ("Scout", "we", "us"), operated by Scout, collects, uses, and protects your information when you use the Scout mobile app and website.</p>
+<Legal title="Privacy Policy" description="Learn what personal, resume, and application data Scout collects, how we use it, and the choices you have about your information." updated="2026-08-14">
+  <p>This Privacy Policy explains how Scout ("Scout", "we", "us"), operated by Scout LTD, collects, uses, and protects your information when you use the Scout mobile app and website. If you use the Scout browser extension, the <a href="/privacy/extension">Extension Privacy Policy</a> also applies.</p>
 
   <h2>Information we collect</h2>
   <ul>
@@ -21,14 +20,22 @@ import Legal from "../layouts/Legal.astro";
   </ul>
 
   <h2>How we share information</h2>
-  <p>We submit your application materials to the employers and job platforms you choose to apply to. We use service providers, including our application-automation and infrastructure providers, and the configured resume-analysis provider (OpenAI or Anthropic), under agreements that protect your data. We do not sell your personal information.</p>
+  <p>We submit your application materials to the employers and job platforms you choose to apply to. When you use our Human Assistant service, the assistant you select can access your submitted jobs, profile, and application materials solely to provide that service, under confidentiality obligations. We do not sell your personal information.</p>
+  <p>We also rely on service providers, under agreements that protect your data:</p>
+  <ul>
+    <li><strong>Supabase</strong>, database, authentication, and file storage.</li>
+    <li><strong>Vercel</strong>, website and application hosting.</li>
+    <li><strong>Heroku (Salesforce)</strong>, hosting for our application-automation service.</li>
+    <li><strong>OpenAI</strong> and <strong>Anthropic</strong>, resume analysis and generation of tailored application documents.</li>
+    <li><strong>PostHog</strong>, product analytics that help us understand how Scout is used.</li>
+  </ul>
 
   <h2>Data retention and your rights</h2>
-  <p>You can access, export, or delete your data at any time. To delete your account and associated data, see our <a href="/delete-account">account deletion page</a>. Depending on your location, you may have rights under the GDPR or CCPA, including access, correction, and deletion.</p>
+  <p>We keep your account, resume, and application data for as long as your account is active. You can access, export, or delete your data at any time. To delete your account and associated data, see our <a href="/delete-account">account deletion page</a>; we delete personal data within 30 days of a verified request, except where the law requires us to keep it longer. Depending on your location, you may have rights under the GDPR or CCPA, including access, correction, and deletion.</p>
 
   <h2>Security</h2>
-  <p>We use industry-standard safeguards to protect your information. No method of transmission or storage is 100% secure, but we work to protect your data and limit access to it.</p>
+  <p>We use industry-standard safeguards to protect your information, including encrypted transmission over HTTPS and access controls that limit production data to authorised personnel. No method of transmission or storage is 100% secure, but we work to protect your data and limit access to it.</p>
 
   <h2>Contact</h2>
-  <p>Questions? Email <a href="mailto:privacy@getscout.app">privacy@getscout.app</a>.</p>
+  <p>Scout LTD. Questions? Email <a href="mailto:privacy@getscout.app">privacy@getscout.app</a>.</p>
 </Legal>

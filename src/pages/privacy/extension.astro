@@ -1,0 +1,55 @@
+---
+import Legal from "../../layouts/Legal.astro";
+---
+<Legal title="Extension Privacy Policy" description="What data the Scout browser extension handles, what stays on your device, what is sent to Scout when you click Send this job, and who can access it." updated="2026-08-14">
+  <p>The Scout browser extension is operated by Scout LTD ("Scout", "we", "us"). This policy explains what data the extension handles, what stays on your device, what is sent to Scout and when, who can access it, and what rights you have over it. Your use of the Scout platform is covered by our main <a href="/privacy">Privacy Policy</a>.</p>
+
+  <h2>What the extension does</h2>
+  <p>The Scout extension lets you capture a job posting you are viewing in your browser and send it to your Scout account with one click. Once submitted, the Human Assistant you have selected in Scout uses that job's information to provide the service you requested for it, such as preparing your tailored application materials and submitting your application to that job.</p>
+
+  <h2>Data the extension handles</h2>
+  <ul>
+    <li><strong>Account and authentication data</strong>. When you connect the extension, Scout receives the identity of the Scout account you signed in to. The extension stores the session's access token, refresh token, expiry time, and the Supabase authentication URL and public API key in Chrome's local extension storage. It uses these values only to keep you signed in and authenticate requests to Scout. Scout also returns your assistant type, assigned Human Assistant's name and avatar (if assigned), paid-access status, whether you can submit a job, remaining application allowance, and upgrade URL so the extension can show the correct account state.</li>
+    <li><strong>Job-page and source-URL data</strong>. When you open the Scout side panel, the extension reads the active page and, where a job listing is embedded, its frames. It extracts the job title, company, location, employment type, salary, description, and the listing or application page URL (the <strong>"source URL"</strong>). You can review and edit the extracted fields before sending. Extraction happens locally in your browser.</li>
+    <li><strong>Submitted job data</strong>. When you click <strong>"Send this job"</strong>, the title, company, location, employment type, salary, description, source URL, and selected job-profile ID are sent to Scout. Scout associates them with the account identified by your authentication token and creates a job and application record.</li>
+    <li><strong>Job-profile preferences</strong>. Scout sends the extension the ID and name of each active Human Assistant job profile and whether that profile uses the original resume or a tailored resume. The extension stores the ID of the profile you last selected for a website's hostname (for example, <code>example.com</code>) in Chrome's local extension storage so it can select it again on that site. The extension does not receive the contents of your resume, target-role list, preferred-location list, or salary target.</li>
+  </ul>
+  <p>The extension does not collect your browsing history, track unrelated browsing, log keystrokes, read page data for purposes other than the job-capture feature, or include advertising or third-party analytics trackers.</p>
+
+  <h2>What stays local and what is sent to Scout</h2>
+  <p>Your authentication session, remembered profile-for-site selection, and job information extracted for review stay in Chrome's extension storage or memory. Opening the side panel and reviewing or editing extracted details does not send those job details or the source URL to Scout. Job information leaves your browser <strong>only when you click "Send this job"</strong>, when the submitted fields listed above are sent to Scout over HTTPS. Connecting your account, refreshing your session, and loading your account state and job-profile choices also communicate with Scout, but do not send job-page content or browsing history.</p>
+
+  <h2>Human Assistants</h2>
+  <p>When you submit a job, the Human Assistant you selected in Scout can access that submitted job's information, including the job details, source URL, and your relevant profile and preference data, solely to provide the service you requested for that job. Human Assistants are bound by confidentiality obligations, cannot see your browsing activity, and cannot access anything you have not submitted or provided in your Scout account.</p>
+
+  <h2>Service providers that receive extension data</h2>
+  <ul>
+    <li><strong>Supabase</strong>, database and authentication hosting. Your account data and submitted jobs are stored on Supabase servers.</li>
+    <li><strong>Vercel</strong>, hosting for the Scout application and the API the extension communicates with.</li>
+    <li><strong>Heroku (Salesforce)</strong>, hosting for our application-automation service, which processes jobs you submit when applications are prepared and sent.</li>
+    <li><strong>OpenAI or Anthropic</strong>, depending on the provider Scout has configured, when Scout analyses a submitted job or generates tailored application materials. The configured provider may process the submitted job description, relevant job-profile preferences, and resume data for that purpose.</li>
+  </ul>
+  <p>We share only the minimum data each provider needs. Beyond these providers and your selected Human Assistant, extension data is shared only with the employers and job platforms you choose to apply to, as described in the main <a href="/privacy">Privacy Policy</a>. We do not sell your personal information and do not use extension data for advertising.</p>
+
+  <h2>Retention and deletion</h2>
+  <ul>
+    <li><strong>Submitted jobs</strong> and their associated application records are retained while your account is active so Scout and your Human Assistant can provide the requested service and maintain your application history. Because a job submitted to a Human Assistant becomes part of that service record, it may not be individually deletable in the dashboard. You may request its deletion by emailing us, or delete your account; we complete verified deletion requests within 30 days, except where law, fraud prevention, dispute resolution, or enforcement obligations require limited information to be kept longer.</li>
+    <li><strong>Local authentication data</strong> remains in Chrome's local extension storage until you sign out, the session becomes invalid, you clear the extension's data, or you uninstall the extension. Signing out removes the locally stored access token, refresh token, expiry time, authentication URL, and public API key. Uninstalling removes all extension-local data, including remembered profile-for-site selections.</li>
+    <li><strong>Account deletion</strong> is available at any time from our <a href="/delete-account">account deletion page</a>; personal data is deleted within 30 days of a verified request, except where we are required to retain it by law.</li>
+  </ul>
+
+  <h2>Chrome Web Store Limited Use</h2>
+  <p>Our use of information received from the extension adheres to the <a href="https://developer.chrome.com/docs/webstore/program-policies/limited-use">Chrome Web Store User Data Policy</a>, including the Limited Use requirements. We only use extension data to provide or improve the single, user-facing job-capture and application feature described in this policy and in the extension's store listing. We do not transfer extension data to third parties except as necessary to provide that feature, to comply with applicable law, or as part of a merger or acquisition with prior notice to you. We do not use or transfer extension data for advertising, and we do not sell it. We do not allow humans to read your data, except: your selected Human Assistant reading the jobs you explicitly submitted (the service you requested); with your consent; for security purposes; to comply with applicable law; or when the data has been aggregated and anonymised.</p>
+
+  <h2>Security</h2>
+  <p>All communication between the extension and Scout uses HTTPS. Your authentication token is kept in the browser's sandboxed extension storage and is never exposed to the websites you visit. Access to production data is restricted to authorised personnel. No method of transmission or storage is 100% secure, but we apply industry-standard protections and do not log passwords or authentication credentials.</p>
+
+  <h2>Your rights</h2>
+  <p>Depending on your location, you may have rights under the GDPR or CCPA, including access, correction, deletion, portability, and objection to certain processing. To exercise any of these rights, email <a href="mailto:privacy@getscout.app">privacy@getscout.app</a>; we respond within 30 days.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>We may update this policy as the extension evolves. If we make material changes we will notify you by email or by a notice in the extension or on the platform. The "last updated" date above reflects the most recent revision.</p>
+
+  <h2>Contact</h2>
+  <p>Scout LTD. Questions? Email <a href="mailto:privacy@getscout.app">privacy@getscout.app</a>.</p>
+</Legal>
