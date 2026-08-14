@@ -5,6 +5,7 @@ import Button from "../components/Button.astro";
 import FAQ from "../components/FAQ.astro";
 import ProductScreenshot from "../components/ProductScreenshot.astro";
 import { SITE } from "../config/site";
+import { COUNTRY_PAGES } from "../data/countries";
 
 const faqs = [
   { q: "Can I pay someone to apply to jobs for me?", a: "Yes. Scout assigns a Human Assistant who applies on your behalf, or you can choose a lower-cost AI Assistant. You set the roles, locations, salary preferences, exclusions, and resume rules before applications begin." },
@@ -98,6 +99,15 @@ const breadcrumbLd = {
         </ol>
       </div>
       <nav class="mt-12 flex flex-wrap gap-x-7 gap-y-3 text-sm font-extrabold" aria-label="Related job application guides"><a href="/how-it-works" class="text-brand-700">How Scout works →</a><a href="/pricing" class="text-brand-700">Compare pricing →</a><a href="/safety" class="text-brand-700">Application safety →</a><a href="/auto-apply" class="text-brand-700">Supported job sites →</a></nav>
+    </Container>
+  </section>
+
+  <section class="bg-brand-50 py-20 sm:py-24">
+    <Container>
+      <div class="max-w-3xl"><p class="font-bold text-brand-700">Country guides</p><h2 class="mt-3 font-display text-4xl font-extrabold sm:text-5xl">Job application help for the market you are targeting.</h2><p class="mt-4 text-lg text-ink-soft">Local terminology, work eligibility, salary conventions, and location rules change how a delegated search should run.</p></div>
+      <nav class="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Job application service by country">
+        {COUNTRY_PAGES.map((country) => <a href={`/job-application-service/${country.slug}`} class="rounded-xl bg-white p-5 font-extrabold shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">{country.name} <span class="text-brand-700" aria-hidden="true">→</span></a>)}
+      </nav>
     </Container>
   </section>
 

@@ -13,6 +13,33 @@ export const TERMS: { value: Term; label: string; hint: string }[] = [
   { value: "quarterly", label: "90 days", hint: "Prepay 90 days and save ~10%" },
 ];
 
+/**
+ * Regions with fixed localized checkout prices (purchasing power parity).
+ * Dodo charges exactly these amounts when the buyer's billing country matches;
+ * everyone else pays the USD base price. `npm run dodo:localize` syncs the
+ * amounts below onto the Dodo products, so change them here, then re-run it.
+ */
+export type RegionCode = "IN" | "NG";
+
+export const REGIONS: Record<RegionCode, { country: string; currency: "INR" | "NGN"; symbol: string; locale: string }> = {
+  IN: { country: "India", currency: "INR", symbol: "₹", locale: "en-IN" },
+  NG: { country: "Nigeria", currency: "NGN", symbol: "₦", locale: "en-NG" },
+};
+
+export function regionCode(value: string | null | undefined): RegionCode | null {
+  return value === "IN" || value === "NG" ? value : null;
+}
+
+/** Formats a smallest-unit amount as a whole-unit local price, e.g. 99900 → "₹999". */
+export function formatRegionalAmount(region: RegionCode, amountMinor: number): string {
+  const { symbol, locale } = REGIONS[region];
+  return symbol + (amountMinor / 100).toLocaleString(locale, { maximumFractionDigits: 0 });
+}
+
+export function regionalPriceLabel(plan: Plan, region: RegionCode): string {
+  return formatRegionalAmount(region, plan.regional[region]);
+}
+
 export interface Plan {
   code: string;
   /** Groups the standard and quarterly versions of the same product. */
@@ -36,6 +63,13 @@ export interface Plan {
   featured?: boolean;
   /** Env var holding the Dodo product id, e.g. DODO_PRODUCT_HUMAN_FULL. */
   productEnvKey: string;
+  /**
+   * Fixed localized price per region, in the currency's smallest unit (paise,
+   * kobo) — the same integer Dodo's localized-prices API takes. AI plans sit
+   * near 70% off list, Human bundles near 35% because they carry real
+   * assistant labor per application.
+   */
+  regional: Record<RegionCode, number>;
 }
 
 const HUMAN_FEATURES = {
@@ -59,6 +93,7 @@ export const PLANS: Plan[] = [
     blurb: "A dedicated person runs one clearly defined job search.",
     features: HUMAN_FEATURES.focused,
     productEnvKey: "DODO_PRODUCT_HUMAN_FOCUSED",
+    regional: { IN: 1799900, NG: 26500000 },
   },
   {
     code: "human_focused_90", family: "human_focused", lane: "human", term: "quarterly",
@@ -68,6 +103,7 @@ export const PLANS: Plan[] = [
     blurb: "The same search, priced lower for a focused 90-day push.",
     features: HUMAN_FEATURES.focused,
     productEnvKey: "DODO_PRODUCT_HUMAN_FOCUSED_90",
+    regional: { IN: 1599900, NG: 23900000 },
   },
   {
     code: "human_full", family: "human_full", lane: "human", term: "standard",
@@ -77,6 +113,7 @@ export const PLANS: Plan[] = [
     blurb: "The complete Human Assistant service for an active search.",
     features: HUMAN_FEATURES.full,
     productEnvKey: "DODO_PRODUCT_HUMAN_FULL",
+    regional: { IN: 2999900, NG: 44500000 },
   },
   {
     code: "human_full_90", family: "human_full", lane: "human", term: "quarterly",
@@ -86,6 +123,7 @@ export const PLANS: Plan[] = [
     blurb: "The complete service, priced lower for a concentrated 90-day search.",
     features: HUMAN_FEATURES.full,
     productEnvKey: "DODO_PRODUCT_HUMAN_FULL_90",
+    regional: { IN: 2699900, NG: 39900000 },
   },
   {
     code: "human_campaign", family: "human_campaign", lane: "human", term: "standard",
@@ -95,6 +133,7 @@ export const PLANS: Plan[] = [
     blurb: "More capacity and coordination for a broad or multi-role search.",
     features: HUMAN_FEATURES.campaign,
     productEnvKey: "DODO_PRODUCT_HUMAN_CAMPAIGN",
+    regional: { IN: 5999900, NG: 88900000 },
   },
   {
     code: "human_campaign_90", family: "human_campaign", lane: "human", term: "quarterly",
@@ -104,6 +143,7 @@ export const PLANS: Plan[] = [
     blurb: "Full campaign capacity, priced lower for a 90-day window.",
     features: HUMAN_FEATURES.campaign,
     productEnvKey: "DODO_PRODUCT_HUMAN_CAMPAIGN_90",
+    regional: { IN: 5399900, NG: 79900000 },
   },
 
   // ---- AI Assistant: subscriptions ----
@@ -115,6 +155,7 @@ export const PLANS: Plan[] = [
     blurb: "A lower-cost assistant for one focused search.",
     features: AI_FEATURES.essential,
     productEnvKey: "DODO_PRODUCT_AI_ESSENTIAL",
+    regional: { IN: 99900, NG: 1600000 },
   },
   {
     code: "ai_essential_90", family: "ai_essential", lane: "ai", term: "quarterly",
@@ -124,6 +165,7 @@ export const PLANS: Plan[] = [
     blurb: "The same assistant, prepaid for 90 days at a lower rate.",
     features: AI_FEATURES.essential,
     productEnvKey: "DODO_PRODUCT_AI_ESSENTIAL_90",
+    regional: { IN: 269900, NG: 4300000 },
   },
   {
     code: "ai_plus", family: "ai_plus", lane: "ai", term: "standard",
@@ -133,6 +175,7 @@ export const PLANS: Plan[] = [
     blurb: "More profiles and volume for an active multi-role search.",
     features: AI_FEATURES.plus,
     productEnvKey: "DODO_PRODUCT_AI_PLUS",
+    regional: { IN: 219900, NG: 3200000 },
   },
   {
     code: "ai_plus_90", family: "ai_plus", lane: "ai", term: "quarterly",
@@ -142,6 +185,7 @@ export const PLANS: Plan[] = [
     blurb: "Multi-role volume, prepaid for 90 days at a lower rate.",
     features: AI_FEATURES.plus,
     productEnvKey: "DODO_PRODUCT_AI_PLUS_90",
+    regional: { IN: 589900, NG: 8650000 },
   },
 ];
 

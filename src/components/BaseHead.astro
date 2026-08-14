@@ -12,6 +12,9 @@ interface Props {
   noindex?: boolean;
   canonical?: string;
   analytics?: boolean;
+  locale?: string;
+  alternates?: { locale: string; href: string }[];
+  xDefault?: string;
 }
 
 const {
@@ -22,6 +25,9 @@ const {
   noindex = false,
   canonical,
   analytics = true,
+  locale = "en",
+  alternates = [],
+  xDefault,
 } = Astro.props;
 
 const fullTitle = title ? `${title} | ${SITE.name}` : `${SITE.name}, ${SITE.tagline}`;
@@ -72,9 +78,10 @@ const siteLd = {
   }}
   twitter={{ card: "summary_large_image", site: SITE.twitter, creator: SITE.twitter }}
 />
-<meta property="og:locale" content={SITE.locale} />
-<link rel="alternate" hreflang="en" href={canonicalURL} />
-<link rel="alternate" hreflang="x-default" href={canonicalURL} />
+<meta property="og:locale" content={locale.replace("-", "_")} />
+{alternates.length === 0 && <link rel="alternate" hreflang={locale} href={canonicalURL} />}
+{alternates.map((alternate) => <link rel="alternate" hreflang={alternate.locale} href={new URL(alternate.href, SITE.url).href} />)}
+<link rel="alternate" hreflang="x-default" href={xDefault ? new URL(xDefault, SITE.url).href : canonicalURL} />
 
 <!-- Fonts: preconnect + display=swap for fast first paint -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />

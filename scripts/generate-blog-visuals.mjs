@@ -99,7 +99,7 @@ function cover(config) {
     ${textBlock(config.subtitle, 72, titleBottom + 56, { max: 48, size: 23, weight: 500, fill: "#C8D7C0", lineHeight: 1.35 })}
     ${visualCards}
     <rect x="72" y="560" width="1056" height="1" fill="${C.white}" opacity=".14"/>
-    <text x="72" y="596" fill="${C.lime}" font-family="${font}" font-size="17" font-weight="700">getscout.app</text>
+    <text x="72" y="596" fill="${C.lime}" font-family="${font}" font-size="17" font-weight="700">applyscout.app</text>
     <text x="1128" y="596" fill="${C.white}" opacity=".62" font-family="${font}" font-size="15" font-weight="600" text-anchor="end">Human + AI job application service</text>
   `, C.forest);
 }
@@ -123,7 +123,7 @@ function infographicHeader(config) {
 function footer() {
   return `<rect x="64" y="750" width="1072" height="1" fill="${C.ink}" opacity=".12"/>
     <text x="64" y="780" fill="${C.muted}" font-family="${font}" font-size="14" font-weight="600">SCOUT FIELD GUIDE</text>
-    <text x="1136" y="780" fill="${C.ink}" font-family="${font}" font-size="14" font-weight="700" text-anchor="end">getscout.app</text>`;
+    <text x="1136" y="780" fill="${C.ink}" font-family="${font}" font-size="14" font-weight="700" text-anchor="end">applyscout.app</text>`;
 }
 
 function cardsGraphic(config) {
@@ -178,6 +178,21 @@ function splitGraphic(config) {
 }
 
 const posts = [
+  {
+    slug: "how-scout-works",
+    cover: { kicker: "Product guide", title: "How Scout works", subtitle: "Choose a Human or AI Assistant. Keep control of every application.", cards: ["Build your profile", "Scout applies", "You interview"], accent: C.brand },
+    info1: { type: "cards", kicker: "Four-step workflow", title: "How Scout works in four steps", subtitle: "You interview. Scout handles the application work.", columns: 2, items: [
+      { title: "Build your profile", body: "Set roles, locations, preferences, resumes, and exclusions." },
+      { title: "Choose your assistant", body: "Use lower-cost AI or a dedicated Human Assistant.", tone: "lime" },
+      { title: "Applications go out", body: "Scout matches, prepares, submits, and records the work." },
+      { title: "You interview", body: "Handle assessments, conversations, and final decisions.", tone: "amber" },
+    ]},
+    info2: { type: "cards", kicker: "Proven infrastructure", title: "Scout is built on the FastApply engine", subtitle: "The service layer you control sits on established application infrastructure.", columns: 3, items: [
+      { title: "You + assistant", body: "AI or human execution guided by your decisions.", tone: "lime" },
+      { title: "Scout layer", body: "Profiles, targeting, delegation, plans, and tracking." },
+      { title: "FastApply engine", body: "Discovery, matching, tailoring, and ATS submission. 2M+ applications.", tone: "amber" },
+    ]},
+  },
   {
     slug: "app-that-applies-to-jobs-for-you",
     cover: { kicker: "Buyer guide", title: "Apps that apply to jobs for you", subtitle: "What they do, what you control, and what proof to expect.", cards: ["Match the right role", "Human review", "Save the receipt"], accent: C.signal },
@@ -349,7 +364,11 @@ const posts = [
   },
 ];
 
-for (const post of posts) {
+const requestedSlug = process.argv[2];
+const selectedPosts = requestedSlug ? posts.filter((post) => post.slug === requestedSlug) : posts;
+if (requestedSlug && selectedPosts.length === 0) throw new Error(`Unknown blog slug: ${requestedSlug}`);
+
+for (const post of selectedPosts) {
   const assets = [
     [`${post.slug}-cover.webp`, cover(post.cover), 1200, 628],
     [`${post.slug}-infographic-1.webp`, post.info1.type === "split" ? splitGraphic(post.info1) : cardsGraphic(post.info1), 1200, 800],
@@ -363,4 +382,4 @@ for (const post of posts) {
   }
 }
 
-console.log(`Generated ${posts.length * 3} Scout blog visuals in ${OUT}`);
+console.log(`Generated ${selectedPosts.length * 3} Scout blog visuals in ${OUT}`);

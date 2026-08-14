@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLANS, planByCode, plansForLane, recommendedPlan, savings, standardSibling } from "./plans";
+import { PLANS, REGIONS, formatRegionalAmount, planByCode, plansForLane, recommendedPlan, regionCode, regionalPriceLabel, savings, standardSibling } from "./plans";
 
 describe("plan catalog", () => {
   it("has a standard and quarterly version of every product", () => {
@@ -94,5 +94,58 @@ describe("quarterly term", () => {
   it("pairs each quarterly plan back to its standard sibling", () => {
     expect(standardSibling(planByCode("human_full_90")!)?.code).toBe("human_full");
     expect(standardSibling(planByCode("ai_essential_90")!)?.code).toBe("ai_essential");
+  });
+});
+
+describe("regional pricing", () => {
+  const regions = Object.keys(REGIONS) as (keyof typeof REGIONS)[];
+
+  it("gives every plan a positive whole amount for every region", () => {
+    for (const plan of PLANS) {
+      for (const region of regions) {
+        expect(Number.isInteger(plan.regional[region]), `${plan.code} ${region}`).toBe(true);
+        expect(plan.regional[region]).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("keeps the quarterly term cheaper than the standard equivalent in every region", () => {
+    for (const plan of PLANS.filter((p) => p.term === "quarterly")) {
+      const sibling = standardSibling(plan)!;
+      for (const region of regions) {
+        // The comparison price is three monthly cycles for AI subscriptions
+        // and the same one-time bundle for Human, matching the USD logic.
+        const standardTotal = sibling.billing === "recurring" ? sibling.regional[region] * 3 : sibling.regional[region];
+        const discount = 1 - plan.regional[region] / standardTotal;
+        expect(discount, `${plan.code} ${region}`).toBeGreaterThan(0.05);
+        expect(discount, `${plan.code} ${region}`).toBeLessThan(0.15);
+      }
+    }
+  });
+
+  it("discounts AI plans more deeply than Human bundles", () => {
+    // Regional amounts relative to each other must reflect the chosen policy:
+    // AI near 70% off list, Human near 35%, so AI's local-to-USD ratio is
+    // roughly half of Human's within a region.
+    for (const region of regions) {
+      const aiRatio = planByCode("ai_essential")!.regional[region] / planByCode("ai_essential")!.priceCents;
+      const humanRatio = planByCode("human_full")!.regional[region] / planByCode("human_full")!.priceCents;
+      expect(aiRatio, region).toBeLessThan(humanRatio * 0.65);
+    }
+  });
+
+  it("formats regional labels in local currency", () => {
+    expect(regionalPriceLabel(planByCode("ai_essential")!, "IN")).toBe("₹999");
+    expect(regionalPriceLabel(planByCode("ai_essential")!, "NG")).toBe("₦16,000");
+    expect(regionalPriceLabel(planByCode("human_campaign")!, "IN")).toBe("₹59,999");
+    expect(formatRegionalAmount("NG", planByCode("ai_essential")!.regional.NG * 3)).toBe("₦48,000");
+  });
+
+  it("maps only supported countries to a region", () => {
+    expect(regionCode("IN")).toBe("IN");
+    expect(regionCode("NG")).toBe("NG");
+    expect(regionCode("US")).toBeNull();
+    expect(regionCode(null)).toBeNull();
+    expect(regionCode(undefined)).toBeNull();
   });
 });

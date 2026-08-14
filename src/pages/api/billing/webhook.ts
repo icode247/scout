@@ -146,15 +146,21 @@ export const POST: APIRoute = async (context) => {
       clientId: gaClientId,
       userId,
       name: isRevenueEvent ? "purchase" : "subscription_activated",
-      params: isRevenueEvent ? {
-        transaction_id: String(data.payment_id || id),
-        currency: String(data.currency || "USD").toUpperCase(),
-        value: plan.priceCents / 100,
-        customer_type: type === "subscription.renewed" ? "returning" : "new",
-        plan_code: plan.code,
-        lane: plan.lane,
-        items: [{ item_id: plan.code, item_name: plan.name, item_category: plan.lane, price: plan.priceCents / 100, quantity: 1 }],
-      } : { plan_code: plan.code, lane: plan.lane, billing: plan.billing },
+      params: isRevenueEvent ? (() => {
+        // Regional (PPP) buyers are charged a localized INR/NGN amount, so
+        // revenue reports what was actually paid; the USD list price is only
+        // the fallback for payloads that omit the amount.
+        const paid = typeof data.total_amount === "number" ? data.total_amount / 100 : plan.priceCents / 100;
+        return {
+          transaction_id: String(data.payment_id || id),
+          currency: String(data.currency || "USD").toUpperCase(),
+          value: paid,
+          customer_type: type === "subscription.renewed" ? "returning" : "new",
+          plan_code: plan.code,
+          lane: plan.lane,
+          items: [{ item_id: plan.code, item_name: plan.name, item_category: plan.lane, price: paid, quantity: 1 }],
+        };
+      })() : { plan_code: plan.code, lane: plan.lane, billing: plan.billing },
     }).catch((error) => console.error("[google-analytics] payment event failed", error));
   } else if (DEACTIVATING.has(type)) {
     const canceled = await supabase.from("subscriptions")

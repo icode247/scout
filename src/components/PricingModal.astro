@@ -1,21 +1,29 @@
 ---
-import { PLANS, savings, standardSibling } from "../config/plans";
+import { PLANS, REGIONS, formatRegionalAmount, regionalPriceLabel, savings, standardSibling } from "../config/plans";
+import { visitorRegion } from "../lib/region";
 
 interface Props { defaultLane?: "human" | "ai" }
 const { defaultLane = "ai" } = Astro.props;
+// Regional visitors see the amounts Dodo will actually charge their billing
+// country; the labels are resolved server-side so the client script stays
+// currency-agnostic.
+const region = visitorRegion(Astro.request);
+const compareOf = (plan: (typeof PLANS)[number]) => {
+  const sibling = standardSibling(plan);
+  if (!sibling) return null;
+  if (sibling.billing !== "recurring") return region ? regionalPriceLabel(sibling, region) : sibling.priceLabel;
+  return region ? formatRegionalAmount(region, sibling.regional[region] * 3) : `$${Math.round(sibling.priceCents * 3 / 100)}`;
+};
 const plans = PLANS.map((plan) => ({
   code: plan.code, lane: plan.lane, term: plan.term, name: plan.name,
-  priceLabel: plan.priceLabel, cadenceLabel: plan.cadenceLabel,
+  priceLabel: region ? regionalPriceLabel(plan, region) : plan.priceLabel, cadenceLabel: plan.cadenceLabel,
   applications: plan.applications, blurb: plan.blurb, features: plan.features,
   featured: Boolean(plan.featured),
   savingsLabel: savings(plan)?.label ?? null,
   savingsPercent: savings(plan)?.percent ?? null,
-  comparePrice: standardSibling(plan)
-    ? (standardSibling(plan)!.billing === "recurring"
-        ? `$${Math.round(standardSibling(plan)!.priceCents * 3 / 100)}`
-        : standardSibling(plan)!.priceLabel)
-    : null,
+  comparePrice: compareOf(plan),
 }));
+const regionNote = region ? `Prices for ${REGIONS[region].country} · billed in ${REGIONS[region].currency} at checkout.` : null;
 const discountPercent = Math.min(...PLANS.filter((p) => p.term === "quarterly").map((p) => savings(p)?.percent ?? 10));
 ---
 <dialog id="pricing-modal" class="w-[min(94vw,62rem)] rounded-2xl bg-white p-0 text-ink shadow-lift backdrop:bg-ink/60" aria-labelledby="pricing-modal-title">
@@ -51,7 +59,7 @@ const discountPercent = Math.min(...PLANS.filter((p) => p.term === "quarterly").
       <p id="pricing-human-note" class="mt-5 hidden rounded-xl bg-human-50 px-4 py-3 text-sm text-human-700">
         Prefer to talk first? <a href="/book-call" class="font-extrabold underline underline-offset-2">Book a 15-minute strategy call</a> and we will help you choose.
       </p>
-      <p class="mt-5 text-center text-xs text-ink-muted">Secure checkout. Cancel a monthly plan any time from Settings.</p>
+      <p class="mt-5 text-center text-xs text-ink-muted">{regionNote && <>{regionNote} </>}Secure checkout. Cancel a monthly plan any time from Settings.</p>
     </div>
   </div>
 </dialog>
