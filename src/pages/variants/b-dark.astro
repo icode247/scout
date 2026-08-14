@@ -2,8 +2,6 @@
 import Shell from "../../layouts/Shell.astro";
 import Container from "../../components/Container.astro";
 import Button from "../../components/Button.astro";
-import AppStoreBadges from "../../components/AppStoreBadges.astro";
-import DownloadQR from "../../components/DownloadQR.astro";
 import SwipeHero from "../../components/islands/SwipeHero.tsx";
 import { SITE, TIERS, STATS } from "../../config/site";
 
@@ -50,7 +48,7 @@ const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: `${SITE.name}: ${SITE.tagline}`,
-  operatingSystem: "iOS, Android",
+  operatingSystem: "Web",
   applicationCategory: "BusinessApplication",
   description: SITE.description,
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -84,7 +82,7 @@ const appLd = {
               <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70"></span>
               <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
             </span>
-            Live on iOS &amp; Android
+            Human + AI Assistants, live now
           </span>
           <h1 class="mt-6 font-display text-[3rem] font-bold leading-[1.0] tracking-tight text-white sm:text-6xl lg:text-[4.4rem]">
             Get a job <br class="hidden sm:block" />while you <span class="text-brand-400">sleep.</span>
@@ -92,9 +90,9 @@ const appLd = {
           <p class="mt-6 max-w-md text-lg leading-relaxed text-white/65">
             Scout finds every job matching your resume and applies for you with a tailored resume and cover letter. Just swipe.
           </p>
-          <div class="mt-9 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-            <AppStoreBadges size="lg" />
-            <DownloadQR class="hidden border-white/10 bg-white/5 sm:inline-flex" label="Scan to install" />
+          <div class="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            <Button href="/pricing" size="lg" variant="primary">Get started</Button>
+            <Button href="/how-it-works" size="lg" variant="secondary" class="border-white/15 bg-white/10 text-white hover:border-white/30 hover:bg-white/15">See how it works</Button>
           </div>
         </div>
 
@@ -286,9 +284,9 @@ const appLd = {
       <p class="reveal mx-auto mt-4 max-w-lg text-lg text-white/60" style="--reveal-delay:90ms">
         Let Scout find it and apply while you get on with your life.
       </p>
-      <div class="reveal mt-10 flex flex-col items-center gap-6 sm:flex-row sm:justify-center" style="--reveal-delay:160ms">
-        <AppStoreBadges size="lg" class="justify-center" />
-        <DownloadQR class="border-white/10 bg-white/5" label="Scan to install" />
+      <div class="reveal mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center" style="--reveal-delay:160ms">
+        <Button href="/pricing" size="lg" variant="primary">Get started</Button>
+        <Button href="/how-it-works" size="lg" variant="secondary" class="border-white/15 bg-white/10 text-white hover:border-white/30 hover:bg-white/15">See how it works</Button>
       </div>
     </Container>
   </section>

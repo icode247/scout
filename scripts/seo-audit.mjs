@@ -67,7 +67,7 @@ for (const page of pages) {
 
   if (page.canonical) {
     const canonical = new URL(page.canonical);
-    if (canonical.origin !== "https://getscout.app") errors.push(page.route + ": wrong canonical origin");
+    if (canonical.origin !== "https://applyscout.app") errors.push(page.route + ": wrong canonical origin");
     const canonicalPath = canonical.pathname.replace(/\/$/, "") || "/";
     if (!page.redirect && canonicalPath !== page.route) errors.push(page.route + ": canonical points to " + canonicalPath);
   }
@@ -83,7 +83,7 @@ for (const page of pages) {
   for (const match of page.html.matchAll(/<a\b[^>]*href=[\"']([^\"']+)[\"']/gi)) {
     const href = match[1];
     if (!href.startsWith("/") || href.startsWith("//") || href.startsWith("/_astro/")) continue;
-    const linked = new URL(href, "https://getscout.app").pathname.replace(/\/$/, "") || "/";
+    const linked = new URL(href, "https://applyscout.app").pathname.replace(/\/$/, "") || "/";
     if (!routeSet.has(linked) && !linked.startsWith("/og/") && !linked.startsWith("/assets/")) {
       errors.push(page.route + ": broken internal link to " + linked);
     }
@@ -114,7 +114,7 @@ for (const field of ["title", "description"]) {
 const robots = fs.readFileSync(path.join(root, "robots.txt"), "utf8");
 if (!/User-agent:\s*\*/i.test(robots)) errors.push("robots.txt: missing wildcard user agent");
 if (!/Allow:\s*\//i.test(robots)) errors.push("robots.txt: site is not explicitly crawlable");
-if (!/Sitemap:\s*https:\/\/getscout\.app\/sitemap-index\.xml/i.test(robots)) errors.push("robots.txt: sitemap declaration missing");
+if (!/Sitemap:\s*https:\/\/applyscout\.app\/sitemap-index\.xml/i.test(robots)) errors.push("robots.txt: sitemap declaration missing");
 
 console.log("Googlebot-style static crawl");
 console.log("  Generated HTML pages:", pages.length);

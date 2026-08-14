@@ -1,7 +1,7 @@
 # Scout — Marketing Site + SEO Blog
 
 Marketing website and SEO blog for **Scout**, the AI job auto-apply mobile app (iOS + Android).
-Built with **Astro + Tailwind**, deploys on **Vercel**. Standalone domain (`getscout.app`),
+Built with **Astro + Tailwind**, deploys on **Vercel**. Standalone domain (`applyscout.app`),
 cross-linked from the sister brand `fastapply.co` for authority.
 
 ## Run

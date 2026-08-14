@@ -24,7 +24,7 @@ For production, set `PUBLIC_CHROME_EXTENSION_ID` in Scout’s deployment environ
 
 ## Production package
 
-Run `npm run extension:check && npm run extension:build`, then zip the contents of `extension/dist` for Chrome Web Store submission. The production Scout origin is `https://getscout.app`.
+Run `npm run extension:check && npm run extension:build`, then zip the contents of `extension/dist` for Chrome Web Store submission. The production Scout origin is `https://applyscout.app`.
 
 ## Permissions
 

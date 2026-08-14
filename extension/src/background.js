@@ -1,4 +1,4 @@
-const DEFAULT_SITE_URL = "https://getscout.app";
+const DEFAULT_SITE_URL = "https://applyscout.app";
 const AUTH_KEY = "scoutAuth";
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -95,7 +95,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       case "SCOUT_GET_SETTINGS": return getSettings();
       case "SCOUT_SET_SITE": {
         const value = String(message.siteUrl || "").trim().replace(/\/$/, "");
-        if (!/^https?:\/\/(localhost|127\.0\.0\.1|([a-z0-9-]+\.)*getscout\.app)(:\d+)?$/i.test(value)) throw new Error("Enter a Scout website URL.");
+        if (!/^https?:\/\/(localhost|127\.0\.0\.1|([a-z0-9-]+\.)*applyscout\.app)(:\d+)?$/i.test(value)) throw new Error("Enter a Scout website URL.");
         await chrome.storage.local.set({ scoutSiteUrl: value });
         await chrome.storage.local.remove(AUTH_KEY);
         return { siteUrl: value };

@@ -2,8 +2,6 @@
 import Shell from "../../layouts/Shell.astro";
 import Container from "../../components/Container.astro";
 import Button from "../../components/Button.astro";
-import AppStoreBadges from "../../components/AppStoreBadges.astro";
-import DownloadQR from "../../components/DownloadQR.astro";
 import SwipeHero from "../../components/islands/SwipeHero.tsx";
 import { SITE, TIERS } from "../../config/site";
 
@@ -81,7 +79,7 @@ const safety = [
           <div class="reveal">
             <span class="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1 text-xs font-medium tracking-wide text-zinc-400">
               <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
-              Live on iOS and Android
+              Human + AI Assistants, live now
             </span>
             <h1 class="mt-7 font-display text-[3.1rem] font-light leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-[4.4rem]">
               Get a job while you <span class="font-normal text-zinc-100">sleep<span class="text-brand-500">.</span></span>
@@ -99,7 +97,6 @@ const safety = [
                   How it works
                 </a>
               </div>
-              <AppStoreBadges size="md" />
             </div>
           </div>
 
@@ -292,9 +289,14 @@ const safety = [
             <p class="mx-auto mt-6 max-w-md text-lg leading-relaxed text-zinc-400">
               Let Scout find it and apply while you get on with your life.
             </p>
-            <div class="mt-10 flex flex-col items-center gap-8 sm:flex-row sm:justify-center">
-              <AppStoreBadges size="lg" class="justify-center" />
-              <DownloadQR label="Scan to install" class="border-zinc-800 bg-zinc-900" />
+            <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="/pricing"
+                class="inline-flex h-13 items-center justify-center rounded-xl bg-zinc-100 px-7 text-base font-medium text-zinc-950 transition-colors hover:bg-white"
+              >Get started</a>
+              <a href="/how-it-works" class="inline-flex h-13 items-center justify-center rounded-xl border border-zinc-800 px-6 text-base font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white">
+                How it works
+              </a>
             </div>
           </div>
         </Container>

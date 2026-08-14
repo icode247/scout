@@ -49,7 +49,7 @@
   "host_permissions": [
     "http://*/*",
     "https://*/*",
-    "https://getscout.app/*",
+    "https://applyscout.app/*",
     "https://*.supabase.co/*",
     "http://localhost/*",
     "http://127.0.0.1/*"

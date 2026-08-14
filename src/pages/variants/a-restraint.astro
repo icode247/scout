@@ -2,8 +2,6 @@
 import Shell from "../../layouts/Shell.astro";
 import Container from "../../components/Container.astro";
 import Button from "../../components/Button.astro";
-import AppStoreBadges from "../../components/AppStoreBadges.astro";
-import DownloadQR from "../../components/DownloadQR.astro";
 import SwipeHero from "../../components/islands/SwipeHero.tsx";
 import { SITE, TIERS, STATS } from "../../config/site";
 
@@ -70,7 +68,7 @@ const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: `${SITE.name}: ${SITE.tagline}`,
-  operatingSystem: "iOS, Android",
+  operatingSystem: "Web",
   applicationCategory: "BusinessApplication",
   description: SITE.description,
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -103,9 +101,9 @@ const appLd = {
         <p class="mt-8 max-w-md text-lg leading-relaxed text-ink-soft">
           Scout finds every job matching your resume and applies for you with a tailored resume and cover letter. Just swipe.
         </p>
-        <div class="mt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-          <AppStoreBadges size="lg" />
-          <DownloadQR class="hidden sm:inline-flex" label="Scan to install" />
+        <div class="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+          <Button href="/pricing" size="lg" variant="primary">Get started</Button>
+          <Button href="/how-it-works" size="lg" variant="ghost">See how it works</Button>
         </div>
       </div>
 
@@ -283,9 +281,9 @@ const appLd = {
         <p class="mx-auto mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
           Let Scout find it and apply while you get on with your life.
         </p>
-        <div class="mt-12 flex flex-col items-center gap-8 sm:flex-row sm:justify-center">
-          <AppStoreBadges size="lg" class="justify-center" />
-          <DownloadQR label="Scan to install" />
+        <div class="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <Button href="/pricing" size="lg" variant="primary">Get started</Button>
+          <Button href="/how-it-works" size="lg" variant="ghost">See how it works</Button>
         </div>
       </div>
     </Container>
@@ -295,7 +293,7 @@ const appLd = {
   <footer class="border-t border-black/5 bg-surface">
     <Container class="flex flex-col items-center justify-between gap-4 py-10 sm:flex-row">
       <span class="font-display text-base font-bold tracking-tight text-ink">Scout</span>
-      <p class="text-sm text-ink-muted">{SITE.tagline}. Live on iOS and Android.</p>
+      <p class="text-sm text-ink-muted">{SITE.tagline}.</p>
     </Container>
   </footer>
 

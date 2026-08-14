@@ -482,7 +482,7 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://getscout.app/sitemap-index.xml
+Sitemap: https://applyscout.app/sitemap-index.xml
 ```
 
 OpenAI says public sites can appear in ChatGPT search and recommends allowing `OAI-SearchBot` so content can be discovered, summarized, cited, and linked. It also explains that ChatGPT referral traffic can be measured in analytics. See [OpenAI's Publishers and Developers FAQ](https://help.openai.com/en/articles/12627856-publishers-and-developers-faq).
