@@ -38,6 +38,8 @@ interface ImportMetaEnv {
   readonly DODO_PRODUCT_HUMAN_CAMPAIGN_90?: string;
   readonly DODO_PRODUCT_AI_ESSENTIAL_90?: string;
   readonly DODO_PRODUCT_AI_PLUS_90?: string;
+  readonly RESEND_API_KEY?: string;
+  readonly RESEND_FROM_EMAIL?: string;
 }
 
 interface ImportMeta {
