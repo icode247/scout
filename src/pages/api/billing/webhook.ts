@@ -1,10 +1,12 @@
 import type { APIRoute } from "astro";
 import { planByCode } from "../../../config/plans";
 import { verifyWebhookSignature } from "../../../lib/dodo";
+import { sendSubscriptionConfirmationEmail } from "../../../lib/email";
 import { assignedHumanAssistant } from "../../../lib/human-assistants";
 import { createSupabaseServiceClient } from "../../../lib/supabase";
 import { serverEnv } from "../../../lib/server-env";
 import { getPostHogServer } from "../../../lib/posthog-server";
+import { sendGoogleAnalyticsEvent } from "../../../lib/google-analytics";
 
 export const prerender = false;
 
@@ -58,6 +60,7 @@ export const POST: APIRoute = async (context) => {
   const metadata = data.metadata || {};
   const userId = String(metadata.user_id || "");
   const plan = planByCode(String(metadata.plan_code || ""));
+  const gaClientId = String(metadata.ga_client_id || "") || null;
 
   // Events we did not originate (or cannot attribute) are acknowledged so Dodo
   // stops retrying, but change nothing.
@@ -98,11 +101,36 @@ export const POST: APIRoute = async (context) => {
     if (written.error) return reply({ error: written.error.message }, 500);
 
     // This is the only place a human assistant is assigned — payment has cleared.
-    const profileUpdate = plan.lane === "human"
-      ? { assistant_type: "human", assistant_name: assignedHumanAssistant(userId).name, updated_at: new Date().toISOString() }
+    const assistant = plan.lane === "human" ? assignedHumanAssistant(userId) : null;
+    const profileUpdate = assistant
+      ? { assistant_type: "human", assistant_name: assistant.name, updated_at: new Date().toISOString() }
       : { assistant_type: "ai", assistant_name: "Scout AI", updated_at: new Date().toISOString() };
     const profile = await supabase.from("profiles").update(profileUpdate).eq("user_id", userId);
     if (profile.error) return reply({ error: profile.error.message }, 500);
+
+    // Confirmation goes out on the first activation only: a renewal reuses the
+    // row, and the second activating event Dodo sends for a new subscription
+    // takes the update path above.
+    if (!existing.data) {
+      const recipient = String(data.customer?.email || "")
+        || (await supabase.auth.admin.getUserById(userId)).data?.user?.email
+        || "";
+      if (recipient) {
+        try {
+          await sendSubscriptionConfirmationEmail({
+            to: recipient,
+            plan,
+            assistant,
+            idempotencyKey: `subscription-confirmation/${id}`,
+          });
+        } catch (error) {
+          // Best effort only. A non-2xx here would make Dodo retry a delivery
+          // whose event id is already in webhook_events, so the retry would be
+          // acked as a duplicate without ever re-sending the email.
+          console.error("Subscription confirmation email failed", error);
+        }
+      }
+    }
 
     const posthog = getPostHogServer();
     if (posthog) {
@@ -113,16 +141,45 @@ export const POST: APIRoute = async (context) => {
       });
       await posthog.flush();
     }
+    const isRevenueEvent = type === "payment.succeeded" || type === "subscription.renewed";
+    await sendGoogleAnalyticsEvent({
+      clientId: gaClientId,
+      userId,
+      name: isRevenueEvent ? "purchase" : "subscription_activated",
+      params: isRevenueEvent ? {
+        transaction_id: String(data.payment_id || id),
+        currency: String(data.currency || "USD").toUpperCase(),
+        value: plan.priceCents / 100,
+        customer_type: type === "subscription.renewed" ? "returning" : "new",
+        plan_code: plan.code,
+        lane: plan.lane,
+        items: [{ item_id: plan.code, item_name: plan.name, item_category: plan.lane, price: plan.priceCents / 100, quantity: 1 }],
+      } : { plan_code: plan.code, lane: plan.lane, billing: plan.billing },
+    }).catch((error) => console.error("[google-analytics] payment event failed", error));
   } else if (DEACTIVATING.has(type)) {
     const canceled = await supabase.from("subscriptions")
       .update({ status: "canceled", updated_at: new Date().toISOString() })
       .eq("user_id", userId).eq("plan_code", plan.code).eq("status", "active");
     if (canceled.error) return reply({ error: canceled.error.message }, 500);
+    await sendGoogleAnalyticsEvent({ clientId: gaClientId, userId, name: type.includes("expired") ? "subscription_churned" : "subscription_cancelled", params: { plan_code: plan.code, lane: plan.lane, event_type: type } })
+      .catch((error) => console.error("[google-analytics] churn event failed", error));
+    const posthog = getPostHogServer();
+    if (posthog) {
+      posthog.capture({ distinctId: userId, event: type.includes("expired") ? "subscription_churned" : "subscription_cancelled", properties: { plan_code: plan.code, lane: plan.lane, event_type: type } });
+      await posthog.flush();
+    }
   } else if (type === "payment.failed") {
     const pastDue = await supabase.from("subscriptions")
       .update({ status: "past_due", updated_at: new Date().toISOString() })
       .eq("user_id", userId).eq("status", "active");
     if (pastDue.error) return reply({ error: pastDue.error.message }, 500);
+    await sendGoogleAnalyticsEvent({ clientId: gaClientId, userId, name: "payment_failed", params: { plan_code: plan.code, lane: plan.lane } })
+      .catch((error) => console.error("[google-analytics] payment failure event failed", error));
+    const posthog = getPostHogServer();
+    if (posthog) {
+      posthog.capture({ distinctId: userId, event: "payment_failed", properties: { plan_code: plan.code, lane: plan.lane } });
+      await posthog.flush();
+    }
   }
 
   return reply({ ok: true });

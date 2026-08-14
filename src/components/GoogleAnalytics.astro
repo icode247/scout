@@ -1,0 +1,26 @@
+---
+const measurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID?.trim() || "G-Z1FEWS6Z7F";
+const bingVerification = import.meta.env.PUBLIC_BING_SITE_VERIFICATION?.trim() || "";
+---
+{bingVerification && <meta name="msvalidate.01" content={bingVerification} />}
+{measurementId && <script async src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`}></script>}
+<script is:inline define:vars={{ measurementId }}>
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  if (measurementId) {
+    window.gtag("js", new Date());
+    window.gtag("config", measurementId, { send_page_view: true });
+  }
+
+  var gaNames = {
+    "Checkout Started": "begin_checkout",
+    "Checkout Completed": "checkout_success_view",
+    "Pricing Modal Opened": "view_item_list",
+    "Pricing Term Changed": "pricing_term_changed"
+  };
+  window.scoutTrack = function (name, properties) {
+    var props = properties || {};
+    if (window.posthog && typeof window.posthog.capture === "function") window.posthog.capture(name, props);
+    if (measurementId) window.gtag("event", gaNames[name] || String(name).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""), props);
+  };
+</script>

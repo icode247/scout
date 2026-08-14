@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { safeNext } from "../../lib/api";
 import { createSupabaseServerClient } from "../../lib/supabase";
 import { getPostHogServer } from "../../lib/posthog-server";
+import { sendGoogleAnalyticsEvent } from "../../lib/google-analytics";
 
 export const prerender = false;
 
@@ -26,6 +27,8 @@ export const GET: APIRoute = async (context) => {
           posthog.capture({ distinctId: u.id, event: "user_signed_in", properties: { method: u.app_metadata?.provider || "google" } });
           await posthog.flush();
         }
+        await sendGoogleAnalyticsEvent({ userId: u.id, name: "login", params: { method: u.app_metadata?.provider || "google" } })
+          .catch((analyticsError) => console.error("[google-analytics] login event failed", analyticsError));
       }
       return finish(next);
     }
@@ -40,6 +43,8 @@ export const GET: APIRoute = async (context) => {
           posthog.capture({ distinctId: u.id, event: "user_signed_in", properties: { method: "magic_link" } });
           await posthog.flush();
         }
+        await sendGoogleAnalyticsEvent({ userId: u.id, name: "login", params: { method: "magic_link" } })
+          .catch((analyticsError) => console.error("[google-analytics] login event failed", analyticsError));
       }
       return finish(next);
     }

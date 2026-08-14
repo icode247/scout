@@ -184,7 +184,7 @@ const discountPercent = Math.min(...PLANS.filter((p) => p.term === "quarterly").
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Checkout could not be started.");
-        window.scoutTrack?.("Checkout Started", { plan_code: planCode });
+        window.scoutTrack?.("Checkout Started", { plan_code: planCode, source: "pricing_modal", ...(data.analytics || {}) });
         window.location.assign(data.url);
       } catch (error) {
         errorBox.textContent = error instanceof Error ? error.message : "Checkout could not be started.";

@@ -180,7 +180,7 @@ const faqs=[
           });
           var data = await response.json();
           if (!response.ok) throw new Error(data.error || "Checkout could not be started.");
-          if (window.scoutTrack) window.scoutTrack("Checkout Started", { plan_code: button.getAttribute("data-checkout-plan"), source: "pricing_page" });
+          if (window.scoutTrack) window.scoutTrack("Checkout Started", { plan_code: button.getAttribute("data-checkout-plan"), source: "pricing_page", ...(data.analytics || {}) });
           window.location.assign(data.url);
         } catch (error) {
           errorBox.textContent = error && error.message ? error.message : "Checkout could not be started.";

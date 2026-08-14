@@ -4,6 +4,7 @@ import { getDemoState } from "../../../lib/demo-store";
 import { assignedHumanAssistant } from "../../../lib/human-assistants";
 import { fastApplyProfilePayload } from "../../../lib/fastapply-applicant";
 import { getPostHogServer } from "../../../lib/posthog-server";
+import { sendGoogleAnalyticsEvent } from "../../../lib/google-analytics";
 
 export const prerender = false;
 
@@ -38,6 +39,8 @@ export const POST: APIRoute = async (context) => {
         posthog.capture({ distinctId: user.id, event: "onboarding_completed", properties: { assistant_type: assistant, target_roles_count: roles.length, has_salary_min: !!salary } });
         await posthog.flush();
       }
+      await sendGoogleAnalyticsEvent({ userId: user.id, name: "onboarding_completed", params: { assistant_type: assistant, target_roles_count: roles.length, has_salary_min: !!salary } })
+        .catch((analyticsError) => console.error("[google-analytics] onboarding event failed", analyticsError));
       return json({ ok: true, redirect: "/dashboard" });
     }
 
@@ -86,6 +89,8 @@ export const POST: APIRoute = async (context) => {
       posthog.capture({ distinctId: user.id, event: "onboarding_completed", properties: { assistant_type: assistant, target_roles_count: roles.length, has_salary_min: !!salary } });
       await posthog.flush();
     }
+    await sendGoogleAnalyticsEvent({ userId: user.id, name: "onboarding_completed", params: { assistant_type: assistant, target_roles_count: roles.length, has_salary_min: !!salary } })
+      .catch((analyticsError) => console.error("[google-analytics] onboarding event failed", analyticsError));
 
     // Send members straight to the plan that unlocks the lane they chose; the
     // dashboard is reachable either way, but this is the conversion moment.
