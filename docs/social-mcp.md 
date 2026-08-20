@@ -1,0 +1,157 @@
+# Scout Social MCP
+
+Lets Claude render on-brand cover images and get back public URLs. Buffer's API accepts
+images by URL only, and Instagram posts cannot be scheduled without an attached asset, so
+this endpoint is what makes both LinkedIn covers and Instagram scheduling automatable.
+
+## Files
+
+| Path | What it is |
+|---|---|
+| `src/lib/social-covers.ts` | Renderer (satori via `@vercel/og`) plus Supabase Storage read/write |
+| `src/pages/api/mcp/[token].ts` | MCP server over streamable HTTP, stateless |
+| `docs/social-mcp.md` | This file |
+
+## Setup
+
+### 1. Dependency
+
+```bash
+npm install @vercel/og
+```
+
+Nothing else. Fonts are fetched from jsDelivr at runtime and cached in module scope, so a
+warm lambda pulls them once per cold start. They must stay `.woff`, `.ttf` or `.otf`;
+satori cannot read `.woff2`.
+
+### 2. Storage bucket
+
+Run once in the Supabase SQL editor. The bucket must be public, because Buffer fetches the
+image from its own servers and will not follow a signed URL.
+
+```sql
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('social', 'social', true, 10485760, array['image/png'])
+on conflict (id) do update
+  set public = true,
+      file_size_limit = 10485760,
+      allowed_mime_types = array['image/png'];
+```
+
+Writes go through `createAdminClient()` on the service role key, which bypasses RLS, so no
+storage policies are needed for this to work. Public read is granted by `public = true`.
+
+### 3. Environment variable
+
+Generate a long random token and set it in Vercel for Production:
+
+```bash
+openssl rand -hex 32
+```
+
+```
+SOCIAL_MCP_TOKEN=<the value>
+```
+
+Redeploy so the variable is picked up.
+
+### 4. Connect it to Claude
+
+In claude.ai, go to Settings, then Connectors, then Add custom connector, and give it:
+
+```
+https://applyscout.app/api/mcp/<SOCIAL_MCP_TOKEN>
+```
+
+Then enable the connector in the chat where Scout's social work happens.
+
+## Auth model, and its tradeoff
+
+The secret is in the URL path rather than an `Authorization` header, because claude.ai
+custom connectors cannot attach arbitrary headers to a remote MCP server. That makes the
+full URL a bearer credential:
+
+- Anyone holding the URL can write to and delete from the `social` bucket.
+- It is not sensitive beyond that. There is no access to user data, applications, or auth.
+- Wrong or missing token returns `404`, not `401`, so the endpoint does not confirm it exists.
+- The comparison is constant time, matching the pattern in `src/pages/api/cron/*`.
+- Rotate by changing `SOCIAL_MCP_TOKEN`, redeploying, and re-adding the connector.
+
+Do not paste the full URL into a shared document or a chat you would not paste an API key into.
+
+## Tools
+
+### `render_cover`
+
+Renders and stores a cover, returning `{ slug, url, width, height }`. Pass the `url`
+straight into Buffer's `create_post` under `assets[].image.url`. Re-rendering the same slug
+overwrites it, and the returned URL carries a cache-busting query string.
+
+Sizes: `linkedin` 1200x1200 (square takes more feed height on mobile than 1.91:1),
+`instagram` 1080x1350, `x` 1600x900.
+
+```jsonc
+// layout "quote": a pull quote from the post, 6 to 12 words
+{
+  "slug": "li-2026-09-08-salary-floor",
+  "platform": "linkedin",
+  "layout": "quote",
+  "dark": false,
+  "lines": ["Decide your number", "in week one.", "Not week nine."],
+  "accentFrom": 2          // lines from index 2 render in the accent colour
+}
+
+// layout "stat": one figure. `source` is required and printed on the image.
+{
+  "slug": "x-2026-09-08-31min",
+  "platform": "x",
+  "layout": "stat",
+  "dark": true,
+  "value": "31",
+  "unit": "min",
+  "label": "The average time to complete one online job application.",
+  "source": "Source: Zippia, 200 largest US employers"
+}
+```
+
+### `list_covers`
+
+Everything rendered so far, newest first, with public URLs.
+
+### `delete_cover`
+
+Removes one cover by slug. Permanent.
+
+## Design rules the renderer enforces
+
+These come from `DESIGN.md` and `src/styles/global.css`. Change them there, not here.
+
+- The mark is the official open-path glyph from `public/scout-mark.svg`, never a letterform.
+  On the forest background its body path swaps to surface for the reversed treatment.
+- Small accent text on the light surface uses `#49791c`, **not** the primary lime `#7fc92b`.
+  Lime on `#f4ffeb` fails contrast and effectively disappears. This was a real bug in the
+  first batch of covers.
+- Display type is Space Grotesk 700 with letter spacing at the design system's `-0.04em`
+  floor. Body and label type is Inter 700.
+- Quote type size scales down as the longest line grows, so lines do not wrap.
+- Text children are rendered literally. Satori does not parse HTML, so `<br>` would print as
+  characters. Use one array entry per line in `lines`; `label` wraps on its own.
+
+## Editorial rules that live outside this code
+
+The renderer will happily draw anything you give it. These are on the caller:
+
+- Never invent customer counts, ratings, interviews, or success rates. Any figure must be
+  verified and cited, and `layout: "stat"` refuses to render without a `source`.
+- Put a cover on an X post only when the visual carries information the text cannot, such as
+  a statistic. Never on a thread opener, where the hook needs to be read. Most X posts get
+  no cover.
+- Every LinkedIn post gets one.
+
+## Known limits
+
+- Satori supports a subset of CSS. Flexbox and plain text work; grid, floats and most
+  filters do not. Keep new layouts inside the shapes already here.
+- Cold start is a few seconds while fonts download. Warm invocations are fast.
+- A failed font fetch clears the cache so the next call retries rather than caching failure.
+- Renders only PNG. No video, so Instagram reels still need media uploaded by hand.

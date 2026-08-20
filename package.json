@@ -30,6 +30,7 @@
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.6",
     "@types/sanitize-html": "^2.16.1",
+    "@vercel/og": "^1.0.1",
     "astro": "^5.16.15",
     "astro-seo": "^0.8.4",
     "lucide-react": "^0.469.0",
