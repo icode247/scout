@@ -24,6 +24,8 @@ interface ImportMetaEnv {
   readonly JOB_BOARD_API_URL?: string;
   readonly JOB_BOARD_API_TOKEN?: string;
   readonly CRON_SECRET?: string;
+  readonly RESEND_REPLY_TO?: string;
+  readonly SCOUT_MAILING_ADDRESS?: string;
   readonly PUBLIC_CALENDLY_URL?: string;
   readonly DODO_API_KEY?: string;
   readonly DODO_WEBHOOK_SECRET?: string;

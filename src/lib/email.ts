@@ -15,16 +15,20 @@ export function emailConfigured() {
   return Boolean(serverEnv("RESEND_API_KEY"));
 }
 
-function siteUrl() {
+export function siteUrl() {
   return (serverEnv("PUBLIC_SITE_URL") || SITE.url).replace(/\/$/, "");
 }
 
-function fromAddress() {
+export function fromAddress() {
   // updates.<site> is the domain verified in Resend; the apex is not.
-  return serverEnv("RESEND_FROM_EMAIL") || `${SITE.name} <hello@updates.${new URL(SITE.url).hostname}>`;
+  return serverEnv("RESEND_FROM_EMAIL") || `Kate from ${SITE.name} <kate@updates.${new URL(SITE.url).hostname}>`;
 }
 
-function escapeHtml(value: string) {
+export function replyToAddress() {
+  return serverEnv("RESEND_REPLY_TO") || `kate@${new URL(SITE.url).hostname}`;
+}
+
+export function escapeHtml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
@@ -35,6 +39,52 @@ export interface SubscriptionEmailInput {
   assistant?: { name: string; firstName: string } | null;
   /** Lets Resend drop a duplicate send if the same delivery is retried. */
   idempotencyKey?: string;
+}
+
+export interface ScoutEmailInput {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  idempotencyKey?: string;
+  headers?: Record<string, string>;
+}
+
+export async function sendScoutEmail(input: ScoutEmailInput) {
+  const apiKey = serverEnv("RESEND_API_KEY");
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY is not set; skipping the email.");
+    return null;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        "content-type": "application/json",
+        ...(input.idempotencyKey ? { "idempotency-key": input.idempotencyKey } : {}),
+      },
+      body: JSON.stringify({
+        from: fromAddress(),
+        reply_to: replyToAddress(),
+        to: [input.to],
+        subject: input.subject,
+        text: input.text,
+        html: input.html,
+        ...(input.headers ? { headers: input.headers } : {}),
+      }),
+    });
+  } catch {
+    throw new EmailError("Scout could not reach the email provider.", 502);
+  }
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new EmailError(String((payload as any)?.message || `The email provider returned ${response.status}.`), response.status);
+  }
+  return { id: String((payload as any)?.id || "") };
 }
 
 export function subscriptionConfirmationContent(input: SubscriptionEmailInput) {
@@ -85,32 +135,11 @@ export function subscriptionConfirmationContent(input: SubscriptionEmailInput) {
  * RESEND_API_KEY is unset so billing keeps working before email is configured.
  */
 export async function sendSubscriptionConfirmationEmail(input: SubscriptionEmailInput) {
-  const apiKey = serverEnv("RESEND_API_KEY");
-  if (!apiKey) {
+  if (!emailConfigured()) {
     console.warn("RESEND_API_KEY is not set; skipping the subscription confirmation email.");
     return null;
   }
 
   const { subject, text, html } = subscriptionConfirmationContent(input);
-
-  let response: Response;
-  try {
-    response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json",
-        ...(input.idempotencyKey ? { "idempotency-key": input.idempotencyKey } : {}),
-      },
-      body: JSON.stringify({ from: fromAddress(), to: [input.to], subject, text, html }),
-    });
-  } catch {
-    throw new EmailError("Scout could not reach the email provider.", 502);
-  }
-
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new EmailError(String((payload as any)?.message || `The email provider returned ${response.status}.`), response.status);
-  }
-  return { id: String((payload as any)?.id || "") };
+  return sendScoutEmail({ to: input.to, subject, text, html, idempotencyKey: input.idempotencyKey });
 }

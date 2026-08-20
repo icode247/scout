@@ -69,7 +69,8 @@ describe("sendSubscriptionConfirmationEmail", () => {
     const body = JSON.parse(init.body);
     expect(body.to).toEqual(["m@example.com"]);
     expect(body.subject).toContain(humanPlan.name);
-    expect(body.from).toContain("@");
+    expect(body.from).toBe("Kate from Scout <kate@updates.applyscout.app>");
+    expect(body.reply_to).toBe("kate@applyscout.app");
   });
 
   it("throws an EmailError when Resend rejects the send", async () => {

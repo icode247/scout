@@ -1,6 +1,7 @@
 {
   "crons": [
-    { "path": "/api/cron/reconcile", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/reconcile", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/launch-emails", "schedule": "*/15 * * * *" }
   ],
   "redirects": [
     {
