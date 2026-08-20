@@ -81,6 +81,8 @@ export default defineConfig({
       allowedHosts: [".ngrok-free.app", ".ngrok.io", ".ngrok.app", ".trycloudflare.com", ".loca.lt"],
     },
     ssr: {
+      external: ["@vercel/og"],
+
       // sanitize-html is CommonJS but depends on htmlparser2@12, which is
       // ESM-only. Left external, the deployed function hits sanitize-html's
       // require("htmlparser2") at module load and Vercel's runtime loader
