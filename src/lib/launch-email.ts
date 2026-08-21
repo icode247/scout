@@ -64,7 +64,7 @@ function content(emailNumber: LaunchEmailNumber, humanFirst: boolean) {
         paragraphs: [
           "If applications keep slipping behind work, family, or the rest of life, Scout is ready when you are.",
           "Choose an AI plan for automated throughput or a Human Assistant campaign for hands-on service. Either way, you keep visibility into the work.",
-          "Use code SCOUT30 for 30% off the first month of a monthly Scout AI plan. Prefer a person? The 90-day Human Full option is already priced $50 below the standard Human Full bundle.",
+          "Use code SCOUT30 for 30% off any standard Scout plan—monthly AI or a standard Human Assistant bundle. The offer does not apply to 90-day plans.",
         ],
         cta: { label: "Choose your Scout assistant", url: pricing },
       };

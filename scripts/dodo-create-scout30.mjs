@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 
 const key = process.env.DODO_API_KEY?.trim();
-const essential = process.env.DODO_PRODUCT_AI_ESSENTIAL?.trim();
-const plus = process.env.DODO_PRODUCT_AI_PLUS?.trim();
-if (!key || !essential || !plus) {
-  console.error("DODO_API_KEY, DODO_PRODUCT_AI_ESSENTIAL, and DODO_PRODUCT_AI_PLUS are required.");
+const productEnvKeys = [
+  "DODO_PRODUCT_AI_ESSENTIAL",
+  "DODO_PRODUCT_AI_PLUS",
+  "DODO_PRODUCT_HUMAN_FOCUSED",
+  "DODO_PRODUCT_HUMAN_FULL",
+  "DODO_PRODUCT_HUMAN_CAMPAIGN",
+];
+const productIds = productEnvKeys.map((name) => process.env[name]?.trim());
+if (!key || productIds.some((id) => !id)) {
+  console.error(`DODO_API_KEY and standard-plan product ids are required: ${productEnvKeys.join(", ")}`);
   process.exit(1);
 }
 
@@ -12,7 +18,7 @@ const live = process.env.DODO_ENVIRONMENT === "live_mode";
 const base = live ? "https://live.dodopayments.com" : "https://test.dodopayments.com";
 const headers = { authorization: `Bearer ${key}`, "content-type": "application/json" };
 const code = "SCOUT30";
-const expectedProducts = [essential, plus].sort();
+const expectedProducts = productIds.map(String).sort();
 
 async function json(response) {
   const body = await response.json().catch(() => null);
@@ -26,13 +32,25 @@ const existing = (Array.isArray(listed?.items) ? listed.items : []).find((item) 
 
 if (existing) {
   const actualProducts = (existing.restricted_to || []).map(String).sort();
-  const valid = existing.type === "percentage"
+  const termsValid = existing.type === "percentage"
     && Number(existing.amount) === 3000
-    && Number(existing.subscription_cycles) === 1
-    && JSON.stringify(actualProducts) === JSON.stringify(expectedProducts);
-  if (!valid) {
-    console.error(`${code} already exists but does not match 30% × one cycle × monthly AI products. Refusing to silently change a live promotion.`);
+    && Number(existing.subscription_cycles) === 1;
+  if (!termsValid) {
+    console.error(`${code} already exists but does not match 30% × one subscription cycle. Refusing to silently change its financial terms.`);
     process.exit(1);
+  }
+  if (JSON.stringify(actualProducts) !== JSON.stringify(expectedProducts)) {
+    await json(await fetch(`${base}/discounts/${encodeURIComponent(existing.discount_id)}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        name: "Scout launch — 30% off standard plans",
+        restricted_to: expectedProducts,
+        metadata: { campaign: "launch_email_4", offer: "standard_plans_30_percent" },
+      }),
+    }));
+    console.log(`${code} updated: 30% off the five standard Scout plans; all 90-day plans excluded.`);
+    process.exit(0);
   }
   console.log(`${code} already exists and is configured correctly (${existing.times_used || 0} uses).`);
   process.exit(0);
@@ -43,14 +61,14 @@ const created = await json(await fetch(`${base}/discounts`, {
   headers,
   body: JSON.stringify({
     code,
-    name: "Scout launch — 30% off first AI month",
+    name: "Scout launch — 30% off standard plans",
     type: "percentage",
     amount: 3000,
     subscription_cycles: 1,
     preserve_on_plan_change: false,
     restricted_to: expectedProducts,
-    metadata: { campaign: "launch_email_4", offer: "first_ai_month_30_percent" },
+    metadata: { campaign: "launch_email_4", offer: "standard_plans_30_percent" },
   }),
 }));
 
-console.log(`Created ${created.code || code}: 30% off one billing cycle, restricted to monthly AI Essential and AI Plus.`);
+console.log(`Created ${created.code || code}: 30% off the five standard Scout plans; all 90-day plans excluded.`);
