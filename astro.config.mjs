@@ -5,8 +5,26 @@ import tailwind from "@astrojs/tailwind";
 import vercel from "@astrojs/vercel";
 import { defineConfig } from "astro/config";
 import remarkGfm from "remark-gfm";
+import { readFileSync, readdirSync } from "node:fs";
+import { basename, join } from "node:path";
 
 import { SITE } from "./src/config/site.ts";
+import { isNonIndexablePath } from "./src/config/seo.ts";
+
+const blogDirectory = new URL("./src/content/blog/", import.meta.url);
+const blogLastModified = new Map(
+  readdirSync(blogDirectory)
+    .filter((filename) => filename.endsWith(".md") || filename.endsWith(".mdx"))
+    .map((filename) => {
+      const source = readFileSync(join(blogDirectory.pathname, filename), "utf8");
+      const published = source.match(/^pubDate:\s*["']?([^\s"']+)/m)?.[1];
+      const updated = source.match(/^updatedDate:\s*["']?([^\s"']+)/m)?.[1];
+      const date = updated ?? published;
+      return [`/blog/${basename(filename).replace(/\.mdx?$/, "")}`, date];
+    })
+    .filter((entry) => entry[1]),
+);
+const latestBlogUpdate = [...blogLastModified.values()].sort().at(-1);
 
 // https://astro.build/config
 export default defineConfig({
@@ -59,12 +77,13 @@ export default defineConfig({
     sitemap({
       filter: (page) => {
         const pathname = new URL(page).pathname;
-        const excluded = [
-          "/applications", "/dashboard", "/jobs", "/profiles",
-          "/login", "/onboarding", "/delete-account",
-          "/first-apply", "/swipe-apply",
-        ];
-        return !excluded.includes(pathname) && !pathname.startsWith("/variants/");
+        return !isNonIndexablePath(pathname);
+      },
+      serialize(item) {
+        const pathname = new URL(item.url).pathname;
+        const lastmod = pathname === "/blog" ? latestBlogUpdate : blogLastModified.get(pathname);
+        if (lastmod) item.lastmod = new Date(lastmod).toISOString();
+        return item;
       },
     }),
   ],

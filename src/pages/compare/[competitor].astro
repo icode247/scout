@@ -16,6 +16,10 @@ export function getStaticPaths() {
 const { competitor } = Astro.props;
 const title = `Scout vs ${competitor.name}: which job application service fits?`;
 const description = `Compare Scout with ${competitor.name}, including service model, application workflow, human support, controls, and the job seekers each option fits.`;
+const researchChecked = competitor.researchChecked ?? "July 23, 2026";
+const buyingQuestions = competitor.buyingQuestions ?? [];
+const competitorIndex = competitors.findIndex((item) => item.slug === competitor.slug);
+const relatedCompetitors = [1, 2, 3].map((offset) => competitors[(competitorIndex + offset) % competitors.length]);
 
 const breadcrumbLd = {
   "@context": "https://schema.org",
@@ -40,10 +44,30 @@ const breadcrumbLd = {
           Scout vs {competitor.name}
         </h1>
         <p class="mt-6 max-w-3xl text-lg leading-relaxed text-white/75 sm:text-xl">{competitor.summary}</p>
-        <p class="mt-6 text-sm text-white/55">Research checked July 23, 2026. Features and pricing can change.</p>
+        <p class="mt-6 text-sm text-white/55">Research checked {researchChecked}. Features and pricing can change.</p>
       </div>
     </Container>
   </section>
+
+  {buyingQuestions.length > 0 && (
+    <section class="bg-brand-50 py-16 sm:py-24">
+      <Container>
+        <div class="max-w-3xl">
+          <p class="font-bold text-brand-700">Buyer checks</p>
+          <h2 class="mt-3 font-display text-4xl font-extrabold sm:text-5xl">Questions that change this comparison</h2>
+          <p class="mt-5 text-lg leading-relaxed text-ink-soft">These are the practical details to verify against the provider's current offer before choosing either service.</p>
+        </div>
+        <div class="mt-10 grid gap-5 lg:grid-cols-3">
+          {buyingQuestions.map((item) => (
+            <article class="rounded-2xl bg-white p-6 shadow-card">
+              <h3 class="text-xl font-extrabold">{item.question}</h3>
+              <p class="mt-4 leading-relaxed text-ink-soft">{item.answer}</p>
+            </article>
+          ))}
+        </div>
+      </Container>
+    </section>
+  )}
 
   <section class="bg-white py-16 sm:py-24">
     <Container>
@@ -132,6 +156,18 @@ const breadcrumbLd = {
       <div class="mt-14 border-t border-ink/10 pt-8">
         <a href="/compare" class="font-bold text-brand-700 hover:text-brand-800">Compare all job application service models →</a>
       </div>
+    </Container>
+  </section>
+
+  <section class="bg-surface py-16 sm:py-20">
+    <Container>
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div><p class="font-bold text-brand-700">Keep comparing</p><h2 class="mt-2 font-display text-3xl font-extrabold sm:text-4xl">Related service alternatives</h2></div>
+        <a href="/compare" class="text-sm font-extrabold text-brand-700">View every comparison →</a>
+      </div>
+      <nav class="mt-8 grid gap-4 md:grid-cols-3" aria-label="Related service comparisons">
+        {relatedCompetitors.map((item) => <a href={`/compare/${item.slug}`} class="rounded-xl bg-white p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-lift"><span class="text-sm font-bold text-ink-muted">{item.category}</span><strong class="mt-2 block text-lg">Scout vs {item.name} <span class="text-brand-700" aria-hidden="true">→</span></strong></a>)}
+      </nav>
     </Container>
   </section>
 

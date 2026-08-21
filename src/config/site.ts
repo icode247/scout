@@ -49,6 +49,7 @@ export const FOOTER: { heading: string; links: NavItem[] }[] = [
   {
     heading: "Auto-apply",
     links: [
+      { label: "All supported platforms", href: "/auto-apply" },
       { label: "Workday", href: "/auto-apply/workday" },
       { label: "Greenhouse", href: "/auto-apply/greenhouse" },
       { label: "Lever", href: "/auto-apply/lever" },

@@ -5,6 +5,17 @@
   ],
   "redirects": [
     {
+      "source": "/(.*)",
+      "destination": "https://applyscout.app/$1",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.applyscout.app"
+        }
+      ]
+    },
+    {
       "source": "/first-apply",
       "destination": "/ai-job-application-assistant",
       "permanent": true

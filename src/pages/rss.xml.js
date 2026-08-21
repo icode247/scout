@@ -6,7 +6,7 @@ export async function GET(context) {
   const posts = (await getCollection("blog"))
     .filter((p) => !p.data.draft)
     .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
-  return rss({
+  const response = await rss({
     title: `${SITE.name} Blog`,
     description: "Job search, application automation, and getting hired faster with Scout.",
     site: context.site,
@@ -17,4 +17,6 @@ export async function GET(context) {
       link: `/blog/${p.id}`,
     })),
   });
+  response.headers.set("X-Robots-Tag", "noindex, follow");
+  return response;
 }

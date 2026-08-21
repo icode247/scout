@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { createSupabaseServerClient, createSupabaseTokenClient, decodeSessionEmail, demoModeEnabled, getSupabaseConfig } from "./lib/supabase";
 import { getDemoState } from "./lib/demo-store";
 import { EMPTY_ENTITLEMENT, loadEntitlement } from "./lib/entitlements";
+import { isNonIndexablePath } from "./config/seo";
 
 const memberPrefixes = ["/dashboard", "/agent", "/jobs", "/ai-jobs", "/applications", "/profiles", "/settings"];
 const adminPrefixes = ["/admin"];
@@ -43,7 +44,19 @@ function configurationError(pathname: string) {
  */
 export const onRequest = defineMiddleware(async (context, next) => {
   try {
-    return await handle(context, next);
+    const response = await handle(context, next);
+    if (!isNonIndexablePath(context.url.pathname)) return response;
+
+    // Protected and utility routes often redirect before their HTML-level
+    // noindex tag can be rendered. Preserve that directive on the response so
+    // crawlers receive it even when signed-out traffic is sent to /login.
+    const headers = new Headers(response.headers);
+    headers.set("X-Robots-Tag", "noindex, nofollow");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   } catch (error) {
     console.error(
       `[middleware] ${context.request.method} ${context.url.pathname} threw:`,

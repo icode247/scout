@@ -10,6 +10,8 @@ export type Competitor = {
   rows: Array<[string, string, string]>;
   sourceUrl: string;
   sourceLabel: string;
+  researchChecked?: string;
+  buyingQuestions?: Array<{ question: string; answer: string }>;
 };
 
 export const competitors: Competitor[] = [
@@ -72,6 +74,21 @@ export const competitors: Competitor[] = [
     ],
     sourceUrl: "https://lazyapply.com/",
     sourceLabel: "LazyApply official website",
+    researchChecked: "August 21, 2026",
+    buyingQuestions: [
+      {
+        question: "How much application volume do you actually want?",
+        answer: "LazyApply's published annual plans currently range from 15 to 1,500 applications per day and from one to 20 resume profiles. Those are materially different operating modes. Choose the smallest limit that you can still audit for job fit, answer accuracy, and duplicate submissions.",
+      },
+      {
+        question: "Which parts of the search do you want automated?",
+        answer: "The official site names Greenhouse, Dice, Indeed, and ZipRecruiter, and also promotes referral emails and an analytics dashboard. Confirm that your target employers and application routes overlap with that coverage before comparing only the headline volume.",
+      },
+      {
+        question: "What control do you need when a form is ambiguous?",
+        answer: "A high daily allowance is most useful for stable, repeatable searches. If sponsorship, compensation, disclosures, or resume changes regularly require judgment, test a small batch or choose a workflow with a human escalation path.",
+      },
+    ],
   },
   {
     slug: "jobcopilot-alternative",
@@ -132,6 +149,21 @@ export const competitors: Competitor[] = [
     ],
     sourceUrl: "https://aiapply.co/",
     sourceLabel: "AIApply official website",
+    researchChecked: "August 21, 2026",
+    buyingQuestions: [
+      {
+        question: "Do you want a broad career toolkit or a focused application service?",
+        answer: "AIApply's current site combines job matching, resume and cover-letter generation, automatic applications, interview practice, and live interview assistance. That breadth can be useful when you want one AI suite; it is less relevant when the only bottleneck is careful application execution.",
+      },
+      {
+        question: "Is an AI-led operating model enough?",
+        answer: "AIApply presents an AI-led workflow. Scout's practical difference is the option to choose a dedicated Human Assistant for searches where exceptions, sensitive answers, and direct communication matter more than software breadth.",
+      },
+      {
+        question: "Which outcome claims can you verify?",
+        answer: "Treat interview-rate and speed claims as marketing until you understand the sample, eligibility rules, and measurement window. Compare the workflow you can inspect—targeting, material accuracy, submission records, and pause controls—before relying on an employer outcome no service controls.",
+      },
+    ],
   },
   {
     slug: "wearecareer-alternative",
@@ -223,6 +255,21 @@ export const competitors: Competitor[] = [
     rows: [["Core service","Human-reviewed application packages","Human or AI application service"],["Job matching","Outcome-informed ranking","Profile rules and fit controls"],["Buying model","One-time application allotment","Choose a fulfillment plan"],["Guarantee","Defined interview refund guarantee","No invented hiring guarantee"],["Human communication","Support team","Dedicated WhatsApp assistant on Human"]],
     sourceUrl: "https://applyall.com/job-application-service",
     sourceLabel: "ApplyAll job application service",
+    researchChecked: "August 21, 2026",
+    buyingQuestions: [
+      {
+        question: "What exactly qualifies for ApplyAll's guarantee?",
+        answer: "ApplyAll currently defines a qualifying interview as a live first-round conversation with someone at the hiring company within 30 days after application completion. Its page excludes automated assessments and third-party recruiter screens. Read the full eligibility and refund terms before treating the guarantee as equivalent to a job offer.",
+      },
+      {
+        question: "How much search control remains with you?",
+        answer: "The service says candidates set target titles, locations, salary requirements, work authorization, and companies to avoid, while people review applications before submission. Confirm how quickly those rules can be changed or paused once a package is underway.",
+      },
+      {
+        question: "Do you prefer a fixed package or an ongoing operating desk?",
+        answer: "ApplyAll markets this package without a recurring subscription. Scout instead organizes work around reusable profiles and separate Human or AI fulfillment lanes. The better model depends on whether you want a bounded campaign or a continuing system for multiple searches.",
+      },
+    ],
   },
   {
     slug: "careery-alternative",
@@ -236,6 +283,21 @@ export const competitors: Competitor[] = [
     rows: [["Core service","Managed applications and positioning","Human or AI managed applications"],["Application sources","Company ATS platforms","Supported workflows plus delegated jobs"],["Career branding","Resume, LinkedIn, and authority bundles","Application materials tied to profiles"],["Human lane","Team-configured managed service","Dedicated Human Assistant option"],["Execution proof","Application pipeline tracking","Records on both lanes; detailed Human evidence"]],
     sourceUrl: "https://careery.pro/pricing",
     sourceLabel: "Careery official pricing",
+    researchChecked: "August 21, 2026",
+    buyingQuestions: [
+      {
+        question: "What is the full program commitment?",
+        answer: "Careery's published installment schedule currently totals $1,025 across three stages: $275, then $375, then $375. The page says future stages can be cancelled. Compare the full likely campaign cost, not only the first payment shown in the call to action.",
+      },
+      {
+        question: "Are you buying applications or a positioning bundle?",
+        answer: "The six-month program currently combines managed applications with an ATS resume rebuild and LinkedIn rewrite. It also advertises unlimited applications and two additional months if the candidate does not find a job. That is broader than an applications-only purchase.",
+      },
+      {
+        question: "How will you evaluate unlimited volume?",
+        answer: "Ask how targeting, duplicate prevention, resume approval, and application evidence work before assigning value to an unlimited allowance. Qualified submissions and usable materials matter more than an uncapped count.",
+      },
+    ],
   },
   {
     slug: "dsd-recruitment-alternative",
@@ -275,6 +337,21 @@ export const competitors: Competitor[] = [
     rows: [["Core service","Resume writing with application support","Managed application service"],["Resume creation","Primary offering","Original or tailored application workflow"],["Job selection","User selects roles for application help","Profiles plus user-delegated jobs"],["Human assistant","Service team supports deliverables","Dedicated Human Assistant available"],["Application tracking","Confirmation emails and response access","Dashboard records plus Human evidence"]],
     sourceUrl: "https://boxresume.com/job-application-services/",
     sourceLabel: "BoxResume application service",
+    researchChecked: "August 21, 2026",
+    buyingQuestions: [
+      {
+        question: "Is your first problem the resume or the application workload?",
+        answer: "BoxResume leads with professional resume writing and offers application help alongside it. Start there when the core asset needs a professional rebuild; start with an application operations service when the resume is usable but repeated forms consume the time.",
+      },
+      {
+        question: "Who chooses the jobs?",
+        answer: "Its current application-service page says the customer selects the roles to apply for and provides core answers once. Confirm whether that means individual job approval, role-level approval, or provider-led sourcing for the package you are considering.",
+      },
+      {
+        question: "What proof arrives after submission?",
+        answer: "BoxResume advertises confirmation emails and progress visibility. Ask for a sample before purchase and compare it with the level of evidence you need, from a basic submission record to screenshots of important form answers.",
+      },
+    ],
   },
 ];
 
