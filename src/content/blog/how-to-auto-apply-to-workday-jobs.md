@@ -1,10 +1,10 @@
 ---
 title: "How to Auto-Apply to Workday Jobs With Better Controls"
-description: "Learn the difference between Workday autofill and managed submission, what information to prepare, and which controls reduce application errors."
+description: "Need Workday application help? Compare autofill and managed submission, prepare accurate profile data, and use controls that reduce application errors."
 coverImage: "/assets/blog/how-to-auto-apply-to-workday-jobs-cover.webp"
 coverAlt: "Scout guide to auto-applying to Workday jobs with better controls"
 pubDate: 2026-06-10
-updatedDate: 2026-07-16
+updatedDate: 2026-08-21
 author: "Scout Editorial Team"
 pillar: "Auto-Apply & Job Automation"
 targetKeyword: "auto apply Workday jobs"
@@ -32,6 +32,20 @@ Common sources of friction include:
 - Optional demographic and self-identification forms.
 
 The correct answer is not to guess faster. It is to create a reliable source profile and a clear path for exceptions.
+
+## Workday application help for common problems
+
+If a Workday application stalls or repeats incorrect information, fix the source of the problem before submitting more forms.
+
+| Problem | Likely cause | Safer next step |
+| --- | --- | --- |
+| Your profile is not recognized at another employer | Employer career sites can use separate account and profile flows | Confirm the employer site and create or update the correct profile |
+| Work history parses incorrectly | The resume layout or date format was misread | Correct the fields and simplify the source document before reuse |
+| A required answer is missing | The employer added a custom screening question | Pause and get an approved answer rather than inferring one |
+| You cannot confirm submission | The form stopped before its final state or confirmation was missed | Check the employer portal and email before trying again |
+| The same role appears through another board | A cross-posted link may lead to the same employer requisition | Compare the requisition ID and application history before submitting |
+
+Do not repeatedly click submit after an uncertain result. A confirmation email, employer-portal status, or saved receipt is stronger evidence than returning to the final form page.
 
 ## Prepare the source profile first
 
@@ -79,7 +93,7 @@ If you pursue more than one role family, select the relevant job profile and res
 
 ### 2. Apply hard eligibility filters
 
-Check location, work arrangement, work authorization, clearance, required licenses, and seniority before spending time on tailoring.
+Check location, work arrangement, work authorization, clearance, required licenses, and seniority before spending time on tailoring. The [wrong-fit application guide](/blog/how-to-stop-auto-apply-tools-from-applying-to-wrong-jobs) explains how to separate hard eligibility rules from preference ranking.
 
 ### 3. Choose the resume behavior
 
@@ -91,7 +105,7 @@ A system should pause for questions it cannot answer from approved information. 
 
 ### 5. Save the receipt
 
-Record the company, title, source URL, date, status, resume version, and any available answer evidence. This helps with recruiter follow-up and duplicate prevention.
+Record the company, title, requisition ID, source URL, date, status, resume version, and any available answer evidence. This helps with recruiter follow-up and [duplicate prevention](/blog/how-to-prevent-duplicate-job-applications).
 
 ![Five-step controlled workflow for auto-applying to Workday jobs](/assets/blog/how-to-auto-apply-to-workday-jobs-infographic-2.webp)
 
@@ -125,4 +139,4 @@ Prepare accurate source information once, make exceptions visible, and judge the
 
 ## Sources and methodology
 
-This article was updated on July 16, 2026 to reflect Scout's current Human and AI Assistant model. Guidance on voluntary self-identification was checked against the [U.S. Equal Employment Opportunity Commission's discussion of applicant demographic data](https://www.eeoc.gov/foia/eeoc-informal-discussion-letter-100). Employer configurations and legal requirements vary by jurisdiction.
+This article was updated on August 21, 2026 to add Workday application troubleshooting and stronger duplicate and wrong-fit controls. Guidance on voluntary self-identification was checked against the [U.S. Equal Employment Opportunity Commission's discussion of applicant demographic data](https://www.eeoc.gov/foia/eeoc-informal-discussion-letter-100). Employer configurations and legal requirements vary by jurisdiction.

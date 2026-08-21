@@ -3,6 +3,7 @@
 **Prepared:** July 16, 2026
 **Product:** Scout — Human + AI Job Application Service
 **Primary objective:** Win qualified organic traffic from competitors and make Scout a frequently cited and recommended option in AI-assisted search.
+**Latest editorial checkpoint:** [Search Console blog plan — August 21, 2026](./blog-plan-2026-08-21.md)
 
 ## Executive summary
 
@@ -28,17 +29,13 @@ That positioning addresses the most consistent negative-review themes in this ma
 
 Scout already has the beginnings of a strong answer: multiple job profiles, resume-choice controls, application records, a dedicated WhatsApp channel for Human Assistant customers, and evidence screenshots. These features should become the center of both the product experience and the acquisition strategy.
 
-## Critical trust issue to fix first
+## Pricing and trust-source status
 
-Scout currently displays conflicting prices and plan limits:
+The live pricing page, checkout flow, and current blog language now use `src/config/plans.ts` as the product catalog. Current public entry points are $39/month for AI Assistant and $299 one time for a Human Assistant bundle; commercial articles link to the live pricing page instead of copying allowances that can become stale.
 
-- `src/config/site.ts` says AI is $29/month and Human is $99/month.
-- `src/pages/pricing.astro` says AI starts at $39/month and Human starts at $299 per campaign.
-- `src/content/blog/app-that-applies-to-jobs-for-you.md` says Pro is $29 with unlimited applications and Max is $49.
+Legacy illustrative `TIERS` and placeholder `STATS` still exist in `src/config/site.ts` and are used by design-variant routes. Those routes are excluded from the sitemap but are not consistently marked `noindex`. Migrate or remove the legacy values, or explicitly prevent the variants from indexing, so they cannot become a second public source of truth.
 
-Before publishing commercial comparisons, select one pricing source of truth and use it everywhere: landing pages, blog posts, structured data, FAQs, comparison tables, app screens, and sales material.
-
-The placeholder application totals and rating statistics in `src/config/site.ts` must also be replaced with verifiable figures or removed before launch.
+Keep pricing, plan limits, structured data, FAQs, comparison tables, app screens, and sales material tied to `src/config/plans.ts`. Remove every unverified application total, rating, or guarantee from indexable pages.
 
 ## Competitor intelligence
 
@@ -309,17 +306,18 @@ Four competitor strategies stand out:
 3. **Careery's topical breadth:** job-status definitions, personal branding, role-specific expertise, job-search strategy, and AI/career topics.
 4. **Boxresume's occupation pages:** many combinations of profession, resume service, and application help.
 
-Scout currently has six blog posts, one general comparison page, and several useful ATS pages. The major content gaps are:
+Scout now has 17 blog posts, a comparison directory with 15 configured competitor pages, and several ATS pages. The highest-value remaining gaps are:
 
-- Competitor names, reviews, and alternatives.
-- Reverse-recruiting pricing and buying decisions.
-- Human-versus-AI service comparisons.
-- “Hire someone to apply for jobs” language.
-- Role-specific application assistance.
-- Quality-control and complaint topics.
-- Evidence, resume control, and duplicate prevention.
+- Clear brand-entity pages that distinguish Scout from unrelated “Scout” products.
+- First-party benchmark data, methodology, and case studies.
+- Genuinely distinct role-specific application assistance.
+- Deeper ATS exception guidance beyond exact-keyword landing pages.
+- Resume-change permission, version integrity, and submission-proof guidance.
+- Independent reviews, citations, and other off-site corroboration.
 
 ## SEO content strategy
+
+The August 21 Search Console export and the resulting weekly editorial slate are documented in the [performance-led blog plan](./blog-plan-2026-08-21.md). Use that document for near-term sequencing and measurement; use this strategy as the broader research and topic backlog.
 
 ### Build commercial pages before adding more broad advice
 
@@ -703,6 +701,14 @@ Several of these capabilities already exist in part. They should become primary 
 Do not promise interviews or job offers until Scout has enough cohort data to understand eligibility, exclusions, conversion rates, and financial risk.
 
 ## 90-day execution plan
+
+### Progress snapshot — August 21, 2026
+
+- The Month 1 editorial set is substantially complete, including Human-vs-AI, reverse-recruiter pricing, and service-model comparisons.
+- The planned competitor alternatives are implemented through the comparison directory and configured competitor pages.
+- The complaint-led cluster now includes wrong-fit and duplicate-application guides; resume version control remains the next trust article.
+- About, methodology, supported-sites, review-policy, and benchmark-report work remains a separate entity and evidence priority.
+- The operational publication order, Search Console baseline, and refresh thresholds live in the [August 21 blog plan](./blog-plan-2026-08-21.md).
 
 ### Month 1: Fix trust and capture buying intent
 

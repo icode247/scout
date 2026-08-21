@@ -4,7 +4,7 @@ description: "Job application bots are not risk-free. Learn about platform rules
 coverImage: "/assets/blog/is-using-a-job-application-bot-safe-cover.webp"
 coverAlt: "Scout guide to evaluating whether a job application bot is safe"
 pubDate: 2026-06-14
-updatedDate: 2026-07-16
+updatedDate: 2026-08-21
 author: "Scout Editorial Team"
 pillar: "Is It Safe? / Does It Work?"
 targetKeyword: "is using a job application bot safe"
@@ -43,7 +43,7 @@ The candidate should be able to correct a factual error once and prevent it from
 
 ### 4. Wrong-fit and duplicate applications
 
-High-volume tools can apply to adjacent titles, incorrect seniority levels, unsuitable locations, or the same requisition found through multiple sources.
+High-volume tools can apply to adjacent titles, incorrect seniority levels, unsuitable locations, or the same requisition found through multiple sources. Use separate controls to [stop wrong-fit applications](/blog/how-to-stop-auto-apply-tools-from-applying-to-wrong-jobs) and [prevent duplicate job applications](/blog/how-to-prevent-duplicate-job-applications).
 
 Use hard filters, excluded employers, normalized job records, and an approval mode while testing the service. Also account for referrals and applications submitted outside the tool.
 

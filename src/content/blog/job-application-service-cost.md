@@ -4,6 +4,7 @@ description: "Compare subscriptions, application bundles, virtual assistants, an
 coverImage: "/assets/blog/job-application-service-cost-cover.webp"
 coverAlt: "Scout guide to job application service costs"
 pubDate: 2026-08-10
+updatedDate: 2026-08-21
 author: "Scout Editorial Team"
 pillar: "Job Application Services"
 targetKeyword: "job application service cost"
@@ -74,7 +75,7 @@ Human-led services cost more because a person handles exceptions and communicati
 
 Scout offers both. The [AI Assistant](/ai-job-application-assistant) focuses on lower-cost execution and standard application records. The [Human Assistant](/human-job-application-service) adds a dedicated person, WhatsApp communication, and detailed evidence. Current allowances appear on the [pricing page](/pricing).
 
-Reverse recruiting is a different purchase. If you need networking, outreach, positioning, or coaching, comparing its total fee with a form-filling tool is misleading.
+Reverse recruiting is a different purchase. If you need networking, outreach, positioning, or coaching, comparing its total fee with a form-filling tool is misleading. Use the [reverse recruiter cost guide](/blog/reverse-recruiter-cost) to model fixed, monthly, and success-fee offers.
 
 ## Hidden costs and warning signs
 
@@ -117,4 +118,3 @@ Track qualified applications, wrong-fit rate, corrections, duplicates, interview
 ## Make price comparable
 
 Write down the scope you need, then request the same answers from every provider. Scout's [comparison directory](/compare) helps you compare service models before checking each vendor's live offer.
-

@@ -4,7 +4,7 @@ description: "A practical system for applying at scale while controlling job fit
 coverImage: "/assets/blog/how-to-apply-to-hundreds-of-jobs-cover.webp"
 coverAlt: "Scout guide to applying to hundreds of jobs without losing quality"
 pubDate: 2026-06-20
-updatedDate: 2026-07-16
+updatedDate: 2026-08-21
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "how to apply to hundreds of jobs"
@@ -94,7 +94,7 @@ Approved reusable answers can speed up future forms. Ambiguous wording should re
 
 At scale, the same job may appear on a company site, LinkedIn, Indeed, and an agency feed. Titles and tracking parameters can change while the underlying requisition stays the same.
 
-Track the employer, normalized title, location, source URL, requisition ID when available, date, resume version, and status. Duplicate detection should check more than an exact URL.
+Track the employer, normalized title, location, source URL, requisition ID when available, date, resume version, and status. Duplicate detection should check more than an exact URL. The [duplicate application guide](/blog/how-to-prevent-duplicate-job-applications) explains how to normalize cross-posted and reposted jobs.
 
 Before submitting, also consider whether you are already interviewing with the company or were referred through another channel.
 

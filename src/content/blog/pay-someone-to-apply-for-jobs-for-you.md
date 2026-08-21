@@ -4,6 +4,7 @@ description: "Yes. Learn what job application assistants do, what to delegate, w
 coverImage: "/assets/blog/pay-someone-to-apply-for-jobs-for-you-cover.webp"
 coverAlt: "Scout guide to paying someone to apply for jobs for you"
 pubDate: 2026-08-10
+updatedDate: 2026-08-21
 author: "Scout Editorial Team"
 pillar: "Human Job Application Services"
 targetKeyword: "pay someone to apply for jobs for you"
@@ -24,9 +25,9 @@ An independent virtual assistant usually finds roles, copies your details into f
 
 A managed application service adds a shared system. It often includes job profiles, answer libraries, matching rules, application tracking, support, and quality checks. Scout's [Human Assistant](/human-job-application-service), for example, pairs a dedicated person with direct WhatsApp communication and detailed application evidence.
 
-An AI assistant handles repeatable searches at a lower service cost. It suits candidates whose target titles, locations, eligibility rules, and source materials are already clear. Scout's [AI Assistant](/ai-job-application-assistant) uses profiles and records each job, status, and resume used.
+An AI assistant handles repeatable searches at a lower service cost. It suits candidates whose target titles, locations, eligibility rules, and source materials are already clear. Scout's [AI Assistant](/ai-job-application-assistant) uses profiles and records each job, status, and resume used. Compare the decision in detail in [Human vs AI Job Application Service](/blog/human-vs-ai-job-application-service).
 
-A reverse recruiter usually covers more than applications. Depending on the provider, the engagement might include positioning, networking, recruiter outreach, interview preparation, and negotiation.
+A reverse recruiter usually covers more than applications. Depending on the provider, the engagement might include positioning, networking, recruiter outreach, interview preparation, and negotiation. That wider scope changes both the [service comparison](/blog/reverse-recruiter-vs-career-coach-vs-job-application-service) and the [reverse recruiter cost](/blog/reverse-recruiter-cost).
 
 ![Four service levels for delegating job applications](/assets/blog/pay-someone-to-apply-for-jobs-for-you-infographic-1.webp)
 
@@ -120,4 +121,3 @@ Pause the service, correct the profile, document the error, and review adjacent 
 ## A practical next step
 
 Write one search profile and ten approved recurring answers. Then test the service on a small batch. Scout's [how it works guide](/how-it-works) shows how profiles, delegation, records, and assistant communication fit together.
-

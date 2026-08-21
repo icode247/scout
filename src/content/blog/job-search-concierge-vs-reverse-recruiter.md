@@ -4,6 +4,7 @@ description: "Compare job search concierge and reverse recruiting services by sc
 coverImage: "/assets/blog/job-search-concierge-vs-reverse-recruiter-cover.webp"
 coverAlt: "Scout comparison of a job search concierge and reverse recruiter"
 pubDate: 2026-08-10
+updatedDate: 2026-08-21
 author: "Scout Editorial Team"
 pillar: "Reverse Recruiting"
 targetKeyword: "job search concierge vs reverse recruiter"
@@ -53,6 +54,8 @@ Read each statement of work. “Reverse recruiting” does not prove that applic
 | Typical pricing | Subscription or application bundle | Larger fixed or monthly engagement |
 
 Neither model controls hiring decisions. Judge a concierge by qualified execution and evidence. Judge a reverse recruiter by the agreed campaign work, outreach quality, interviews, and candidate support.
+
+Reverse-recruiting proposals may use fixed, monthly, success-fee, or hybrid pricing. Model the complete engagement with the [reverse recruiter cost guide](/blog/reverse-recruiter-cost) before comparing it with a narrower application service.
 
 ## Which service fits your search
 
@@ -128,4 +131,3 @@ No provider controls an employer's decision. Read any guarantee for exact condit
 ## Choose the work, not the label
 
 List the tasks you want removed. Mark applications, research, outreach, networking, coaching, and negotiation separately. Then buy the service whose written scope matches that list. Review Scout's [Human and AI options](/how-it-works) or browse the [comparison directory](/compare) for adjacent providers.
-

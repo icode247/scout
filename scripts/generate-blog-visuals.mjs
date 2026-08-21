@@ -362,6 +362,67 @@ const posts = [
       { title: "What is logged?", body: "Files, answers, status, proof." }, { title: "How is fit set?", body: "Written profiles or messages?" }, { title: "How is success judged?", body: "Work, interviews, or a promise?", tone: "lime" },
     ]},
   },
+  {
+    slug: "human-vs-ai-job-application-service",
+    cover: { kicker: "Decision guide", title: "Human vs AI job application service", subtitle: "Choose by ambiguity, oversight, evidence, and budget—not hype.", cards: ["Map the search", "Choose the lane", "Audit the work"], accent: C.brand },
+    info1: { type: "split", kicker: "Best fit", title: "Choose the assistant for the search", subtitle: "The more exceptions a search creates, the more valuable human judgment becomes.", rightTone: "amber", sides: [
+      { title: "AI fits when", items: ["Targets are narrow and repeatable", "Approved answers cover most forms", "Budget is the main constraint", "You can audit early results"] },
+      { title: "Human fits when", items: ["Roles or industries are changing", "Forms create frequent exceptions", "Direct communication matters", "Detailed answer evidence is required"] },
+    ]},
+    info2: { type: "cards", kicker: "Buyer scorecard", title: "Compare the workflow, not the label", subtitle: "Human and AI services both need visible operating controls.", columns: 3, items: [
+      { title: "Fit rules", body: "Roles, seniority, location, and exclusions." }, { title: "Answer policy", body: "What is reused, inferred, or escalated?", tone: "amber" },
+      { title: "Resume control", body: "Original source plus exact sent versions." }, { title: "Evidence", body: "Job, status, file, and important answers.", tone: "lime" },
+      { title: "Stop control", body: "Pause or change direction quickly." }, { title: "True cost", body: "Qualified output plus your review time." },
+    ]},
+  },
+  {
+    slug: "reverse-recruiter-cost",
+    cover: { kicker: "Pricing guide", title: "What does a reverse recruiter cost?", subtitle: "Compare fixed fees, monthly retainers, and post-offer percentages.", cards: ["Map the scope", "Model the fee", "Read the guarantee"], accent: C.amber },
+    info1: { type: "cards", kicker: "Fee models", title: "Reverse recruiter fee models", subtitle: "The headline fee is only useful when the scope and duration are clear.", columns: 2, items: [
+      { title: "Fixed program fee", body: "One price for a defined campaign and set of deliverables." }, { title: "Monthly retainer", body: "Recurring fee while sourcing, outreach, and support continue." },
+      { title: "Success fee", body: "A percentage or fixed amount becomes due after an accepted offer.", tone: "amber" }, { title: "Hybrid", body: "An upfront or monthly fee plus a post-offer payment.", tone: "lime" },
+    ]},
+    info2: { type: "cards", kicker: "Contract check", title: "Calculate the whole engagement", subtitle: "Model a realistic search before comparing providers.", columns: 3, items: [
+      { title: "Setup fee", body: "Documents, positioning, and onboarding." }, { title: "Monthly cost", body: "Multiply by a realistic duration." }, { title: "Success fee", body: "Apply the percentage to expected salary.", tone: "amber" },
+      { title: "Add-ons", body: "Coaching, extra profiles, or outreach." }, { title: "Cancellation", body: "Notice, pauses, and unused time." }, { title: "Guarantee", body: "Eligibility, remedy, and exclusions.", tone: "lime" },
+    ]},
+  },
+  {
+    slug: "reverse-recruiter-vs-career-coach-vs-job-application-service",
+    cover: { kicker: "Service map", title: "Reverse recruiter, coach, or application service?", subtitle: "Buy advice, application execution, or a managed campaign intentionally.", cards: ["Advice", "Execution", "Full campaign"], accent: C.signal },
+    info1: { type: "cards", kicker: "Three models", title: "Match the service to the bottleneck", subtitle: "Similar marketing language can hide very different deliverables.", columns: 3, items: [
+      { title: "Career coach", body: "Improves direction, positioning, skills, and decisions." }, { title: "Application service", body: "Finds, completes, and records suitable applications.", tone: "lime" },
+      { title: "Reverse recruiter", body: "Runs a broader search with outreach and support.", tone: "amber" },
+    ]},
+    info2: { type: "cards", kicker: "Scope worksheet", title: "Mark the work you actually need", subtitle: "A written task list makes proposals comparable.", columns: 3, items: [
+      { title: "Direction", body: "Target role, level, and market." }, { title: "Positioning", body: "Resume, LinkedIn, and narrative." }, { title: "Applications", body: "Sourcing, forms, and tracking.", tone: "lime" },
+      { title: "Outreach", body: "Recruiters, managers, and network." }, { title: "Interviews", body: "Practice, feedback, and preparation." }, { title: "Negotiation", body: "Offer analysis and response.", tone: "amber" },
+    ]},
+  },
+  {
+    slug: "how-to-stop-auto-apply-tools-from-applying-to-wrong-jobs",
+    cover: { kicker: "Quality controls", title: "Stop auto-apply from choosing wrong jobs", subtitle: "Use hard filters before fit scores, then audit the first batch.", cards: ["Block ineligible", "Rank the rest", "Audit per 100"], accent: C.amber },
+    info1: { type: "split", kicker: "Decision order", title: "Eligibility before similarity", subtitle: "A strong keyword match cannot repair a disqualifying requirement.", rightTone: "amber", sides: [
+      { title: "Block first", items: ["Wrong work authorization", "Unavailable location or work mode", "Required clearance or license missing", "Seniority or employment type mismatch"] },
+      { title: "Rank second", items: ["Skills and responsibility overlap", "Relevant outcomes and industry", "Preferred tools and qualifications", "Posting age and candidate preference"] },
+    ]},
+    info2: { type: "cards", kicker: "Control loop", title: "Fix drift before adding volume", subtitle: "Every wrong-fit application should improve the rules that follow it.", columns: 3, items: [
+      { title: "Pause", body: "Stop the queue after a pattern appears.", tone: "amber" }, { title: "Classify", body: "Name the rule that failed." }, { title: "Correct", body: "Add a hard filter or exclusion." },
+      { title: "Review neighbors", body: "Inspect recent similar submissions." }, { title: "Pilot again", body: "Test a small new batch." }, { title: "Measure", body: "Track wrong fits per 100.", tone: "lime" },
+    ]},
+  },
+  {
+    slug: "how-to-prevent-duplicate-job-applications",
+    cover: { kicker: "Tracking guide", title: "Prevent duplicate job applications", subtitle: "Normalize the employer, requisition, location, and source before submitting.", cards: ["Capture the job", "Check the key", "Save the receipt"], accent: C.brand },
+    info1: { type: "cards", kicker: "Duplicate map", title: "Four listings that look alike", subtitle: "Not every repeated title is the same requisition.", columns: 2, items: [
+      { title: "Exact duplicate", body: "The same employer requisition appears through two sources.", tone: "amber" }, { title: "Cross-posted role", body: "A board link redirects to the employer's original listing." },
+      { title: "Reposted opening", body: "A new date may or may not carry a new requisition." }, { title: "Similar opening", body: "Same title, but a different team, location, or requisition.", tone: "lime" },
+    ]},
+    info2: { type: "cards", kicker: "Dedupe key", title: "Check these fields before submission", subtitle: "Use the strongest identifiers available, then preserve the decision.", columns: 3, items: [
+      { title: "Employer", body: "Use a normalized company name." }, { title: "Requisition ID", body: "Prefer the employer's stable identifier.", tone: "lime" }, { title: "Canonical URL", body: "Strip tracking parameters." },
+      { title: "Title + team", body: "Distinguish similar openings." }, { title: "Location", body: "Separate genuinely different roles." }, { title: "Prior channel", body: "Record referral, manual, or service.", tone: "amber" },
+    ]},
+  },
 ];
 
 const requestedSlug = process.argv[2];
