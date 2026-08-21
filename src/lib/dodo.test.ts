@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
-import { describe, expect, it } from "vitest";
-import { verifyWebhookSignature } from "./dodo";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createCheckoutSession, verifyWebhookSignature } from "./dodo";
 
 const secret = "whsec_dGVzdHNlY3JldA==";
 const id = "evt_123";
@@ -60,5 +60,24 @@ describe("verifyWebhookSignature", () => {
 
   it("rejects a missing webhook id", () => {
     expect(verifyWebhookSignature({ id: "", timestamp, signature: `v1,${sign(rawBody)}`, rawBody, secret })).toBe(false);
+  });
+});
+
+describe("createCheckoutSession", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.DODO_API_KEY;
+    delete process.env.DODO_PRODUCT_AI_ESSENTIAL;
+  });
+
+  it("allows customers to enter a configured promo code", async () => {
+    process.env.DODO_API_KEY = "test_key";
+    process.env.DODO_PRODUCT_AI_ESSENTIAL = "prod_ai_essential";
+    const fetchSpy = vi.fn().mockResolvedValue(new Response(JSON.stringify({ session_id: "sess_1", checkout_url: "https://checkout.example" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchSpy);
+    const plan = { productEnvKey: "DODO_PRODUCT_AI_ESSENTIAL", code: "ai_essential", lane: "ai" } as any;
+    await createCheckoutSession({ plan, userId: "user_1", email: "alex@example.com", returnUrl: "https://applyscout.app/success", cancelUrl: "https://applyscout.app/pricing" });
+    const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
+    expect(body.feature_flags).toEqual({ allow_discount_code: true });
   });
 });

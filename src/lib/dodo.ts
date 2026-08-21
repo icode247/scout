@@ -69,6 +69,7 @@ export async function createCheckoutSession(input: {
     body: JSON.stringify({
       product_cart: [{ product_id: productIdForPlan(input.plan), quantity: 1 }],
       customer: { email: input.email, ...(input.name ? { name: input.name } : {}) },
+      feature_flags: { allow_discount_code: true },
       return_url: input.returnUrl,
       cancel_url: input.cancelUrl,
       metadata: {

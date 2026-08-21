@@ -16,6 +16,7 @@
     "locations:generate": "node scripts/generate-locations.mjs",
     "dodo:setup": "node --experimental-strip-types --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/dodo-setup.mjs",
     "dodo:localize": "node --experimental-strip-types --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/dodo-localize.mjs",
+    "dodo:scout30": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/dodo-create-scout30.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
