@@ -423,6 +423,65 @@ const posts = [
       { title: "Title + team", body: "Distinguish similar openings." }, { title: "Location", body: "Separate genuinely different roles." }, { title: "Prior channel", body: "Record referral, manual, or service.", tone: "amber" },
     ]},
   },
+  {
+    slug: "resume-version-control-for-job-applications",
+    cover: { kicker: "Document integrity", title: "Resume version control", subtitle: "Preserve the source. Trace every tailored copy. Know what was submitted.", cards: ["Verified source", "Tailored copy", "Submitted artifact"], accent: C.brand },
+    info1: { type: "cards", kicker: "Version chain", title: "Four layers protect resume truth", subtitle: "Each submitted file should trace back to verified facts.", columns: 2, items: [
+      { title: "Source record", body: "Complete, verified career facts. Never tailored for one job.", tone: "lime" }, { title: "Role-family master", body: "Relevant facts arranged for one search." },
+      { title: "Job-specific copy", body: "Permitted tailoring for one requisition." }, { title: "Submitted artifact", body: "Immutable record of what the employer received.", tone: "amber" },
+    ]},
+    info2: { type: "cards", kicker: "Quality check", title: "Check the facts, meaning, scope, and file", subtitle: "A polished document still fails if its claims drift.", columns: 3, items: [
+      { title: "Facts", body: "Titles, dates, degrees, metrics, and tools." }, { title: "Meaning", body: "Rewording must preserve the original claim." }, { title: "Scope", body: "Support must not become ownership.", tone: "amber" },
+      { title: "Relevance", body: "Choose evidence that fits the role." }, { title: "Keywords", body: "Use natural, truthful terminology." }, { title: "Final file", body: "Readable PDF linked to the job.", tone: "lime" },
+    ]},
+  },
+  {
+    slug: "what-proof-should-job-application-assistant-provide",
+    cover: { kicker: "Evidence guide", title: "Proof behind every application", subtitle: "A total is not enough. Require a job-level receipt and document record.", cards: ["Job + requisition", "Resume used", "Answer evidence"], accent: C.signal },
+    info1: { type: "cards", kicker: "Minimum receipt", title: "What every claimed submission should show", subtitle: "The record must identify the opportunity, document, and result.", columns: 3, items: [
+      { title: "Job identity", body: "Employer, role, requisition, and canonical URL." }, { title: "Time + channel", body: "When and where the application was sent." }, { title: "True status", body: "Prepared, attempted, submitted, or confirmed.", tone: "amber" },
+      { title: "Resume version", body: "The exact employer-facing file." }, { title: "Confirmation", body: "Reference, email, page, or portal signal.", tone: "lime" }, { title: "Exceptions", body: "Questions, decisions, and corrections." },
+    ]},
+    info2: { type: "cards", kicker: "Evidence depth", title: "Match proof to the field's risk", subtitle: "Structured records and selective screenshots serve different jobs.", columns: 3, items: [
+      { title: "Routine fields", body: "Searchable data from the approved profile." }, { title: "Important answers", body: "Exact evidence for salary, eligibility, and clearance.", tone: "amber" }, { title: "Exceptions", body: "Why the work paused and who decided." },
+      { title: "Documents", body: "Original, tailored, and submitted versions." }, { title: "Timeline", body: "Preparation, approval, submission, and failure." }, { title: "Privacy", body: "Redaction, access, retention, and deletion.", tone: "lime" },
+    ]},
+  },
+  {
+    slug: "can-job-application-service-change-your-resume-without-permission",
+    cover: { kicker: "Permission guide", title: "Who can change your resume?", subtitle: "Define the editing boundary before a service applies in your name.", cards: ["Formatting", "Truthful tailoring", "Direct approval"], accent: C.amber },
+    info1: { type: "cards", kicker: "Permission levels", title: "Three kinds of resume change", subtitle: "The more a change affects truth, the stronger its approval must be.", columns: 3, items: [
+      { title: "Formatting", body: "Spacing, typography, page breaks, and punctuation.", tone: "lime" }, { title: "Editorial", body: "Selection, order, shortening, and truthful wording." }, { title: "Material", body: "Titles, dates, credentials, metrics, skills, and scope.", tone: "amber" },
+    ]},
+    info2: { type: "split", kicker: "Editing boundary", title: "Standing permission vs direct approval", subtitle: "Write the rule before the first tailored document.", rightTone: "amber", sides: [
+      { title: "May be pre-approved", items: ["Reorder verified bullets", "Shorten unrelated experience", "Use accurate role language", "Adjust layout and summary"] },
+      { title: "Approve directly", items: ["Titles, employers, or dates", "Skills and certifications", "Metrics and leadership scope", "Eligibility or disclosure facts"] },
+    ]},
+  },
+  {
+    slug: "can-auto-apply-get-your-job-board-account-restricted",
+    cover: { kicker: "Platform rules", title: "Can auto-apply restrict your account?", subtitle: "Pacing is not permission. Check the rule and the actual submission route.", cards: ["Read the terms", "Map the workflow", "Keep a stop control"], accent: C.amber },
+    info1: { type: "cards", kicker: "Before connecting", title: "Answer these platform questions first", subtitle: "“Supports this job board” does not explain what the tool does there.", columns: 2, items: [
+      { title: "Where does it act?", body: "Personal account, employer ATS, or approved integration?", tone: "amber" }, { title: "What is automated?", body: "Discovery, preparation, form entry, or submission?" },
+      { title: "What do rules allow?", body: "Check the current terms for that exact workflow." }, { title: "How does it stop?", body: "Pause instantly and preserve the activity log.", tone: "lime" },
+    ]},
+    info2: { type: "cards", kicker: "Restriction response", title: "What to do after a restriction notice", subtitle: "Follow the platform's recovery path; do not try to evade enforcement.", columns: 3, items: [
+      { title: "Pause", body: "Stop the tool or service immediately.", tone: "amber" }, { title: "Disconnect", body: "Disable involved extensions and software." }, { title: "Preserve", body: "Save the notice and activity records." },
+      { title: "Secure", body: "Review sessions, access, and account security." }, { title: "Appeal", body: "Use the platform's official support process." }, { title: "Audit", body: "Check whether other applications continued.", tone: "lime" },
+    ]},
+  },
+  {
+    slug: "application-volume-vs-interview-rate",
+    cover: { kicker: "Measurement guide", title: "Volume vs interview rate", subtitle: "Count qualified applications, process errors, time saved, and outcomes together.", cards: ["Useful throughput", "Quality controls", "Interview outcomes"], accent: C.signal },
+    info1: { type: "cards", kicker: "Core scorecard", title: "Start with qualified applications", subtitle: "Raw submissions are not a useful denominator when they break your rules.", columns: 3, items: [
+      { title: "Qualified apps", body: "Roles that met the profile at submission.", tone: "lime" }, { title: "Wrong-fit rate", body: "Targeting failures per 100 submitted.", tone: "amber" }, { title: "Duplicate rate", body: "Repeated requisitions that escaped controls." },
+      { title: "Correction rate", body: "Material document or answer repairs." }, { title: "Evidence rate", body: "Submissions with the required receipt." }, { title: "Interview rate", body: "Interviews per 100 qualified applications." },
+    ]},
+    info2: { type: "cards", kicker: "Balanced measurement", title: "Four views of a healthy search", subtitle: "A single headline number cannot diagnose the campaign.", columns: 2, items: [
+      { title: "Volume", body: "How much application work was completed." }, { title: "Quality", body: "Fit, accuracy, duplicates, and evidence.", tone: "lime" },
+      { title: "Efficiency", body: "Candidate time and service cost required." }, { title: "Outcomes", body: "Assessments, screens, and live interviews.", tone: "amber" },
+    ]},
+  },
 ];
 
 const requestedSlug = process.argv[2];
