@@ -50,6 +50,12 @@ const workAuthLabels: Record<string, string> = {
               <p id="email-error" class="intake-error"><span aria-hidden="true">!</span> Enter a valid email, like you@example.com.</p>
             </div>
             <div class="intake-field sm:col-span-2">
+              <label class="intake-label" for="whatsappPhone">WhatsApp number <span class="intake-required" aria-hidden="true">*</span></label>
+              <p id="whatsappPhone-hint" class="intake-hint">Include your country code. Your assistant adds you to a private WhatsApp group to keep you updated.</p>
+              <input id="whatsappPhone" name="whatsappPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" pattern="\+?[0-9 \(\)\-]{7,24}" placeholder="e.g. +44 7700 900123" required aria-describedby="whatsappPhone-hint" aria-errormessage="whatsappPhone-error" class="intake-input sm:!w-80" />
+              <p id="whatsappPhone-error" class="intake-error"><span aria-hidden="true">!</span> Enter your number with the country code, like +44 7700 900123.</p>
+            </div>
+            <div class="intake-field sm:col-span-2">
               <span class="intake-label" id="resume-label">Resume <span class="intake-required" aria-hidden="true">*</span></span>
               <label id="resume-drop" class="mt-2 flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-brand-500 bg-surface px-5 py-7 text-center transition focus-within:ring-2 focus-within:ring-brand-300">
                 <input id="resume" name="resume" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required aria-labelledby="resume-label" aria-describedby="resume-status" aria-errormessage="resume-error" class="sr-only" />

@@ -3,7 +3,7 @@ import { errorMessage, json } from "../../lib/api";
 import { createSupabaseServiceClient } from "../../lib/supabase";
 import { clientIp, rateLimit, tooManyRequests } from "../../lib/rate-limit";
 import { validateResumeFile } from "../../lib/resume";
-import { INTAKE_MAX_RESUME_BYTES, cleanIntakeAnswers } from "../../lib/applicant-intake";
+import { INTAKE_MAX_RESUME_BYTES, cleanIntakeAnswers, validWhatsappPhone } from "../../lib/applicant-intake";
 
 export const prerender = false;
 
@@ -31,6 +31,7 @@ export const POST: APIRoute = async (context) => {
     const resume = form.get("resume");
     if (!fullName) return json({ error: "Enter your full name." }, { status: 400 });
     if (!validEmail(email)) return json({ error: "Enter a valid email address." }, { status: 400 });
+    if (!validWhatsappPhone(text(fields.whatsappPhone, 40))) return json({ error: "Enter your WhatsApp number with the country code, e.g. +44 7700 900123." }, { status: 400 });
     if (!(resume instanceof File) || !resume.size) return json({ error: "Add your resume." }, { status: 400 });
     // Vercel caps a function request at 4.5 MB, so the form enforces this before sending too.
     if (resume.size > INTAKE_MAX_RESUME_BYTES) return json({ error: "Your resume must be under 4 MB." }, { status: 400 });

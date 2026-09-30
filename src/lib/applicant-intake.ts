@@ -6,7 +6,7 @@
  * assistant can copy them straight into the client's job profile.
  */
 export const INTAKE_KEYS = [
-  "middleName", "nationality", "timezone",
+  "whatsappPhone", "middleName", "nationality", "timezone",
   "workAuthorizationCountries", "workAuthorization", "requiresSponsorship", "securityClearance",
   "desiredSalary", "desiredSalaryCurrency", "desiredSalaryNegotiable", "currentSalary", "currentSalaryCurrency",
   "noticePeriod", "remotePreference", "willingToRelocate",
@@ -16,7 +16,7 @@ export const INTAKE_KEYS = [
 ] as const;
 
 export const INTAKE_LABELS: Record<(typeof INTAKE_KEYS)[number], string> = {
-  middleName: "Middle name", nationality: "Nationality", timezone: "Timezone",
+  whatsappPhone: "WhatsApp number", middleName: "Middle name", nationality: "Nationality", timezone: "Timezone",
   workAuthorizationCountries: "Authorized to work in", workAuthorization: "Work authorization", requiresSponsorship: "Requires sponsorship", securityClearance: "Security clearance",
   desiredSalary: "Expected annual salary", desiredSalaryCurrency: "Expected salary currency", desiredSalaryNegotiable: "Salary negotiable",
   currentSalary: "Current annual salary", currentSalaryCurrency: "Current salary currency",
@@ -56,6 +56,11 @@ function parseReferences(value: string) {
     const [name = "", email = "", phone = "", type = ""] = line.split("|").map((part) => part.trim());
     return { name: name.slice(0, 200), email: email.slice(0, 320), phone: phone.slice(0, 80), type: type.slice(0, 80) };
   }).filter((reference) => reference.name);
+}
+
+/** Same rule as onboarding: digits with an optional +, spaces, brackets or dashes. */
+export function validWhatsappPhone(value: string) {
+  return /^\+?[0-9 ()-]{7,24}$/.test(value);
 }
 
 /** Keeps only questionnaire answers, trimmed and typed as the applicant profile stores them. Blank answers are dropped. */

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { INTAKE_KEYS, INTAKE_LABELS, cleanIntakeAnswers, formatIntakeAnswer } from "./applicant-intake";
+import { INTAKE_KEYS, INTAKE_LABELS, cleanIntakeAnswers, formatIntakeAnswer, validWhatsappPhone } from "./applicant-intake";
 import { isApplicantKey } from "./applicant-profile";
 
 describe("cleanIntakeAnswers", () => {
@@ -34,6 +34,13 @@ describe("cleanIntakeAnswers", () => {
     expect(formatIntakeAnswer(["Nigeria", "Canada"])).toBe("Nigeria, Canada");
   });
 
+  it("accepts WhatsApp numbers the way onboarding does", () => {
+    expect(validWhatsappPhone("+44 7700 900123")).toBe(true);
+    expect(validWhatsappPhone("(234) 803-555-0101")).toBe(true);
+    expect(validWhatsappPhone("call me")).toBe(false);
+    expect(validWhatsappPhone("123")).toBe(false);
+  });
+
   it("caps long answers", () => {
     expect(cleanIntakeAnswers({ nationality: "x".repeat(5_000) }).nationality).toHaveLength(2_000);
     expect(cleanIntakeAnswers({ coverLetter: "x".repeat(20_000) }).coverLetter).toHaveLength(10_000);
@@ -51,8 +58,8 @@ describe("formatIntakeAnswer", () => {
 describe("INTAKE_KEYS", () => {
   it("are applicant-profile keys, so answers copy straight into a job profile", () => {
     // nationality and howDidYouHearAboutUs are FastApply fields the /profiles editor does not collect yet;
-    // workAuthorizationCountries is for the assistant only.
-    const notInEditor = new Set(["nationality", "howDidYouHearAboutUs", "workAuthorizationCountries"]);
+    // workAuthorizationCountries and whatsappPhone are for the assistant only.
+    const notInEditor = new Set(["nationality", "howDidYouHearAboutUs", "workAuthorizationCountries", "whatsappPhone"]);
     for (const key of INTAKE_KEYS) if (!notInEditor.has(key)) expect(isApplicantKey(key)).toBe(true);
   });
 
