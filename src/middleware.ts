@@ -4,6 +4,7 @@ import { createSupabaseServerClient, createSupabaseTokenClient, decodeSessionEma
 import { getDemoState } from "./lib/demo-store";
 import { EMPTY_ENTITLEMENT, loadEntitlement } from "./lib/entitlements";
 import { isNonIndexablePath } from "./config/seo";
+import { adminEmails } from "./lib/admin";
 
 const memberPrefixes = ["/dashboard", "/agent", "/jobs", "/ai-jobs", "/applications", "/profiles", "/settings"];
 const adminPrefixes = ["/admin"];
@@ -149,6 +150,12 @@ const handle = async (context: Parameters<Parameters<typeof defineMiddleware>[0]
       }
       const nextPath = encodeURIComponent(pathname + context.url.search);
       return context.redirect("/login?next=" + nextPath, 303);
+    }
+
+    // Operations accounts are staff, not clients: they never onboard or see the member
+    // app, so every client page (and onboarding) sends them to the operations queue.
+    if (user?.email && adminEmails().has(user.email.toLowerCase()) && (matchesPrefix(pathname, memberPrefixes) || pathname === "/onboarding")) {
+      return context.redirect("/admin", 303);
     }
 
     if (user && matchesPrefix(pathname, memberPrefixes) && profile?.onboarding_complete !== true) {
