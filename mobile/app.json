@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "Scout",
+    "slug": "scout-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/app-icon.png",
+    "scheme": "scout",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F4FFEB",
+    "ios": {
+      "icon": "./assets/images/app-icon.png",
+      "bundleIdentifier": "com.applyscout.mobile",
+      "usesAppleSignIn": true,
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.applyscout.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#F4FFEB",
+        "foregroundImage": "./assets/images/scout-icon.png"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/scout-icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#10210D",
+          "image": "./assets/images/scout-icon.png",
+          "imageWidth": 112,
+          "dark": {
+            "backgroundColor": "#10210D",
+            "image": "./assets/images/scout-icon.png"
+          }
+        }
+      ],
+      "expo-secure-store",
+      "expo-apple-authentication"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d41285f4-81a9-44db-869c-1018dffbc715"
+      }
+    }
+  }
+}

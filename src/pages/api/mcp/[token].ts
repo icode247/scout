@@ -197,7 +197,7 @@ export const POST: APIRoute = async ({ params, request }) => {
   }
 
   const batch = Array.isArray(payload) ? payload : [payload];
-  const responses = [];
+  const responses: unknown[] = [];
   for (const msg of batch) {
     // A JSON-RPC message with no id is a notification and takes no response.
     if (msg && typeof msg === "object" && "method" in msg && msg.id !== undefined) {

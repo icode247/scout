@@ -12,5 +12,10 @@ export const GET: APIRoute = async (context) => {
   if (result.error) return json({ error: "Evidence not found" }, { status: 404 });
   const signed = await supabase.storage.from("application-evidence").createSignedUrl(result.data.storage_path, 60);
   if (signed.error) return json({ error: signed.error.message }, { status: 400 });
+  if (context.url.searchParams.get("format") === "json") {
+    return json({ url: signed.data.signedUrl, expiresIn: 60 }, {
+      headers: { "cache-control": "no-store" },
+    });
+  }
   return context.redirect(signed.data.signedUrl, 302);
 };

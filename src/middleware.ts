@@ -96,17 +96,22 @@ const handle = async (context: Parameters<Parameters<typeof defineMiddleware>[0]
   const config = getSupabaseConfig();
   if (config.configured) {
     const bearer = context.request.headers.get("authorization");
-    if (pathname.startsWith("/api/extension") && bearer?.startsWith("Bearer ")) {
+    const acceptsBearer = pathname.startsWith("/api/extension") || matchesPrefix(pathname, protectedApiPrefixes);
+    if (acceptsBearer && bearer?.startsWith("Bearer ")) {
       const supabase = createSupabaseTokenClient(bearer.slice(7));
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return new Response(JSON.stringify({ error: "Invalid extension token" }), {
+        return new Response(JSON.stringify({ error: "Invalid access token" }), {
           status: 401,
-          headers: { "content-type": "application/json", ...extensionCors },
+          headers: {
+            "content-type": "application/json",
+            ...(pathname.startsWith("/api/extension") ? extensionCors : {}),
+          },
         });
       }
       context.locals.supabase = supabase;
       context.locals.user = user;
+      context.locals.authTransport = "bearer";
       const [profileResult, entitlement] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
         loadEntitlement(user.id, supabase, false),
@@ -118,6 +123,7 @@ const handle = async (context: Parameters<Parameters<typeof defineMiddleware>[0]
 
     const supabase = createSupabaseServerClient(context);
     context.locals.supabase = supabase;
+    context.locals.authTransport = "cookie";
     const { data: { user } } = await supabase.auth.getUser();
     context.locals.user = user ?? undefined;
 

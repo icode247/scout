@@ -8,6 +8,10 @@ export function requireUser(context: APIContext): User {
 }
 
 export function assertSameOrigin(context: APIContext) {
+  // Native apps do not have a browser origin. Middleware sets this flag only
+  // after `supabase.auth.getUser()` verifies the bearer token, preserving CSRF
+  // protection for cookie-authenticated browser requests.
+  if (context.locals.authTransport === "bearer" && context.locals.user) return;
   const origin = context.request.headers.get("origin");
   const referer = context.request.headers.get("referer");
   let requestOrigin = origin;

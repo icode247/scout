@@ -60,5 +60,11 @@ declare namespace App {
      */
     sessionEmail?: string | null;
     demoMode: boolean;
+    /**
+     * Set only after middleware verifies a Supabase access token. Native clients
+     * use this transport instead of browser cookies, so mutation routes can skip
+     * browser-only same-origin checks without weakening cookie authentication.
+     */
+    authTransport?: "cookie" | "bearer";
   }
 }
