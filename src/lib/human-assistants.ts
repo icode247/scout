@@ -2,15 +2,22 @@ export interface HumanAssistant {
   name: string;
   firstName: string;
   avatar: string;
+  /** Names this assistant was saved under before a rename; old profile rows still match. */
+  formerNames?: string[];
 }
 
 export const humanAssistants: HumanAssistant[] = [
   { name: "Angela Price", firstName: "Angela", avatar: "/assets/agents/angela-price.webp" },
-  { name: "Daniel Kim", firstName: "Daniel", avatar: "/assets/agents/daniel-kim.webp" },
+  { name: "Clinton", firstName: "Clinton", avatar: "/assets/agents/clinton.webp", formerNames: ["Daniel Kim"] },
   { name: "Lena Santos", firstName: "Lena", avatar: "/assets/agents/lena-santos.webp" },
   { name: "Marcus Reed", firstName: "Marcus", avatar: "/assets/agents/marcus-reed.webp" },
   { name: "Maya Brooks", firstName: "Maya", avatar: "/assets/agents/maya-brooks.webp" },
 ];
+
+function matchesName(assistant: HumanAssistant, saved: string) {
+  return assistant.name.toLowerCase() === saved
+    || Boolean(assistant.formerNames?.some((name) => name.toLowerCase() === saved));
+}
 
 function stableIndex(value: string) {
   let hash = 2166136261;
@@ -32,7 +39,7 @@ function stableIndex(value: string) {
  */
 export function assignedHumanAssistant(userId: string, savedName?: string | null): HumanAssistant {
   const saved = savedName?.trim().toLowerCase();
-  return humanAssistants.find((assistant) => assistant.name.toLowerCase() === saved)
+  return (saved ? humanAssistants.find((assistant) => matchesName(assistant, saved)) : undefined)
     ?? humanAssistants[stableIndex(userId)];
 }
 
@@ -40,5 +47,5 @@ export function assignedHumanAssistant(userId: string, savedName?: string | null
 export function savedHumanAssistant(savedName?: string | null): HumanAssistant | null {
   const saved = savedName?.trim().toLowerCase();
   if (!saved) return null;
-  return humanAssistants.find((assistant) => assistant.name.toLowerCase() === saved) ?? null;
+  return humanAssistants.find((assistant) => matchesName(assistant, saved)) ?? null;
 }
