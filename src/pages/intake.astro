@@ -1,0 +1,431 @@
+---
+import Base from "../layouts/Base.astro";
+import IntakeChoices from "../components/IntakeChoices.astro";
+import {
+  CURRENCIES, DISABILITY_STATUSES, ETHNICITIES, GENDERS, NOTICE_PERIODS, RACES, TIMEZONES,
+  VETERAN_STATUSES, WORK_ARRANGEMENTS, WORK_AUTHORIZATIONS, YES_NO,
+} from "../lib/applicant-options";
+export const prerender = false;
+
+// Operations can send a personal link (/intake?email=…&name=…) so the client only confirms who they are.
+const email = Astro.url.searchParams.get("email")?.trim().slice(0, 254) || "";
+const name = Astro.url.searchParams.get("name")?.trim().slice(0, 160) || "";
+// Friendlier wording on screen; the stored values stay the ones FastApply matches against.
+const noticePeriods = NOTICE_PERIODS.map((choice) => choice.value === "Immediate" ? { ...choice, label: "Right away" } : choice);
+const workAuthLabels: Record<string, string> = {
+  "Citizen": "I'm a citizen",
+  "Permanent Resident": "Permanent resident / Green Card",
+  "Work Visa / Work Permit": "Work visa or work permit",
+  "Student Visa": "Student visa",
+  "Dependent Visa": "Dependent visa",
+  "Post-Study Work Visa": "Post-study work visa",
+  "Refugee/Asylee": "Refugee or asylee",
+  "Temporary Protected Status (TPS)": "Temporary Protected Status (TPS)",
+  "No work authorization yet": "I don't have work authorization yet",
+};
+---
+<Base title="Your Scout application details" description="A few answers your Scout Human Assistant needs before applying for you." noindex={true}>
+  <section class="intake min-h-[calc(100dvh-5rem)] bg-brand-950 py-10 text-white sm:py-16">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6">
+      <p class="text-base font-bold text-brand-300">Scout Human Assistant</p>
+      <h1 class="mt-3 text-balance font-display text-4xl font-extrabold leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl">A few answers before we start applying.</h1>
+      <p class="mt-4 max-w-2xl text-pretty text-lg leading-relaxed text-white/80">Upload your resume and we'll take your experience, education, skills and contact details from it. Below are only the questions employers ask that a resume can't answer. About 3 minutes.</p>
+
+      <div class="mt-8 rounded-2xl bg-white text-ink shadow-card">
+        <form id="intake-form" class="p-5 sm:p-8">
+          <p class="text-sm text-ink-soft"><span class="intake-required">*</span> Required. Everything else is optional.</p>
+
+          <!-- 1. Who you are + resume -->
+          <h2 class="intake-step"><span>1</span>You and your resume</h2>
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div class="intake-field">
+              <label class="intake-label" for="full_name">Full name <span class="intake-required" aria-hidden="true">*</span></label>
+              <input id="full_name" name="full_name" value={name} autocomplete="name" maxlength="160" required aria-errormessage="full_name-error" class="intake-input" />
+              <p id="full_name-error" class="intake-error"><span aria-hidden="true">!</span> Enter your full name.</p>
+            </div>
+            <div class="intake-field">
+              <label class="intake-label" for="email">Email <span class="intake-required" aria-hidden="true">*</span></label>
+              <input id="email" name="email" type="email" value={email} autocomplete="email" maxlength="254" required aria-errormessage="email-error" aria-describedby="email-hint" class="intake-input" />
+              <p id="email-hint" class="intake-hint">Use the one you signed up to Scout with.</p>
+              <p id="email-error" class="intake-error"><span aria-hidden="true">!</span> Enter a valid email, like you@example.com.</p>
+            </div>
+            <div class="intake-field sm:col-span-2">
+              <span class="intake-label" id="resume-label">Resume <span class="intake-required" aria-hidden="true">*</span></span>
+              <label id="resume-drop" class="mt-2 flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-brand-500 bg-surface px-5 py-7 text-center transition focus-within:ring-2 focus-within:ring-brand-300">
+                <input id="resume" name="resume" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required aria-labelledby="resume-label" aria-describedby="resume-status" aria-errormessage="resume-error" class="sr-only" />
+                <span class="grid h-11 w-11 place-items-center rounded-full bg-brand-100 text-lg" aria-hidden="true">↑</span>
+                <strong id="resume-title" class="mt-3 block">Drop your resume here or tap to choose</strong>
+                <span id="resume-status" class="mt-1 block text-sm text-ink-muted">PDF or Word (.docx), up to 4 MB</span>
+              </label>
+              <p id="resume-error" class="intake-error"><span aria-hidden="true">!</span> <span data-resume-error>Add your resume as a PDF or .docx file.</span></p>
+            </div>
+          </div>
+
+          <!-- 2. Eligibility -->
+          <h2 class="intake-step"><span>2</span>Where you can work</h2>
+          <div class="grid gap-6">
+            <div class="intake-field" data-country-picker>
+              <label class="intake-label" for="country-search">Countries you're allowed to work in <span class="intake-required" aria-hidden="true">*</span></label>
+              <p class="intake-hint" id="country-hint">Add every country where you can legally work today. We only apply to jobs you're eligible for.</p>
+              <ul class="mt-2 flex flex-wrap gap-2 empty:hidden" data-country-chips aria-label="Countries you've added"></ul>
+              <div class="mt-2 flex gap-2">
+                <input id="country-search" list="countries" autocomplete="off" placeholder="Type a country, e.g. Canada" aria-describedby="country-hint" aria-errormessage="country-error" class="intake-input !mt-0 min-w-0 flex-1" />
+                <button type="button" data-add-country class="intake-add !mt-0 shrink-0">Add</button>
+              </div>
+              <input type="hidden" name="workAuthorizationCountries" />
+              <p id="country-error" class="intake-error"><span aria-hidden="true">!</span> <span data-country-error>Add at least one country.</span></p>
+            </div>
+            <div class="intake-field">
+              <label class="intake-label" for="workAuthorization">What's your status there? <span class="intake-required" aria-hidden="true">*</span></label>
+              <p class="intake-hint" id="workAuthorization-hint">If it differs by country, pick your main one and tell your assistant the rest.</p>
+              <select id="workAuthorization" name="workAuthorization" required aria-describedby="workAuthorization-hint" aria-errormessage="workAuthorization-error" class="intake-input">
+                <option value="">Choose one</option>
+                {WORK_AUTHORIZATIONS.map((choice) => <option value={choice.value}>{workAuthLabels[choice.value] ?? choice.label}</option>)}
+              </select>
+              <p id="workAuthorization-error" class="intake-error"><span aria-hidden="true">!</span> Choose one.</p>
+            </div>
+            <IntakeChoices name="requiresSponsorship" legend="Will you need visa sponsorship?" choices={YES_NO} required hint="That is, would an employer have to sponsor a visa for you to work there?" />
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div class="intake-field">
+                <label class="intake-label" for="nationality">Country of citizenship</label>
+                <input id="nationality" name="nationality" list="countries" autocomplete="off" maxlength="80" placeholder="Start typing…" class="intake-input" />
+                <datalist id="countries"></datalist>
+              </div>
+              <div class="intake-field">
+                <label class="intake-label" for="securityClearance">Security clearance</label>
+                <input id="securityClearance" name="securityClearance" maxlength="120" placeholder="Leave blank if none" class="intake-input" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Pay and availability -->
+          <h2 class="intake-step"><span>3</span>Pay and start date</h2>
+          <div class="grid gap-6">
+            <div class="intake-field">
+              <label class="intake-label" for="desiredSalary">Salary you're looking for (per year) <span class="intake-required" aria-hidden="true">*</span></label>
+              <div class="mt-2 flex gap-2">
+                <select name="desiredSalaryCurrency" aria-label="Currency for the salary you're looking for" class="intake-input !mt-0 !w-28 shrink-0" data-currency>{CURRENCIES.map((code) => <option>{code}</option>)}</select>
+                <input id="desiredSalary" name="desiredSalary" inputmode="numeric" maxlength="40" placeholder="e.g. 85,000" required aria-errormessage="desiredSalary-error" class="intake-input !mt-0 min-w-0 flex-1" />
+              </div>
+              <label class="mt-3 flex min-h-11 items-center gap-2 text-sm font-bold"><input name="desiredSalaryNegotiable" id="negotiable" type="checkbox" class="h-5 w-5 accent-brand-700" />I'd rather not give a number. It's negotiable.</label>
+              <p id="desiredSalary-error" class="intake-error"><span aria-hidden="true">!</span> Enter an amount, or tick "negotiable".</p>
+            </div>
+            <div class="intake-field">
+              <label class="intake-label" for="currentSalary">Current salary (per year)</label>
+              <p class="intake-hint">Some applications ask for it. Leave blank to skip.</p>
+              <div class="mt-2 flex gap-2">
+                <select name="currentSalaryCurrency" aria-label="Currency for your current salary" class="intake-input !mt-0 !w-28 shrink-0" data-currency>{CURRENCIES.map((code) => <option>{code}</option>)}</select>
+                <input id="currentSalary" name="currentSalary" inputmode="numeric" maxlength="40" class="intake-input !mt-0 min-w-0 flex-1" />
+              </div>
+            </div>
+            <IntakeChoices name="noticePeriod" legend="How soon could you start?" choices={noticePeriods} required />
+            <IntakeChoices name="remotePreference" legend="How do you want to work?" choices={WORK_ARRANGEMENTS} required />
+            <IntakeChoices name="willingToRelocate" legend="Would you move for the right job?" choices={YES_NO} required />
+            <div class="intake-field">
+              <label class="intake-label" for="timezone">Your timezone</label>
+              <p class="intake-hint">We guessed this from your device. Change it if it's wrong.</p>
+              <select id="timezone" name="timezone" class="intake-input"><option value="">Choose one</option>{TIMEZONES.map((zone) => <option>{zone}</option>)}</select>
+            </div>
+          </div>
+
+          <!-- Optional extras, folded away so the required path stays short. -->
+          <details class="intake-more">
+            <summary><span><strong>Links, references and cover letter</strong><span class="block text-sm font-normal text-ink-soft">Optional. Add them if you have them.</span></span><span aria-hidden="true" class="intake-chevron">⌄</span></summary>
+            <div class="grid gap-6 pt-5">
+              <div class="intake-field">
+                <label class="intake-label" for="middleName">Middle name</label>
+                <input id="middleName" name="middleName" autocomplete="additional-name" maxlength="80" class="intake-input" />
+              </div>
+              <div class="intake-field">
+                <span class="intake-label">Portfolio and other links</span>
+                <p class="intake-hint">Portfolio, Behance, Dribbble, X/Twitter, publications…</p>
+                <div data-links class="mt-2 grid gap-2"></div>
+                <button type="button" data-add-link class="intake-add">+ Add a link</button>
+                <input type="hidden" name="additionalLinks" />
+                <input type="hidden" name="twitterURL" />
+              </div>
+              <div class="intake-field">
+                <span class="intake-label">References</span>
+                <p class="intake-hint">Only shared when an employer asks for them.</p>
+                <div data-references class="mt-2 grid gap-3"></div>
+                <button type="button" data-add-reference class="intake-add">+ Add a reference</button>
+                <input type="hidden" name="references" />
+              </div>
+              <div class="intake-field">
+                <label class="intake-label" for="coverLetter">Cover letter</label>
+                <p class="intake-hint">Paste one you've used before. We'll tailor it for each job.</p>
+                <textarea id="coverLetter" name="coverLetter" rows="5" maxlength="10000" class="intake-input"></textarea>
+              </div>
+              <div class="intake-field">
+                <label class="intake-label" for="howDidYouHearAboutUs">When a form asks "How did you hear about us?", we should say…</label>
+                <input id="howDidYouHearAboutUs" name="howDidYouHearAboutUs" maxlength="120" placeholder="e.g. LinkedIn" class="intake-input" />
+              </div>
+            </div>
+          </details>
+
+          <details class="intake-more">
+            <summary><span><strong>Voluntary questions</strong><span class="block text-sm font-normal text-ink-soft">Optional. Many US employers ask these (EEO). They never affect your application.</span></span><span aria-hidden="true" class="intake-chevron">⌄</span></summary>
+            <div class="grid gap-6 pt-5">
+              <div class="intake-field">
+                <label class="intake-label" for="dateOfBirth">Date of birth</label>
+                <input id="dateOfBirth" name="dateOfBirth" type="date" autocomplete="bday" class="intake-input sm:!w-60" />
+              </div>
+              <IntakeChoices name="gender" legend="Gender" choices={GENDERS} />
+              <IntakeChoices name="ethnicity" legend="Are you Hispanic or Latino?" choices={ETHNICITIES} />
+              <IntakeChoices name="race" legend="Race" choices={RACES} />
+              <IntakeChoices name="veteranStatus" legend="Veteran status" choices={VETERAN_STATUSES} />
+              <IntakeChoices name="disabilityStatus" legend="Disability" choices={DISABILITY_STATUSES} />
+            </div>
+          </details>
+
+          <label class="sr-only" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label>
+          <p id="intake-error" class="mt-6 hidden rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-800" role="alert" tabindex="-1"></p>
+          <button id="intake-submit" class="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand-600 px-6 py-3.5 text-base font-extrabold text-white transition hover:bg-brand-700 disabled:cursor-wait disabled:opacity-65">
+            <span data-submit-label>Send to my assistant</span><span data-submit-loading class="hidden">Uploading…</span>
+          </button>
+          <p class="mt-4 text-center text-xs leading-relaxed text-ink-muted">Only your Scout assistant sees this, and only to fill in job applications for you.</p>
+        </form>
+
+        <section id="intake-done" class="hidden p-7 text-center sm:p-12" aria-live="polite">
+          <span class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-signal-50 text-2xl text-signal-700" aria-hidden="true">✓</span>
+          <h2 class="mt-6 text-balance font-display text-3xl font-extrabold text-ink">Thanks, your assistant has it.</h2>
+          <p class="mx-auto mt-3 max-w-md text-pretty leading-relaxed text-ink-soft">We'll use your resume and these answers on every application. If anything changes, open this link again and resend. We always use your latest answers.</p>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <style is:global>
+    .intake form h2, .intake form legend, .intake form strong { color: rgb(13 27 42); }
+    .intake-step { display: flex; align-items: center; gap: .6rem; margin: 2.25rem 0 1.25rem; padding-top: 1.75rem; border-top: 1px solid rgb(13 27 42 / .1); font-size: 1.2rem; font-weight: 800; }
+    .intake-step:first-of-type { margin-top: 1.25rem; padding-top: 0; border-top: 0; }
+    .intake-step > span { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 999px; background: rgb(220 239 200); font-size: .85rem; color: rgb(38 70 12); }
+    .intake-label { display: block; font-size: .95rem; font-weight: 700; color: rgb(13 27 42); }
+    .intake-hint { margin-top: .2rem; font-size: .85rem; color: rgb(74 88 99); }
+    .intake-required { color: rgb(185 28 28); }
+    .intake-input { margin-top: .5rem; width: 100%; min-height: 3rem; border-radius: .75rem; border: 1px solid rgb(13 27 42 / .2); background: white; padding: .7rem .9rem; font-size: 1rem; color: rgb(13 27 42); outline: none; transition: border-color .15s, box-shadow .15s; }
+    .intake-input::placeholder { color: rgb(110 122 132); }
+    .intake-input:focus { border-color: rgb(77 124 15); box-shadow: 0 0 0 3px rgb(190 227 150); }
+    .intake-input:disabled { background: rgb(241 243 240); color: rgb(110 122 132); }
+    .intake-chip { position: relative; }
+    .intake-chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+    .intake-chip span { display: inline-flex; align-items: center; min-height: 2.75rem; padding: .55rem 1rem; border-radius: 999px; border: 1px solid rgb(13 27 42 / .2); background: white; font-size: .95rem; font-weight: 600; color: rgb(13 27 42); cursor: pointer; transition: background .15s, border-color .15s; }
+    .intake-chip:hover span { border-color: rgb(77 124 15); }
+    .intake-chip input:checked + span { background: rgb(38 70 12); border-color: rgb(38 70 12); color: white; }
+    .intake-chip input:checked + span::before { content: "✓"; margin-right: .4rem; }
+    .intake-chip input:focus-visible + span { box-shadow: 0 0 0 3px rgb(190 227 150); }
+    .intake-error { display: none; align-items: center; gap: .4rem; margin-top: .45rem; font-size: .85rem; font-weight: 700; color: rgb(185 28 28); }
+    .intake-error > span[aria-hidden] { display: inline-grid; place-items: center; width: 1.1rem; height: 1.1rem; border-radius: 999px; background: rgb(185 28 28); color: white; font-size: .7rem; }
+    /* Errors appear only after someone has interacted with the field or tried to send. */
+    .intake-field:has(:user-invalid) .intake-error { display: flex; }
+    .intake-input:user-invalid { border-color: rgb(185 28 28); background: rgb(254 242 242); }
+    .intake-field:has(input[type="radio"]:user-invalid) .intake-chip span { border-color: rgb(185 28 28); }
+    #resume-drop:has(:user-invalid) { border-color: rgb(185 28 28); background: rgb(254 242 242); }
+    #resume-drop.is-dragging { background: rgb(220 239 200); }
+    #resume-drop.has-file { border-style: solid; background: rgb(240 248 232); }
+    .intake-more { margin-top: 2rem; border-radius: 1rem; border: 1px solid rgb(13 27 42 / .12); padding: 1rem 1.1rem; }
+    .intake-more summary { display: flex; cursor: pointer; list-style: none; align-items: center; justify-content: space-between; gap: 1rem; min-height: 2.75rem; }
+    .intake-more summary::-webkit-details-marker { display: none; }
+    .intake-more[open] .intake-chevron { transform: rotate(180deg); }
+    .intake-chevron { font-size: 1.25rem; color: rgb(13 27 42); transition: transform .15s; }
+    .intake-add { margin-top: .6rem; min-height: 2.75rem; border-radius: 999px; background: rgb(241 243 240); padding: .5rem 1rem; font-size: .9rem; font-weight: 700; color: rgb(13 27 42); }
+    .intake-remove { min-height: 2.75rem; min-width: 2.75rem; border-radius: .75rem; font-size: 1.1rem; color: rgb(74 88 99); }
+    .intake-remove:hover { background: rgb(241 243 240); }
+    @media (prefers-reduced-motion: reduce) { .intake * { transition: none !important; } }
+  </style>
+
+  <script>
+    import { INTAKE_MAX_RESUME_BYTES } from "../lib/applicant-intake";
+
+    const form = document.getElementById("intake-form") as HTMLFormElement;
+    const done = document.getElementById("intake-done")!;
+    const errorBox = document.getElementById("intake-error")!;
+    const submit = document.getElementById("intake-submit") as HTMLButtonElement;
+
+    // Keep aria-invalid in step with the visual :user-invalid state, for screen readers.
+    const syncAria = (event: Event) => {
+      const field = event.target as HTMLElement;
+      if (!field.matches?.("input, select, textarea")) return;
+      const group = field.closest("fieldset.intake-field");
+      const target = (field as HTMLInputElement).type === "radio" && group ? group : field;
+      if (field.matches(":user-invalid")) target.setAttribute("aria-invalid", "true"); else target.removeAttribute("aria-invalid");
+    };
+    form.addEventListener("blur", syncAria, true);
+    form.addEventListener("input", syncAria);
+    form.addEventListener("change", syncAria);
+
+    // Resume: click or drag-and-drop, checked here so a wrong file is caught before upload.
+    const resume = document.getElementById("resume") as HTMLInputElement;
+    const drop = document.getElementById("resume-drop")!;
+    const resumeTitle = document.getElementById("resume-title")!;
+    const resumeStatus = document.getElementById("resume-status")!;
+    const resumeError = form.querySelector("[data-resume-error]")!;
+    const describeResume = () => {
+      const file = resume.files?.[0];
+      let problem = "";
+      if (file && !/\.(pdf|docx)$/i.test(file.name)) problem = /\.doc$/i.test(file.name) ? "Old .doc files don't work. Save it as PDF or .docx." : "That file isn't a PDF or .docx.";
+      else if (file && file.size > INTAKE_MAX_RESUME_BYTES) problem = "That file is over 4 MB. Try saving it as a smaller PDF.";
+      resume.setCustomValidity(problem);
+      resumeError.textContent = problem || "Add your resume as a PDF or .docx file.";
+      drop.classList.toggle("has-file", Boolean(file) && !problem);
+      resumeTitle.textContent = file ? file.name : "Drop your resume here or tap to choose";
+      resumeStatus.textContent = file ? (problem ? "Choose a different file" : `${(file.size / 1024 / 1024).toFixed(1)} MB · tap to change`) : "PDF or Word (.docx), up to 4 MB";
+    };
+    resume.addEventListener("change", describeResume);
+    drop.addEventListener("dragover", (event) => { event.preventDefault(); drop.classList.add("is-dragging"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("is-dragging"));
+    drop.addEventListener("drop", (event) => {
+      event.preventDefault();
+      drop.classList.remove("is-dragging");
+      if (!event.dataTransfer?.files.length) return;
+      resume.files = event.dataTransfer.files;
+      resume.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    // Salary: an amount is needed unless the client would rather negotiate.
+    const salary = document.getElementById("desiredSalary") as HTMLInputElement;
+    const negotiable = document.getElementById("negotiable") as HTMLInputElement;
+    negotiable.addEventListener("change", () => {
+      salary.disabled = negotiable.checked;
+      salary.required = !negotiable.checked;
+      if (negotiable.checked) salary.value = "";
+    });
+
+    // Sensible defaults from the device: its timezone, and a currency for its region.
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timezone = document.getElementById("timezone") as HTMLSelectElement;
+    if (zone) {
+      const match = [...timezone.options].find((option) => option.value.startsWith(zone + " "));
+      if (match) timezone.value = match.value; else { timezone.add(new Option(zone, zone)); timezone.value = zone; }
+    }
+    const region = (navigator.language.split("-")[1] || "").toUpperCase();
+    const regionCurrency: Record<string, string> = { US: "USD", GB: "GBP", CA: "CAD", AU: "AUD", NZ: "NZD", IN: "INR", NG: "NGN", KE: "KES", ZA: "ZAR", AE: "AED", SG: "SGD", DE: "EUR", FR: "EUR", ES: "EUR", IT: "EUR", NL: "EUR", IE: "EUR", PT: "EUR", BR: "BRL", MX: "MXN", PH: "PHP", PK: "PKR" };
+    form.querySelectorAll<HTMLSelectElement>("[data-currency]").forEach((select) => { select.value = regionCurrency[region] || "USD"; });
+
+    // Countries the client may work in: pick from the list (typing narrows it), shown as removable tags.
+    const countrySearch = document.getElementById("country-search") as HTMLInputElement;
+    const countryChips = form.querySelector<HTMLElement>("[data-country-chips]")!;
+    const countryError = form.querySelector("[data-country-error]")!;
+    let knownCountries: string[] = [];
+    const chosenCountries: string[] = [];
+    const renderCountries = () => {
+      countryChips.replaceChildren(...chosenCountries.map((country) => {
+        const item = document.createElement("li");
+        item.className = "inline-flex items-center gap-1 rounded-full bg-brand-950 py-1 pl-3.5 pr-1 text-sm font-bold text-white";
+        const remove = document.createElement("button");
+        Object.assign(remove, { type: "button", textContent: "✕", className: "grid h-8 w-8 place-items-center rounded-full hover:bg-white/15" });
+        remove.setAttribute("aria-label", `Remove ${country}`);
+        remove.addEventListener("click", () => { chosenCountries.splice(chosenCountries.indexOf(country), 1); renderCountries(); countrySearch.focus(); });
+        item.append(country, remove);
+        return item;
+      }));
+      // The search box carries the group's validity, so the browser flags it on send.
+      countrySearch.setCustomValidity(chosenCountries.length ? "" : "Add at least one country.");
+    };
+    const addCountry = () => {
+      const typed = countrySearch.value.trim();
+      if (!typed) return;
+      const country = knownCountries.find((name) => name.toLowerCase() === typed.toLowerCase());
+      if (!country) { countryError.textContent = `We couldn't find "${typed}". Pick it from the list as you type.`; countrySearch.setCustomValidity("Pick a country from the list."); countrySearch.reportValidity(); return; }
+      if (!chosenCountries.includes(country)) chosenCountries.push(country);
+      countryError.textContent = "Add at least one country.";
+      countrySearch.value = "";
+      renderCountries();
+    };
+    // Picking from the suggestion list fires `input` with the full name, so add it at once.
+    countrySearch.addEventListener("input", () => { if (knownCountries.includes(countrySearch.value)) addCountry(); });
+    countrySearch.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addCountry(); } });
+    form.querySelector("[data-add-country]")!.addEventListener("click", addCountry);
+    renderCountries();
+
+    fetch("/data/countries.json").then((response) => response.json()).then((countries: string[]) => {
+      knownCountries = countries;
+      document.getElementById("countries")!.replaceChildren(...countries.map((country) => new Option(country)));
+    }).catch(() => {});
+
+    // Repeatable rows for links and references; serialized into the hidden fields on send.
+    const input = (placeholder: string, label: string, type = "text") => {
+      const element = document.createElement("input");
+      Object.assign(element, { type, placeholder, className: "intake-input !mt-0" });
+      element.setAttribute("aria-label", label);
+      return element;
+    };
+    const removeButton = (row: HTMLElement, label: string) => {
+      const button = document.createElement("button");
+      Object.assign(button, { type: "button", className: "intake-remove", textContent: "✕" });
+      button.setAttribute("aria-label", label);
+      button.addEventListener("click", () => row.remove());
+      return button;
+    };
+    const links = form.querySelector<HTMLElement>("[data-links]")!;
+    const addLink = () => {
+      const row = document.createElement("div");
+      row.className = "flex gap-2";
+      const url = input("https://…", "Link", "url");
+      url.classList.add("flex-1", "min-w-0");
+      url.dataset.link = "";
+      row.append(url, removeButton(row, "Remove this link"));
+      links.append(row);
+      return url;
+    };
+    const references = form.querySelector<HTMLElement>("[data-references]")!;
+    const addReference = () => {
+      const row = document.createElement("div");
+      row.className = "grid gap-2 rounded-xl border border-ink/10 p-3 sm:grid-cols-2";
+      row.dataset.reference = "";
+      const fields = [input("Name", "Reference name"), input("How you know them, e.g. Manager", "Relationship"), input("Email", "Reference email", "email"), input("Phone", "Reference phone", "tel")];
+      const remove = removeButton(row, "Remove this reference");
+      remove.classList.add("justify-self-end", "sm:col-span-2", "!min-h-9", "text-sm");
+      remove.textContent = "Remove";
+      row.append(...fields, remove);
+      references.append(row);
+      return fields[0];
+    };
+    form.querySelector("[data-add-link]")!.addEventListener("click", () => addLink().focus());
+    form.querySelector("[data-add-reference]")!.addEventListener("click", () => addReference().focus());
+    addLink();
+
+    const serializeRows = (data: FormData) => {
+      data.set("workAuthorizationCountries", chosenCountries.join("\n"));
+      const urls = [...links.querySelectorAll<HTMLInputElement>("[data-link]")].map((field) => field.value.trim()).filter(Boolean);
+      // An X/Twitter URL has its own profile field; everything else is an additional link.
+      const isTwitter = (url: string) => /^(https?:\/\/)?(www\.)?(x|twitter)\.com\//i.test(url);
+      data.set("twitterURL", urls.find(isTwitter) || "");
+      data.set("additionalLinks", urls.filter((url) => !isTwitter(url)).join("\n"));
+      data.set("references", [...references.querySelectorAll<HTMLElement>("[data-reference]")].map((row) => {
+        const [name, type, email, phone] = [...row.querySelectorAll("input")].map((field) => field.value.trim().replaceAll("|", "/"));
+        return name ? [name, email, phone, type].join(" | ") : "";
+      }).filter(Boolean).join("\n"));
+    };
+
+    function setLoading(loading: boolean) {
+      submit.disabled = loading;
+      submit.querySelector("[data-submit-label]")!.classList.toggle("hidden", loading);
+      submit.querySelector("[data-submit-loading]")!.classList.toggle("hidden", !loading);
+    }
+
+    // The browser's own validation runs first (it marks every missed field and focuses the
+    // first one), so this handler only ever sees a complete form.
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      errorBox.classList.add("hidden");
+      const data = new FormData(form);
+      serializeRows(data);
+      setLoading(true);
+      try {
+        const response = await fetch("/api/intake", { method: "POST", body: data });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || "We couldn't save your answers. Please try again.");
+        form.classList.add("hidden");
+        done.classList.remove("hidden");
+        done.scrollIntoView({ block: "center" });
+      } catch (error) {
+        errorBox.textContent = error instanceof Error ? error.message : "Something went wrong. Please try again.";
+        errorBox.classList.remove("hidden");
+        errorBox.focus();
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</Base>

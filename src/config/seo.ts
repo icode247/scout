@@ -17,6 +17,7 @@ export const NON_INDEXABLE_PATH_PREFIXES = [
   "/email/unsubscribe",
   "/extension/connect",
   "/first-apply",
+  "/intake",
   "/jobs",
   "/login",
   "/logo-lab",

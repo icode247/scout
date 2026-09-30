@@ -1,0 +1,16 @@
+---
+import type { Choice } from "../lib/applicant-options";
+interface Props { name: string; legend: string; choices: Choice[]; required?: boolean; hint?: string; class?: string }
+const { name, legend, choices, required = false, hint, class: className = "" } = Astro.props;
+const errorId = `${name}-error`;
+---
+<fieldset class={`intake-field ${className}`} aria-errormessage={required ? errorId : undefined}>
+  <legend class="intake-label">{legend}{required && <span class="intake-required" aria-hidden="true"> *</span>}</legend>
+  {hint && <p class="intake-hint">{hint}</p>}
+  <div class="mt-2 flex flex-wrap gap-2">
+    {choices.map((choice, index) => (
+      <label class="intake-chip"><input type="radio" name={name} value={choice.value} required={required && index === 0} /><span>{choice.label}</span></label>
+    ))}
+  </div>
+  {required && <p id={errorId} class="intake-error"><span aria-hidden="true">!</span> Pick one.</p>}
+</fieldset>
