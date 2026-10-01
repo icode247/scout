@@ -7,10 +7,7 @@ import { getPostHogServer } from "../../lib/posthog-server";
 export const prerender = false;
 
 /** Field caps mirror the maxlength attributes the form already declares. */
-const LIMITS = {
-  first_name: 80, last_name: 80, email: 254,
-  primary_role: 80, target_location: 120, challenge: 2000, source_path: 300,
-} as const;
+const LIMITS = { full_name: 160, email: 254, primary_role: 120, source_path: 300 } as const;
 
 function text(value: unknown, max: number) {
   return String(value ?? "").trim().slice(0, max);
@@ -29,21 +26,20 @@ export const POST: APIRoute = async (context) => {
     // Answer with a plausible success so bots learn nothing from the response.
     if (text((body as any).website, 200)) return json({ leadId: crypto.randomUUID() });
 
+    // The form asks for one full-name field; the table keeps first/last columns,
+    // so the first word is the first name and the rest (possibly empty) the last.
+    const fullName = text((body as any).full_name, LIMITS.full_name).replace(/\s+/g, " ");
+    const [firstName, ...rest] = fullName.split(" ");
     const lead = {
-      first_name: text((body as any).first_name, LIMITS.first_name),
-      last_name: text((body as any).last_name, LIMITS.last_name),
+      first_name: firstName || "",
+      last_name: rest.join(" "),
       email: text((body as any).email, LIMITS.email).toLowerCase(),
-      primary_role: text((body as any).primary_role, LIMITS.primary_role),
-      target_location: text((body as any).target_location, LIMITS.target_location),
-      challenge: text((body as any).challenge, LIMITS.challenge),
+      primary_role: text((body as any).primary_role, LIMITS.primary_role) || null,
       source_path: text((body as any).source_path, LIMITS.source_path),
     };
 
-    if (!lead.first_name || !lead.last_name) return json({ error: "Enter your first and last name." }, { status: 400 });
+    if (!lead.first_name) return json({ error: "Enter your name." }, { status: 400 });
     if (!validEmail(lead.email)) return json({ error: "Enter a valid email address." }, { status: 400 });
-    if (!lead.primary_role) return json({ error: "Choose the role family you are targeting." }, { status: 400 });
-    if (!lead.target_location) return json({ error: "Tell us where you want to work." }, { status: 400 });
-    if (!lead.challenge) return json({ error: "Tell us what is hardest about applying right now." }, { status: 400 });
 
     // Anonymous visitors have no session, so this writes with the service role.
     // Rate limit on IP so the public endpoint cannot be used to spam the table.
@@ -60,7 +56,7 @@ export const POST: APIRoute = async (context) => {
       posthog.capture({
         distinctId: lead.email,
         event: "strategy_call_lead_created",
-        properties: { primary_role: lead.primary_role, target_location: lead.target_location, source_path: lead.source_path },
+        properties: { primary_role: lead.primary_role, source_path: lead.source_path },
       });
       await posthog.flush();
     }
