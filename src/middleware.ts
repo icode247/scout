@@ -155,7 +155,7 @@ const handle = async (context: Parameters<Parameters<typeof defineMiddleware>[0]
 
     // Operations accounts are staff, not clients: they never onboard or see the member
     // app, so every client page (and onboarding) sends them to the operations queue.
-    if (staffMember(user?.email) && (matchesPrefix(pathname, memberPrefixes) || pathname === "/onboarding")) {
+    if (staffMember(user) && (matchesPrefix(pathname, memberPrefixes) || pathname === "/onboarding")) {
       return context.redirect("/admin", 303);
     }
 

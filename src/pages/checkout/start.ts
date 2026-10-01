@@ -15,7 +15,7 @@ export const GET: APIRoute = async (context) => {
   if (!plan) return context.redirect("/pricing", 303);
   const user = context.locals.user;
   if (!user) return context.redirect(`/login?next=${encodeURIComponent(`/checkout/start?plan=${plan.code}`)}`, 303);
-  if (staffMember(user.email)) return context.redirect("/admin", 303);
+  if (staffMember(user)) return context.redirect("/admin", 303);
   try {
     const session = await startCheckout(context, user, plan);
     return context.redirect(session.checkoutUrl, 303);

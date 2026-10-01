@@ -6,7 +6,7 @@ import { BRIEF_ACCEPT, listBriefs } from "../../../lib/client-briefs";
 import { INTAKE_KEYS, INTAKE_LABELS, formatIntakeAnswer } from "../../../lib/applicant-intake";
 import { TAILORED_RESUME_LABEL } from "../../../lib/application-evidence";
 export const prerender = false;
-const staff = staffMember(Astro.locals.user?.email);
+const staff = staffMember(Astro.locals.user);
 if (!staff) return Astro.redirect("/dashboard", 303);
 const isAdmin = staff.role === "admin";
 

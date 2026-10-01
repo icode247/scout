@@ -39,19 +39,30 @@ export function agentAssignments() {
   return map;
 }
 
-/** The operations role for an email, or null for clients and visitors. */
-export function staffMember(email: string | null | undefined): StaffMember | null {
-  const clean = email?.trim().toLowerCase();
+/** The fields of a signed-in user that decide operations access. */
+export interface StaffIdentity { email?: string | null; app_metadata?: Record<string, unknown> | null }
+
+/**
+ * The operations role for a signed-in user, or null for clients and visitors.
+ * Admins come from ADMIN_EMAILS. Agents are added by an admin from /admin, which
+ * stores `scout_role` and `assistant_name` in the login's app_metadata (only the
+ * service role can write it). AGENT_EMAILS still works as a fallback.
+ */
+export function staffMember(user: StaffIdentity | null | undefined): StaffMember | null {
+  const clean = user?.email?.trim().toLowerCase();
   if (!clean) return null;
-  const assistantName = agentAssignments().get(clean) ?? null;
+  const metadata = user?.app_metadata || {};
+  const savedName = typeof metadata.assistant_name === "string" && metadata.assistant_name.trim() ? metadata.assistant_name.trim() : null;
+  const assistantName = savedName ?? agentAssignments().get(clean) ?? null;
   if (adminEmails().has(clean)) return { email: clean, role: "admin", assistantName };
-  if (assistantName) return { email: clean, role: "agent", assistantName };
+  if (metadata.scout_role === "agent" && assistantName) return { email: clean, role: "agent", assistantName };
+  if (agentAssignments().has(clean)) return { email: clean, role: "agent", assistantName };
   return null;
 }
 
 /** Admins and agents. Agents are then limited to their own clients with `canWorkClient`. */
 export function requireStaff(context: APIContext): StaffMember {
-  const staff = staffMember(context.locals.user?.email);
+  const staff = staffMember(context.locals.user);
   if (!staff) {
     throw new Response(JSON.stringify({ error: "Operations access required" }), { status: 403, headers: { "content-type": "application/json" } });
   }

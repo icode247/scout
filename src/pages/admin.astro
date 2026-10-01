@@ -3,9 +3,10 @@ import App from "../layouts/App.astro";
 import { adminEmails, agentAssignments, canWorkClient, createAdminClient, staffMember } from "../lib/admin";
 import { assignedHumanAssistant, humanAssistants, savedHumanAssistant } from "../lib/human-assistants";
 import { clientsWithBriefs } from "../lib/client-briefs";
+import { listAgents, type TeamAgent } from "../lib/team";
 import { attentionReasons, summarizeWorkload, timeAgo, type ApplicationActivity } from "../lib/ops-overview";
 export const prerender = false;
-const staff = staffMember(Astro.locals.user?.email);
+const staff = staffMember(Astro.locals.user);
 if (!staff) return Astro.redirect("/dashboard", 303);
 const isAdmin = staff.role === "admin";
 const admin = createAdminClient();
@@ -51,7 +52,10 @@ const totals = clients.reduce((sum, client) => ({
 }), { today: 0, week: 0, requested: 0, attention: 0 });
 
 // What each assistant is doing, built from the clients assigned to them.
-const logins = agentAssignments();
+// Logins come from agents added on this page, plus any legacy AGENT_EMAILS entries.
+const teamAgents: TeamAgent[] = isAdmin ? await listAgents(admin) : [];
+const logins = new Map<string, string>([...agentAssignments(), ...teamAgents.map((agent) => [agent.email.toLowerCase(), agent.assistantName] as [string, string])]);
+const envOnly = [...agentAssignments()].filter(([email]) => !teamAgents.some((agent) => agent.email.toLowerCase() === email));
 const loginsByAssistant = new Map<string, string[]>();
 for (const [email, name] of logins) {
   const canonical = savedHumanAssistant(name)?.name ?? name;
@@ -112,7 +116,7 @@ const admins = [...adminEmails()];
   {isAdmin && <section class="mt-6 rounded-xl bg-white p-5 shadow-card sm:p-6">
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 class="text-xl font-extrabold">Agents</h2><p class="mt-1 text-sm text-ink-soft">What each assistant is doing. Click a row to see only their clients.</p></div></div>
     <div class="mt-4 overflow-x-auto"><table class="w-full min-w-[720px] text-left text-sm"><thead><tr class="text-xs text-ink-muted"><th class="py-2 pr-3">Agent</th><th class="py-2 pr-3">Clients</th><th class="py-2 pr-3">Today</th><th class="py-2 pr-3">This week</th><th class="py-2 pr-3">Requests waiting</th><th class="py-2 pr-3">Need attention</th><th class="py-2 pr-3">Last application</th><th class="py-2">Login</th></tr></thead><tbody class="divide-y divide-ink/10">
-      {agents.length ? agents.map((agent) => <tr class="cursor-pointer hover:bg-surface/60" data-agent-row={agent.assistant.name}><td class="py-3 pr-3"><span class="flex items-center gap-2"><img src={agent.assistant.avatar} alt="" class="h-8 w-8 rounded-full object-cover"/><strong>{agent.assistant.name}</strong></span></td><td class="py-3 pr-3">{agent.clients}</td><td class="py-3 pr-3 font-bold">{agent.today}</td><td class="py-3 pr-3">{agent.week}</td><td class={`py-3 pr-3 ${agent.requested ? "font-bold text-human-700" : ""}`}>{agent.requested}</td><td class={`py-3 pr-3 ${agent.attention ? "font-bold text-human-700" : ""}`}>{agent.attention}</td><td class="py-3 pr-3 text-ink-soft">{timeAgo(agent.last, now)}</td><td class="py-3 text-xs">{agent.logins.length ? agent.logins.join(", ") : <span class="font-bold text-human-700">No login — add to AGENT_EMAILS</span>}</td></tr>) : <tr><td colspan="8" class="py-6 text-center text-ink-muted">No assistants have clients yet.</td></tr>}
+      {agents.length ? agents.map((agent) => <tr class="cursor-pointer hover:bg-surface/60" data-agent-row={agent.assistant.name}><td class="py-3 pr-3"><span class="flex items-center gap-2"><img src={agent.assistant.avatar} alt="" class="h-8 w-8 rounded-full object-cover"/><strong>{agent.assistant.name}</strong></span></td><td class="py-3 pr-3">{agent.clients}</td><td class="py-3 pr-3 font-bold">{agent.today}</td><td class="py-3 pr-3">{agent.week}</td><td class={`py-3 pr-3 ${agent.requested ? "font-bold text-human-700" : ""}`}>{agent.requested}</td><td class={`py-3 pr-3 ${agent.attention ? "font-bold text-human-700" : ""}`}>{agent.attention}</td><td class="py-3 pr-3 text-ink-soft">{timeAgo(agent.last, now)}</td><td class="py-3 text-xs">{agent.logins.length ? agent.logins.join(", ") : <span class="font-bold text-human-700">No login yet — add one under Team</span>}</td></tr>) : <tr><td colspan="8" class="py-6 text-center text-ink-muted">No assistants have clients yet.</td></tr>}
     </tbody></table></div>
   </section>}
 
@@ -148,10 +152,21 @@ const admins = [...adminEmails()];
       <div class="mt-4 divide-y divide-ink/10">{leads.length ? leads.map((lead) => <div class="flex flex-wrap justify-between gap-2 py-2.5 text-sm"><span><strong>{lead.full_name}</strong> <span class="text-ink-soft">{lead.email}</span></span><span class="text-xs text-ink-muted">{timeAgo(lead.created_at, now)}</span></div>) : <p class="py-3 text-sm text-ink-muted">No open leads.</p>}</div>
     </section>
     <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
-      <h2 class="text-xl font-extrabold">Team access</h2>
-      <p class="mt-1 text-sm text-ink-soft">Admins see everything. Agents see only the clients assigned to their assistant name.</p>
-      <dl class="mt-4 space-y-3 text-sm"><div><dt class="text-xs font-bold text-ink-muted">ADMINS (ADMIN_EMAILS)</dt><dd class="mt-1">{admins.join(", ") || "—"}</dd></div><div><dt class="text-xs font-bold text-ink-muted">AGENTS (AGENT_EMAILS)</dt><dd class="mt-1">{logins.size ? [...logins].map(([email, name]) => `${email} → ${name}`).join(", ") : "None yet"}</dd></div></dl>
-      <p class="mt-4 rounded-xl bg-surface p-3 text-xs text-ink-soft">To add an agent, add <code>email=Assistant Name</code> to <code>AGENT_EMAILS</code> in Vercel (comma separated), then redeploy. They sign in at /login with that email.</p>
+      <h2 class="text-xl font-extrabold">Team</h2>
+      <p class="mt-1 text-sm text-ink-soft">Add an agent with their email and the assistant they work as. They sign in at <strong>{new URL("/login", Astro.url).host}/login</strong> with that email using Google or an emailed link, and see only that assistant's clients.</p>
+      <form data-team-form class="mt-4 grid gap-3 sm:grid-cols-[1fr_180px_auto] sm:items-end">
+        <label class="text-xs font-bold">Agent email<input name="email" type="email" required placeholder="agent@applyscout.app" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label>
+        <label class="text-xs font-bold">Works as<select name="assistant_name" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm">{humanAssistants.map((assistant) => <option value={assistant.name}>{assistant.name}</option>)}</select></label>
+        <button class="rounded-full bg-ink px-5 py-2.5 text-sm font-extrabold text-white">Add agent</button>
+        <p data-error class="hidden text-xs font-bold text-red-700 sm:col-span-3" role="alert"></p>
+        <p data-success class="hidden rounded-lg bg-signal-50 p-3 text-xs font-bold text-signal-700 sm:col-span-3" role="status"></p>
+      </form>
+      <div class="mt-5 divide-y divide-ink/10">
+        {teamAgents.map((agent) => <div class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"><span class="min-w-0"><strong class="block truncate">{agent.email}</strong><span class="text-xs text-ink-muted">Works as {agent.assistantName} · {agent.lastSignInAt ? `last signed in ${timeAgo(agent.lastSignInAt, now)}` : "has not signed in yet"}</span></span><span class="flex gap-3"><button type="button" data-change-agent={agent.email} data-assistant={agent.assistantName} class="text-xs font-bold text-brand-700">Change assistant</button><button type="button" data-remove-agent={agent.userId} class="text-xs font-bold text-red-700">Remove access</button></span></div>)}
+        {envOnly.map(([email, name]) => <div class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"><span><strong>{email}</strong> <span class="text-xs text-ink-muted">works as {name} · set in AGENT_EMAILS</span></span></div>)}
+        {!teamAgents.length && !envOnly.length && <p class="py-3 text-sm text-ink-muted">No agents yet. Add the first one above.</p>}
+      </div>
+      <p class="mt-4 text-xs text-ink-muted">Admins (full access): {admins.join(", ") || "none"} · set in ADMIN_EMAILS.</p>
     </section>
   </div>}
 
@@ -173,6 +188,37 @@ const admins = [...adminEmails()];
       noMatch?.classList.toggle("hidden", shown > 0 || rows.length === 0);
     }
     [search, agentFilter, attentionOnly].forEach((element) => element?.addEventListener("input", applyFilters));
+    const teamForm = document.querySelector("[data-team-form]");
+    teamForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = teamForm.querySelector("button"), error = teamForm.querySelector("[data-error]"), success = teamForm.querySelector("[data-success]");
+      button.disabled = true; button.textContent = "Adding…"; error.classList.add("hidden"); success.classList.add("hidden");
+      try {
+        const response = await fetch("/api/admin/team", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(teamForm).entries())) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not add the agent");
+        success.textContent = `${data.created ? "Login created" : "Access updated"} for ${data.email}. Tell them to sign in at ${location.host}/login with this email. Reloading…`;
+        success.classList.remove("hidden");
+        setTimeout(() => location.reload(), 2500);
+      } catch (reason) {
+        error.textContent = reason instanceof Error ? reason.message : "Could not add the agent";
+        error.classList.remove("hidden"); button.disabled = false; button.textContent = "Add agent";
+      }
+    });
+    document.querySelectorAll("[data-change-agent]").forEach((button) => button.addEventListener("click", () => {
+      if (!teamForm) return;
+      teamForm.elements.email.value = button.dataset.changeAgent;
+      teamForm.elements.assistant_name.value = button.dataset.assistant;
+      teamForm.querySelector("button").textContent = "Save change";
+      teamForm.scrollIntoView({ behavior: "smooth", block: "center" });
+      teamForm.elements.assistant_name.focus();
+    }));
+    document.querySelectorAll("[data-remove-agent]").forEach((button) => button.addEventListener("click", async () => {
+      if (button.dataset.confirming !== "1") { button.dataset.confirming = "1"; button.textContent = "Click again to remove"; return; }
+      button.disabled = true; button.textContent = "Removing…";
+      const response = await fetch(`/api/admin/team?user_id=${encodeURIComponent(button.dataset.removeAgent)}`, { method: "DELETE" });
+      if (response.ok) location.reload(); else { const data = await response.json().catch(() => ({})); button.disabled = false; button.textContent = data.error || "Remove failed"; }
+    }));
     document.querySelectorAll("[data-agent-row]").forEach((row) => row.addEventListener("click", () => {
       if (!agentFilter) return;
       agentFilter.value = agentFilter.value === row.dataset.agentRow ? "" : row.dataset.agentRow;

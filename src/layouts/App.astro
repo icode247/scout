@@ -25,7 +25,7 @@ const posthogUserName = profile?.full_name || user?.user_metadata?.full_name || 
 const posthogUserEmail = user?.email || "";
 const posthogAssistantType = assistantType;
 // Operations accounts are staff: the member pages redirect them to /admin, so they get only that link.
-const isAdmin = Boolean(staffMember(user?.email));
+const isAdmin = Boolean(staffMember(user));
 const nav = isAdmin ? [{ id: "admin", label: "Operations", href: "/admin", icon: "↗" }] : [
   { id: "dashboard", label: "Overview", href: "/dashboard", icon: "⌂" },
   ...(assistantType === "ai" ? [{ id: "agent", label: "Scout AI", href: "/agent", icon: "✦" }] : []),
