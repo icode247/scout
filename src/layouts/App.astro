@@ -2,7 +2,7 @@
 import "../styles/global.css";
 import BaseHead from "../components/BaseHead.astro";
 import Logo from "../components/Logo.astro";
-import { adminEmails } from "../lib/admin";
+import { staffMember } from "../lib/admin";
 import { savedHumanAssistant } from "../lib/human-assistants";
 import { chromeExtensionUrl as resolveChromeExtensionUrl } from "../lib/extension";
 import PricingModal from "../components/PricingModal.astro";
@@ -25,7 +25,7 @@ const posthogUserName = profile?.full_name || user?.user_metadata?.full_name || 
 const posthogUserEmail = user?.email || "";
 const posthogAssistantType = assistantType;
 // Operations accounts are staff: the member pages redirect them to /admin, so they get only that link.
-const isAdmin = Boolean(user?.email && adminEmails().has(user.email.toLowerCase()));
+const isAdmin = Boolean(staffMember(user?.email));
 const nav = isAdmin ? [{ id: "admin", label: "Operations", href: "/admin", icon: "↗" }] : [
   { id: "dashboard", label: "Overview", href: "/dashboard", icon: "⌂" },
   ...(assistantType === "ai" ? [{ id: "agent", label: "Scout AI", href: "/agent", icon: "✦" }] : []),
@@ -47,6 +47,7 @@ const nav = isAdmin ? [{ id: "admin", label: "Operations", href: "/admin", icon:
       </nav>
       {isAdmin ? null : hasAssistant
         ? <div class="mx-3 mt-8 rounded-xl bg-brand-950 p-4 text-white"><p class="text-xs font-bold text-brand-300">{assistantType.toUpperCase()} ASSISTANT</p>{humanAssistant ? <div class="mt-3 flex items-center gap-3"><img src={humanAssistant.avatar} alt="" class="h-10 w-10 rounded-full object-cover ring-2 ring-white/20" /><div class="min-w-0"><strong class="block truncate text-sm text-white">{assistantName}</strong><span class="text-xs text-white/55">Assigned to your desk</span></div></div> : <strong class="mt-2 block text-sm text-white">Scout AI is ready</strong>}<p class="mt-1 text-xs text-white/60">{assistantType === "human" ? (profile?.whatsapp_url ? "WhatsApp and application evidence are ready" : "WhatsApp group setup is in progress") : "Your automated queue is active"}</p><p class="mt-3 text-xs font-bold text-brand-300">{entitlement.applicationsRemaining} of {entitlement.applicationsQuota} applications left</p>{humanAssistant && profile?.whatsapp_url && <a href={profile.whatsapp_url} rel="noopener noreferrer" class="mt-4 block rounded-full bg-white px-3 py-2 text-center text-xs font-extrabold text-ink">Open WhatsApp group</a>}</div>
+        : assistantType === "human" && entitlement.paid ? <div class="mx-3 mt-8 rounded-xl bg-brand-950 p-4 text-white"><p class="text-xs font-bold text-brand-300">PLAN ACTIVE</p><strong class="mt-2 block text-sm text-white">Assigning your assistant</strong><p class="mt-1 text-xs text-white/60">Their name and your WhatsApp group will appear here.</p></div>
         : <div class="mx-3 mt-8 rounded-xl bg-brand-950 p-4 text-white"><p class="text-xs font-bold text-brand-300">NO ASSISTANT YET</p><strong class="mt-2 block text-sm text-white">Browsing is free</strong><p class="mt-1 text-xs text-white/60">Choose a plan and Scout starts applying for you.</p><button type="button" data-open-pricing={assistantType} class="mt-4 block w-full rounded-full bg-brand-300 px-3 py-2.5 text-center text-xs font-extrabold text-brand-950 transition hover:bg-brand-200">Get Assistant</button></div>}
       <div class="mt-auto border-t border-ink/10 p-3">{assistantType === "human" && chromeExtensionUrl && <a href={chromeExtensionUrl} target="_blank" rel="noopener noreferrer" class="block rounded-lg px-3 py-2 text-sm font-bold text-ink-soft hover:bg-surface">Add Scout to Chrome</a>}<a href="/support" class="block rounded-lg px-3 py-2 text-sm font-bold text-ink-soft hover:bg-surface">Get support</a><div class="mt-3 flex items-center gap-3 rounded-lg bg-surface p-3"><span class="grid h-9 w-9 place-items-center rounded-full bg-brand-300 font-bold">{initials}</span><div class="min-w-0 flex-1"><strong class="block truncate text-sm">{name}</strong><span class="text-xs text-ink-muted">{assistantType === "human" ? "Human" : "AI"} plan</span></div><form action="/api/auth/logout" method="post"><button class="text-xs font-bold text-ink-muted hover:text-ink" title="Sign out" aria-label="Sign out">↗</button></form></div></div>
     </aside>

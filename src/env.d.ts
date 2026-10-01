@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly OPENAI_API_KEY?: string;
   readonly OPENAI_MODEL?: string;
   readonly ADMIN_EMAILS?: string;
+  readonly AGENT_EMAILS?: string;
   readonly FULFILLMENT_API_KEY?: string;
   readonly CALCOM_EMBED_URL?: string;
   readonly SCOUT_DEMO_MODE?: string;

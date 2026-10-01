@@ -4,11 +4,12 @@ import { createSupabaseServerClient, createSupabaseTokenClient, decodeSessionEma
 import { getDemoState } from "./lib/demo-store";
 import { EMPTY_ENTITLEMENT, loadEntitlement } from "./lib/entitlements";
 import { isNonIndexablePath } from "./config/seo";
-import { adminEmails } from "./lib/admin";
+import { staffMember } from "./lib/admin";
 
 const memberPrefixes = ["/dashboard", "/agent", "/jobs", "/ai-jobs", "/applications", "/profiles", "/settings"];
 const adminPrefixes = ["/admin"];
-const protectedPrefixes = [...memberPrefixes, "/onboarding", "/extension/connect"];
+// /checkout/start sends signed-out buyers through login and back with their plan still chosen.
+const protectedPrefixes = [...memberPrefixes, "/onboarding", "/extension/connect", "/checkout/start"];
 // /api/billing/webhook is deliberately absent: it is called by Dodo, not the
 // browser, and authenticates itself with a Standard Webhooks signature.
 const protectedApiPrefixes = ["/api/app", "/api/admin", "/api/extension", "/_actions", "/api/billing/checkout", "/api/billing/portal", "/api/billing/status"];
@@ -154,7 +155,7 @@ const handle = async (context: Parameters<Parameters<typeof defineMiddleware>[0]
 
     // Operations accounts are staff, not clients: they never onboard or see the member
     // app, so every client page (and onboarding) sends them to the operations queue.
-    if (user?.email && adminEmails().has(user.email.toLowerCase()) && (matchesPrefix(pathname, memberPrefixes) || pathname === "/onboarding")) {
+    if (staffMember(user?.email) && (matchesPrefix(pathname, memberPrefixes) || pathname === "/onboarding")) {
       return context.redirect("/admin", 303);
     }
 

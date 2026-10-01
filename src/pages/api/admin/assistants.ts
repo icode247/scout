@@ -22,9 +22,10 @@ export const POST: APIRoute = async (context) => {
     const whatsappUrl = String(body.whatsapp_url || "").trim();
     if (!userId) return json({ error: "Member is required" }, { status: 400 });
     if (!humanAssistants.some((assistant) => assistant.name === assistantName)) return json({ error: "Choose a valid Human Assistant" }, { status: 400 });
-    if (!validGroupUrl(whatsappUrl)) return json({ error: "Enter a valid WhatsApp group invite link" }, { status: 400 });
+    // The assistant can be assigned before the group exists; the link is added later.
+    if (whatsappUrl && !validGroupUrl(whatsappUrl)) return json({ error: "Enter a valid WhatsApp group invite link" }, { status: 400 });
     const admin = createAdminClient();
-    const result = await admin.from("profiles").update({ assistant_name: assistantName, whatsapp_url: whatsappUrl, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("assistant_type", "human").select("user_id,assistant_name,whatsapp_url").single();
+    const result = await admin.from("profiles").update({ assistant_name: assistantName, whatsapp_url: whatsappUrl || null, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("assistant_type", "human").select("user_id,assistant_name,whatsapp_url").single();
     if (result.error) throw result.error;
     return json({ profile: result.data });
   } catch (error) {

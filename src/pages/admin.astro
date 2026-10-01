@@ -1,98 +1,183 @@
 ---
 import App from "../layouts/App.astro";
-import { createAdminClient, requireAdmin } from "../lib/admin";
-import { assignedHumanAssistant, humanAssistants } from "../lib/human-assistants";
-import { INTAKE_KEYS, INTAKE_LABELS, formatIntakeAnswer } from "../lib/applicant-intake";
+import { adminEmails, agentAssignments, canWorkClient, createAdminClient, staffMember } from "../lib/admin";
+import { assignedHumanAssistant, humanAssistants, savedHumanAssistant } from "../lib/human-assistants";
+import { clientsWithBriefs } from "../lib/client-briefs";
+import { attentionReasons, summarizeWorkload, timeAgo, type ApplicationActivity } from "../lib/ops-overview";
 export const prerender = false;
-try { requireAdmin(Astro); } catch (response) { if (response instanceof Response) return Astro.redirect("/dashboard", 303); throw response; }
+const staff = staffMember(Astro.locals.user?.email);
+if (!staff) return Astro.redirect("/dashboard", 303);
+const isAdmin = staff.role === "admin";
 const admin = createAdminClient();
-const humanProfilesResult = await admin.from("profiles").select("user_id,full_name,email,assistant_name,whatsapp_phone,whatsapp_url,created_at").eq("assistant_type", "human").order("created_at", { ascending: false });
-if (humanProfilesResult.error) throw humanProfilesResult.error;
-// Only paid members belong in the setup queue. Before billing existed this list
-// included anyone who picked the human lane during onboarding, which had
-// operations creating WhatsApp groups and assigning real assistants for free.
-const subscriptionsResult = await admin.from("subscriptions").select("user_id,plan_code,status,applications_used,applications_quota").eq("lane", "human").eq("status", "active");
-if (subscriptionsResult.error) throw subscriptionsResult.error;
-interface HumanSubscription { user_id: string; plan_code: string; status: string; applications_used: number; applications_quota: number }
-const subscriptionByUser = new Map<string, HumanSubscription>((subscriptionsResult.data || []).map((row: any) => [String(row.user_id), row as HumanSubscription]));
-const allHumanProfiles = (humanProfilesResult.data || []).map((profile) => ({ ...profile, subscription: subscriptionByUser.get(profile.user_id) ?? null }));
-const humanProfiles = allHumanProfiles.filter((profile): profile is typeof profile & { subscription: HumanSubscription } => profile.subscription !== null);
-const unpaidHumanCount = allHumanProfiles.length - humanProfiles.length;
-const result = await admin.from("applications").select("id,user_id,job_id,job_profile_id,resume_id,assistant_type,status,notes,created_at,submitted_at").order("created_at", { ascending: false }).limit(100);
-if (result.error) throw result.error;
-const applications = result.data || [];
-const jobIds = [...new Set(applications.map((item) => item.job_id).filter(Boolean))];
-const applicationIds = applications.map((item) => item.id);
-const [jobsResult, evidenceResult] = await Promise.all([
-  jobIds.length ? admin.from("jobs").select("id,title,company,external_url").in("id", jobIds) : Promise.resolve({ data: [], error: null }),
-  applicationIds.length ? admin.from("application_evidence").select("id,application_id,label,mime_type,created_at").in("application_id", applicationIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [], error: null }),
+
+// Paid Human clients only. Anyone who picked the human lane but never paid is a
+// lead, not a client, and must not get an assistant's time.
+const [profilesResult, subscriptionsResult] = await Promise.all([
+  admin.from("profiles").select("user_id,full_name,email,assistant_name,whatsapp_phone,whatsapp_url,created_at").eq("assistant_type", "human"),
+  admin.from("subscriptions").select("user_id,plan_code,applications_used,applications_quota,created_at").eq("lane", "human").eq("status", "active"),
 ]);
-if (jobsResult.error || evidenceResult.error) throw jobsResult.error || evidenceResult.error;
-type AdminJob = { id:string; title:string; company:string; external_url:string | null };
-const jobs = new Map<string, AdminJob>(((jobsResult.data || []) as AdminJob[]).map((job) => [job.id, job]));
-const evidenceByApplication = new Map<string, Array<{ id:string; label:string; mime_type:string; created_at:string }>>();
-for (const item of evidenceResult.data || []) {
-  const items = evidenceByApplication.get(item.application_id) || [];
-  items.push(item);
-  evidenceByApplication.set(item.application_id, items);
+if (profilesResult.error || subscriptionsResult.error) throw profilesResult.error || subscriptionsResult.error;
+const subscriptions = new Map((subscriptionsResult.data || []).map((row) => [row.user_id, row]));
+const allHuman = profilesResult.data || [];
+const paidClients = allHuman.filter((profile) => subscriptions.has(profile.user_id) && canWorkClient(staff, profile.assistant_name));
+const unpaidCount = allHuman.filter((profile) => !subscriptions.has(profile.user_id)).length;
+const clientIds = paidClients.map((client) => client.user_id);
+
+const [applicationsResult, briefs] = await Promise.all([
+  clientIds.length ? admin.from("applications").select("id,user_id,job_id,status,submitted_at,created_at").eq("assistant_type", "human").in("user_id", clientIds).order("created_at", { ascending: false }).limit(10000) : Promise.resolve({ data: [], error: null }),
+  clientsWithBriefs(admin),
+]);
+if (applicationsResult.error) throw applicationsResult.error;
+type OpsApplication = { id: string; user_id: string; job_id: string; status: string; submitted_at: string | null; created_at: string };
+const applications = (applicationsResult.data || []) as OpsApplication[];
+const byClient = new Map<string, ApplicationActivity[]>();
+for (const row of applications) byClient.set(row.user_id, [...(byClient.get(row.user_id) || []), row]);
+
+const now = Date.now();
+const clients = paidClients.map((profile) => {
+  const subscription = subscriptions.get(profile.user_id)!;
+  const workload = summarizeWorkload(byClient.get(profile.user_id) || [], now);
+  const applicationsLeft = Math.max(0, subscription.applications_quota - subscription.applications_used);
+  const reasons = attentionReasons(workload, { hasWhatsapp: Boolean(profile.whatsapp_url), hasBrief: briefs.has(profile.user_id), applicationsLeft, startedAt: subscription.created_at }, now);
+  const assistant = savedHumanAssistant(profile.assistant_name) ?? assignedHumanAssistant(profile.user_id, profile.assistant_name);
+  return { ...profile, subscription, workload, applicationsLeft, reasons, assistant, hasBrief: briefs.has(profile.user_id) };
+}).sort((a, b) => b.reasons.length - a.reasons.length || b.workload.requested - a.workload.requested || (a.full_name || a.email).localeCompare(b.full_name || b.email));
+
+const totals = clients.reduce((sum, client) => ({
+  today: sum.today + client.workload.appliedToday,
+  week: sum.week + client.workload.appliedWeek,
+  requested: sum.requested + client.workload.requested,
+  attention: sum.attention + (client.reasons.length ? 1 : 0),
+}), { today: 0, week: 0, requested: 0, attention: 0 });
+
+// What each assistant is doing, built from the clients assigned to them.
+const logins = agentAssignments();
+const loginsByAssistant = new Map<string, string[]>();
+for (const [email, name] of logins) {
+  const canonical = savedHumanAssistant(name)?.name ?? name;
+  loginsByAssistant.set(canonical, [...(loginsByAssistant.get(canonical) || []), email]);
 }
-const statuses = ["preparing","submitted","needs_input","evidence_ready","interview","rejected","withdrawn"];
-// Public /intake submissions are append-only; the newest row per email is the client's current answer set.
-const intakesResult = await admin.from("assistant_intakes").select("id,email,full_name,answers,resume_path,resume_name,created_at").order("created_at", { ascending: false }).limit(200);
-if (intakesResult.error) throw intakesResult.error;
-const latestIntakes = new Map<string, { id: string; email: string; full_name: string; answers: Record<string, unknown>; resume_path: string | null; resume_name: string | null; created_at: string }>();
-for (const row of intakesResult.data || []) if (!latestIntakes.has(row.email.toLowerCase())) latestIntakes.set(row.email.toLowerCase(), row);
-// The resumes bucket is private; operations gets short-lived download links.
-const intakeResumePaths = [...latestIntakes.values()].map((intake) => intake.resume_path).filter((path): path is string => Boolean(path));
-const signedResumes = intakeResumePaths.length ? await admin.storage.from("resumes").createSignedUrls(intakeResumePaths, 60 * 60) : { data: [], error: null };
-if (signedResumes.error) throw signedResumes.error;
-const intakeResumeUrls = new Map((signedResumes.data || []).filter((item) => item.signedUrl).map((item) => [item.path, item.signedUrl]));
+const agents = humanAssistants.map((assistant) => {
+  const mine = clients.filter((client) => client.assistant.name === assistant.name);
+  const last = mine.map((client) => client.workload.lastAppliedAt).filter((value): value is string => Boolean(value)).sort().pop() ?? null;
+  return {
+    assistant, clients: mine.length, logins: loginsByAssistant.get(assistant.name) || [],
+    today: mine.reduce((sum, client) => sum + client.workload.appliedToday, 0),
+    week: mine.reduce((sum, client) => sum + client.workload.appliedWeek, 0),
+    requested: mine.reduce((sum, client) => sum + client.workload.requested, 0),
+    attention: mine.filter((client) => client.reasons.length).length,
+    last,
+  };
+}).filter((agent) => agent.clients > 0 || agent.logins.length > 0);
+
+// Latest applications across these clients, for the activity feed.
+const recent = applications.filter((row) => row.submitted_at).sort((a, b) => String(b.submitted_at).localeCompare(String(a.submitted_at))).slice(0, 25);
+const recentJobIds = [...new Set(recent.map((row) => row.job_id))];
+const jobsResult = recentJobIds.length ? await admin.from("jobs").select("id,title,company,external_url").in("id", recentJobIds) : { data: [], error: null };
+if (jobsResult.error) throw jobsResult.error;
+type OpsJob = { id: string; title: string; company: string; external_url: string | null };
+const jobs = new Map<string, OpsJob>(((jobsResult.data || []) as OpsJob[]).map((job) => [job.id, job]));
+const clientById = new Map(clients.map((client) => [client.user_id, client]));
+
+// Admin only: people who filled in the intake form but are not paying clients yet.
+let leads: Array<{ email: string; full_name: string; created_at: string }> = [];
+if (isAdmin) {
+  const intakes = await admin.from("assistant_intakes").select("email,full_name,created_at").order("created_at", { ascending: false }).limit(200);
+  if (intakes.error) throw intakes.error;
+  const clientEmails = new Set(clients.map((client) => String(client.email || "").toLowerCase()));
+  const seen = new Set<string>();
+  leads = (intakes.data || []).filter((row) => {
+    const email = row.email.toLowerCase();
+    if (seen.has(email) || clientEmails.has(email)) return false;
+    seen.add(email);
+    return true;
+  }).slice(0, 20);
+}
 const intakeLink = new URL("/intake", Astro.url).toString();
-// Clients who paid before finishing onboarding never saved a WhatsApp number; their intake answer fills the gap.
-const intakePhoneByEmail = new Map([...latestIntakes].filter(([, intake]) => typeof intake.answers?.whatsappPhone === "string").map(([email, intake]) => [email, String(intake.answers.whatsappPhone)]));
+const greeting = staff.assistantName ? (savedHumanAssistant(staff.assistantName)?.firstName ?? staff.assistantName) : "there";
+const admins = [...adminEmails()];
 ---
-<App title="Operations queue" active="admin">
-  <div class="flex flex-wrap items-end justify-between gap-4"><div><p class="text-sm font-extrabold text-signal-700">SCOUT OPERATIONS</p><h1 class="mt-2 text-4xl font-extrabold">Application fulfillment</h1><p class="mt-2 text-ink-soft">Every delegated job must leave this queue with a truthful outcome and supporting evidence when included.</p></div><span class="rounded-full bg-brand-100 px-4 py-2 text-sm font-bold">{applications.length} recent</span></div>
-  <section class="mt-8 rounded-xl bg-white p-5 shadow-card sm:p-6"><div class="flex flex-wrap items-end justify-between gap-4"><div><h2 class="text-xl font-extrabold">Human assistant setup</h2><p class="mt-1 text-sm text-ink-soft">Paid members only. Create the private WhatsApp group manually, then save its invite link here.</p></div><div class="flex flex-wrap gap-2"><span class="rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700">{humanProfiles.filter((profile) => !profile.whatsapp_url).length} awaiting setup</span>{unpaidHumanCount > 0 && <span class="rounded-full bg-surface px-3 py-1.5 text-xs font-bold text-ink-muted">{unpaidHumanCount} chose human but have not paid</span>}</div></div><div class="mt-5 divide-y divide-ink/10">{humanProfiles.length ? humanProfiles.map((profile) => { const assigned = assignedHumanAssistant(profile.user_id, profile.assistant_name); const groupName = `Scout · ${profile.full_name || profile.email} · ${assigned.firstName}`; return <div class="py-5 first:pt-0 last:pb-0"><div class="flex flex-wrap items-start justify-between gap-4"><div class="flex min-w-0 items-center gap-3"><img src={assigned.avatar} alt="" class="h-11 w-11 rounded-full object-cover"/><div class="min-w-0"><strong class="block truncate">{profile.full_name || "Unnamed member"}</strong><p class="truncate text-sm text-ink-soft">{profile.email}</p><p class="mt-1 text-xs font-bold text-ink-muted">{profile.whatsapp_phone || (intakePhoneByEmail.get(String(profile.email || "").toLowerCase()) ? `${intakePhoneByEmail.get(String(profile.email || "").toLowerCase())} (from intake form)` : "WhatsApp number not provided")}</p></div></div><div class="flex flex-none flex-wrap gap-2"><span class="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-800">{profile.subscription.plan_code} · {profile.subscription.applications_used}/{profile.subscription.applications_quota}</span><span class={profile.whatsapp_url ? "rounded-full bg-signal-50 px-3 py-1.5 text-xs font-bold text-signal-700" : "rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700"}>{profile.whatsapp_url ? "Group ready" : "Setup required"}</span></div></div><div class="mt-4 rounded-xl bg-surface p-4"><p class="text-xs font-bold text-ink-muted">GROUP TO CREATE</p><strong class="mt-1 block text-sm">{groupName}</strong><p class="mt-2 text-xs text-ink-soft">Add {profile.full_name || "the member"}, {assigned.name}, and the Scout supervisor. Copy the group invite link after creating it.</p></div><form data-assistant-form class="mt-4 grid gap-3 lg:grid-cols-[220px_1fr_auto]"><input type="hidden" name="user_id" value={profile.user_id}/><label class="text-xs font-bold">Assigned assistant<select name="assistant_name" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2.5 text-sm">{humanAssistants.map((assistant) => <option value={assistant.name} selected={assistant.name === assigned.name}>{assistant.name}</option>)}</select></label><label class="text-xs font-bold">WhatsApp group invite link<input name="whatsapp_url" type="url" value={profile.whatsapp_url || ""} placeholder="https://chat.whatsapp.com/..." class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2.5 text-sm"/></label><div class="self-end"><button class="rounded-full bg-ink px-4 py-2.5 text-sm font-extrabold text-white">{profile.whatsapp_url ? "Update group" : "Save group"}</button></div><p data-assistant-error class="hidden text-xs font-bold text-red-700 lg:col-span-3" role="alert"></p></form></div> }) : <p class="py-8 text-center text-sm text-ink-muted">No Human Assistant members yet.</p>}</div></section>
-  <section class="mt-8 rounded-xl bg-white p-5 shadow-card sm:p-6">
-    <div class="flex flex-wrap items-end justify-between gap-4"><div><h2 class="text-xl font-extrabold">Client intake answers</h2><p class="mt-1 text-sm text-ink-soft">Each client's resume plus the answers a resume can't give us. Send any client <code class="rounded bg-surface px-1.5 py-0.5 text-xs">{intakeLink}</code> (add <code class="rounded bg-surface px-1.5 py-0.5 text-xs">?email=…</code> to prefill). Latest submission per email.</p></div><span class="rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700">{latestIntakes.size} clients</span></div>
-    <div class="mt-5 divide-y divide-ink/10">{latestIntakes.size ? [...latestIntakes.values()].map((intake) => <details class="py-3"><summary class="flex cursor-pointer flex-wrap items-center justify-between gap-2"><span><strong>{intake.full_name}</strong> <span class="text-sm text-ink-soft">{intake.email}</span></span><span class="text-xs text-ink-muted">{new Date(intake.created_at).toLocaleString()}</span></summary>{intake.resume_path && intakeResumeUrls.get(intake.resume_path) && <a class="mt-3 inline-flex min-h-10 items-center rounded-full bg-brand-100 px-4 text-sm font-bold text-brand-900" href={intakeResumeUrls.get(intake.resume_path)} target="_blank" rel="noopener noreferrer">Download resume · {intake.resume_name} ↓</a>}<dl class="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">{INTAKE_KEYS.filter((key) => intake.answers?.[key] !== undefined).map((key) => <div><dt class="text-xs font-bold text-ink-muted">{INTAKE_LABELS[key]}</dt><dd class="whitespace-pre-wrap break-words">{formatIntakeAnswer(intake.answers[key])}</dd></div>)}</dl></details>) : <p class="py-3 text-sm text-ink-muted">No submissions yet.</p>}</div>
+<App title="Operations" active="admin">
+  <header class="flex flex-wrap items-end justify-between gap-4">
+    <div><p class="text-sm font-extrabold text-signal-700">{isAdmin ? "SCOUT OPERATIONS · ADMIN" : "SCOUT OPERATIONS"}</p><h1 class="mt-1 text-3xl font-extrabold">{isAdmin ? "Every client, every agent, at a glance." : `Hi ${greeting}, here are your clients.`}</h1><p class="mt-2 max-w-2xl text-ink-soft">{isAdmin ? "Clients that need attention are listed first. Open a client to upload their brief, set up their assistant, and see every job applied for them." : "Start with the clients at the top — they have requests waiting or nothing applied recently. Open a client to read their brief and log applications."}</p></div>
+  </header>
+
+  <section class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">APPLIED TODAY</p><strong class="mt-1 block text-3xl">{totals.today}</strong></div>
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">APPLIED THIS WEEK</p><strong class="mt-1 block text-3xl">{totals.week}</strong></div>
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">REQUESTS WAITING</p><strong class={`mt-1 block text-3xl ${totals.requested ? "text-human-700" : ""}`}>{totals.requested}</strong></div>
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">CLIENTS NEEDING ATTENTION</p><strong class={`mt-1 block text-3xl ${totals.attention ? "text-human-700" : ""}`}>{totals.attention} <span class="text-base font-bold text-ink-muted">of {clients.length}</span></strong></div>
   </section>
-  <div class="mt-8 space-y-4">{applications.length ? applications.map((application) => {
-    const job = jobs.get(application.job_id);
-    const evidence = evidenceByApplication.get(application.id) || [];
-    return <article class="rounded-xl bg-white p-5 shadow-card">
-      <div class="flex flex-wrap items-start justify-between gap-5">
-        <div class="min-w-0"><p class="text-xs font-bold text-ink-muted">{application.assistant_type.toUpperCase()} · {application.status.replaceAll("_"," ")}</p><h2 class="mt-1 truncate text-xl font-extrabold">{job?.title || "Unknown role"}</h2><p class="text-sm text-ink-soft">{job?.company || "Unknown company"} · queued {new Date(application.created_at).toLocaleString()}</p>{job?.external_url && <a class="mt-2 inline-block text-sm font-bold text-brand-700" href={job.external_url} target="_blank" rel="noopener noreferrer">Open job ↗</a>}</div>
-        <form action="/api/admin/applications" method="post" data-status-form class="flex flex-wrap items-end gap-2"><input type="hidden" name="id" value={application.id}/><label class="text-xs font-bold">Status<select name="status" class="mt-1 block rounded-lg border border-ink/15 px-3 py-2 text-sm">{statuses.map(status=><option value={status} selected={status===application.status}>{status.replaceAll("_"," ")}</option>)}</select></label><label class="text-xs font-bold">Ops note<input name="notes" value={application.notes || ""} class="mt-1 block min-w-64 rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label><button class="rounded-full bg-ink px-4 py-2 text-sm font-extrabold text-white">Update</button><p data-status-error class="hidden w-full text-xs font-bold text-red-700" role="alert"></p></form>
+
+  {isAdmin && <section class="mt-6 rounded-xl bg-white p-5 shadow-card sm:p-6">
+    <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 class="text-xl font-extrabold">Agents</h2><p class="mt-1 text-sm text-ink-soft">What each assistant is doing. Click a row to see only their clients.</p></div></div>
+    <div class="mt-4 overflow-x-auto"><table class="w-full min-w-[720px] text-left text-sm"><thead><tr class="text-xs text-ink-muted"><th class="py-2 pr-3">Agent</th><th class="py-2 pr-3">Clients</th><th class="py-2 pr-3">Today</th><th class="py-2 pr-3">This week</th><th class="py-2 pr-3">Requests waiting</th><th class="py-2 pr-3">Need attention</th><th class="py-2 pr-3">Last application</th><th class="py-2">Login</th></tr></thead><tbody class="divide-y divide-ink/10">
+      {agents.length ? agents.map((agent) => <tr class="cursor-pointer hover:bg-surface/60" data-agent-row={agent.assistant.name}><td class="py-3 pr-3"><span class="flex items-center gap-2"><img src={agent.assistant.avatar} alt="" class="h-8 w-8 rounded-full object-cover"/><strong>{agent.assistant.name}</strong></span></td><td class="py-3 pr-3">{agent.clients}</td><td class="py-3 pr-3 font-bold">{agent.today}</td><td class="py-3 pr-3">{agent.week}</td><td class={`py-3 pr-3 ${agent.requested ? "font-bold text-human-700" : ""}`}>{agent.requested}</td><td class={`py-3 pr-3 ${agent.attention ? "font-bold text-human-700" : ""}`}>{agent.attention}</td><td class="py-3 pr-3 text-ink-soft">{timeAgo(agent.last, now)}</td><td class="py-3 text-xs">{agent.logins.length ? agent.logins.join(", ") : <span class="font-bold text-human-700">No login — add to AGENT_EMAILS</span>}</td></tr>) : <tr><td colspan="8" class="py-6 text-center text-ink-muted">No assistants have clients yet.</td></tr>}
+    </tbody></table></div>
+  </section>}
+
+  <section class="mt-6 rounded-xl bg-white p-5 shadow-card sm:p-6">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div><h2 class="text-xl font-extrabold">{isAdmin ? "All clients" : "My clients"}</h2><p class="mt-1 text-sm text-ink-soft">Paid Human Assistant clients. {isAdmin && unpaidCount > 0 ? `${unpaidCount} more chose Human but have not paid.` : ""}</p></div>
+      <div class="flex flex-wrap gap-2">
+        <input data-client-search type="search" placeholder="Search name or email" class="rounded-full border border-ink/15 px-4 py-2 text-sm"/>
+        {isAdmin && <select data-agent-filter class="rounded-full border border-ink/15 px-4 py-2 text-sm" aria-label="Filter by agent"><option value="">All agents</option>{humanAssistants.map((assistant) => <option value={assistant.name}>{assistant.name}</option>)}</select>}
+        <label class="flex items-center gap-2 rounded-full bg-surface px-4 py-2 text-sm font-bold"><input data-attention-only type="checkbox"/> Needs attention</label>
       </div>
-      {application.assistant_type === "human" && <div class="mt-5 border-t border-ink/10 pt-5"><div class="flex flex-wrap items-center justify-between gap-3"><div><strong class="text-sm">Application evidence</strong><p class="mt-1 text-xs text-ink-muted">Upload screenshots or a PDF receipt. Members receive secure, expiring previews.</p></div>{evidence.length > 0 && <div class="flex flex-wrap gap-2">{evidence.map(item=><a href={`/api/admin/evidence?id=${item.id}`} target="_blank" class="rounded-full bg-surface px-3 py-2 text-xs font-bold">{item.label} ↗</a>)}</div>}</div><form data-evidence-form class="mt-4 flex flex-wrap items-end gap-2"><input type="hidden" name="application_id" value={application.id}/><label class="text-xs font-bold">Label<input name="label" value="Application answers" maxlength="160" class="mt-1 block rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label><label class="text-xs font-bold">Files<input name="evidence" type="file" multiple required accept=".png,.jpg,.jpeg,.webp,.pdf" class="mt-1 block max-w-xs text-sm"/></label><button class="rounded-full bg-brand-500 px-4 py-2 text-sm font-extrabold text-ink">Upload evidence</button><p data-evidence-error class="hidden text-xs font-bold text-red-700" role="alert"></p></form></div>}
-    </article>
-  }) : <div class="rounded-xl bg-white p-10 text-center shadow-card"><strong>The queue is empty.</strong></div>}</div>
+    </div>
+    <div class="mt-4 divide-y divide-ink/10">
+      {clients.length ? clients.map((client) => <a href={`/admin/clients/${client.user_id}`} data-client-row data-agent={client.assistant.name} data-attention={client.reasons.length ? "1" : "0"} data-search={`${client.full_name} ${client.email}`.toLowerCase()} class="grid gap-3 py-4 hover:bg-surface/60 lg:grid-cols-[1.3fr_1fr_1.4fr_auto] lg:items-center">
+        <span class="flex min-w-0 items-center gap-3"><img src={client.assistant.avatar} alt="" class="h-9 w-9 flex-none rounded-full object-cover"/><span class="min-w-0"><strong class="block truncate">{client.full_name || client.email}</strong><span class="block truncate text-xs text-ink-muted">{client.email} · {client.assistant.name}</span></span></span>
+        <span class="flex flex-wrap gap-2 text-xs font-bold"><span class="rounded-full bg-surface px-2.5 py-1">{client.workload.appliedToday} today</span><span class="rounded-full bg-surface px-2.5 py-1">{client.workload.appliedWeek} this week</span><span class="rounded-full bg-brand-100 px-2.5 py-1 text-brand-800">{client.applicationsLeft} left</span></span>
+        <span class="flex flex-wrap gap-1.5 text-xs font-bold">{client.reasons.length ? client.reasons.map((reason) => <span class="rounded-full bg-human-50 px-2.5 py-1 text-human-700">{reason}</span>) : <span class="rounded-full bg-signal-50 px-2.5 py-1 text-signal-700">On track · last applied {timeAgo(client.workload.lastAppliedAt, now)}</span>}</span>
+        <span class="text-sm font-extrabold text-brand-700">Open →</span>
+      </a>) : <p class="py-8 text-center text-sm text-ink-muted">{isAdmin ? "No paid Human Assistant clients yet." : "No clients are assigned to you yet. Your admin assigns clients from their workspace."}</p>}
+      <p data-no-match class="hidden py-8 text-center text-sm text-ink-muted">No clients match.</p>
+    </div>
+  </section>
+
+  <section class="mt-6 rounded-xl bg-white p-5 shadow-card sm:p-6">
+    <h2 class="text-xl font-extrabold">Latest applications</h2>
+    <div class="mt-4 divide-y divide-ink/10">{recent.length ? recent.map((row) => { const job = jobs.get(row.job_id); const client = clientById.get(row.user_id); return <div class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"><span class="min-w-0"><strong class="block truncate">{job?.title || "Unknown role"} · {job?.company}</strong><span class="text-xs text-ink-muted">for <a href={`/admin/clients/${row.user_id}`} class="font-bold text-brand-700">{client?.full_name || client?.email}</a> · by {client?.assistant.name} · {timeAgo(row.submitted_at, now)}</span></span>{job?.external_url && <a href={job.external_url} target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-ink-soft">Job ↗</a>}</div>; }) : <p class="py-4 text-sm text-ink-muted">No applications yet.</p>}</div>
+  </section>
+
+  {isAdmin && <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
+      <h2 class="text-xl font-extrabold">Leads from the intake form</h2>
+      <p class="mt-1 text-sm text-ink-soft">Filled in <code class="rounded bg-surface px-1.5 py-0.5 text-xs">{intakeLink}</code> but not a paying client yet. Their answers appear in their workspace once they pay.</p>
+      <div class="mt-4 divide-y divide-ink/10">{leads.length ? leads.map((lead) => <div class="flex flex-wrap justify-between gap-2 py-2.5 text-sm"><span><strong>{lead.full_name}</strong> <span class="text-ink-soft">{lead.email}</span></span><span class="text-xs text-ink-muted">{timeAgo(lead.created_at, now)}</span></div>) : <p class="py-3 text-sm text-ink-muted">No open leads.</p>}</div>
+    </section>
+    <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
+      <h2 class="text-xl font-extrabold">Team access</h2>
+      <p class="mt-1 text-sm text-ink-soft">Admins see everything. Agents see only the clients assigned to their assistant name.</p>
+      <dl class="mt-4 space-y-3 text-sm"><div><dt class="text-xs font-bold text-ink-muted">ADMINS (ADMIN_EMAILS)</dt><dd class="mt-1">{admins.join(", ") || "—"}</dd></div><div><dt class="text-xs font-bold text-ink-muted">AGENTS (AGENT_EMAILS)</dt><dd class="mt-1">{logins.size ? [...logins].map(([email, name]) => `${email} → ${name}`).join(", ") : "None yet"}</dd></div></dl>
+      <p class="mt-4 rounded-xl bg-surface p-3 text-xs text-ink-soft">To add an agent, add <code>email=Assistant Name</code> to <code>AGENT_EMAILS</code> in Vercel (comma separated), then redeploy. They sign in at /login with that email.</p>
+    </section>
+  </div>}
+
   <script is:inline>
-    document.querySelectorAll("[data-status-form]").forEach(form=>form.addEventListener("submit",async event=>{
-      event.preventDefault();const button=form.querySelector("button"),error=form.querySelector("[data-status-error]");button.disabled=true;button.textContent="Updating…";error.classList.add("hidden");
-      try{const response=await fetch(form.action,{method:"POST",headers:{accept:"application/json"},body:new FormData(form)});const data=await response.json();if(!response.ok)throw new Error(data.error||"Application update failed");location.reload()}
-      catch(reason){error.textContent=reason instanceof Error?reason.message:"Application update failed";error.classList.remove("hidden");button.disabled=false;button.textContent="Update"}
-    }));
-    document.querySelectorAll("[data-assistant-form]").forEach(form=>form.addEventListener("submit",async event=>{
-      event.preventDefault();const button=form.querySelector("button"),error=form.querySelector("[data-assistant-error]");button.disabled=true;button.textContent="Saving…";error.classList.add("hidden");
-      try{const response=await fetch("/api/admin/assistants",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});const data=await response.json();if(!response.ok)throw new Error(data.error||"Group setup could not be saved");location.reload()}
-      catch(reason){error.textContent=reason instanceof Error?reason.message:"Group setup could not be saved";error.classList.remove("hidden");button.disabled=false;button.textContent="Save group"}
-    }));
-    document.querySelectorAll("[data-evidence-form]").forEach(form=>form.addEventListener("submit",async event=>{
-      event.preventDefault();
-      const button=form.querySelector("button"),error=form.querySelector("[data-evidence-error]");
-      button.disabled=true;button.textContent="Uploading…";error.classList.add("hidden");
-      try{
-        const response=await fetch("/api/admin/evidence",{method:"POST",body:new FormData(form)});
-        const data=await response.json();
-        if(!response.ok)throw new Error(data.error||"Evidence upload failed");
-        location.reload();
-      }catch(reason){
-        error.textContent=reason instanceof Error?reason.message:"Evidence upload failed";
-        error.classList.remove("hidden");button.disabled=false;button.textContent="Upload evidence";
-      }
+    const rows = [...document.querySelectorAll("[data-client-row]")];
+    const search = document.querySelector("[data-client-search]");
+    const agentFilter = document.querySelector("[data-agent-filter]");
+    const attentionOnly = document.querySelector("[data-attention-only]");
+    const noMatch = document.querySelector("[data-no-match]");
+    function applyFilters() {
+      const term = (search?.value || "").trim().toLowerCase();
+      const agent = agentFilter?.value || "";
+      let shown = 0;
+      rows.forEach((row) => {
+        const visible = (!term || row.dataset.search.includes(term)) && (!agent || row.dataset.agent === agent) && (!attentionOnly?.checked || row.dataset.attention === "1");
+        row.classList.toggle("hidden", !visible);
+        if (visible) shown += 1;
+      });
+      noMatch?.classList.toggle("hidden", shown > 0 || rows.length === 0);
+    }
+    [search, agentFilter, attentionOnly].forEach((element) => element?.addEventListener("input", applyFilters));
+    document.querySelectorAll("[data-agent-row]").forEach((row) => row.addEventListener("click", () => {
+      if (!agentFilter) return;
+      agentFilter.value = agentFilter.value === row.dataset.agentRow ? "" : row.dataset.agentRow;
+      applyFilters();
+      agentFilter.scrollIntoView({ behavior: "smooth", block: "center" });
     }));
   </script>
 </App>

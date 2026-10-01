@@ -1,0 +1,239 @@
+---
+import App from "../../../layouts/App.astro";
+import { canWorkClient, createAdminClient, staffMember } from "../../../lib/admin";
+import { assignedHumanAssistant, humanAssistants, savedHumanAssistant } from "../../../lib/human-assistants";
+import { BRIEF_ACCEPT, listBriefs } from "../../../lib/client-briefs";
+import { INTAKE_KEYS, INTAKE_LABELS, formatIntakeAnswer } from "../../../lib/applicant-intake";
+import { TAILORED_RESUME_LABEL } from "../../../lib/application-evidence";
+export const prerender = false;
+const staff = staffMember(Astro.locals.user?.email);
+if (!staff) return Astro.redirect("/dashboard", 303);
+const isAdmin = staff.role === "admin";
+
+// One client's whole engagement on one page: what they want, what they asked
+// for, and the single form an assistant uses after every submission.
+const userId = Astro.params.id!;
+const admin = createAdminClient();
+const profileResult = await admin.from("profiles").select("user_id,full_name,email,assistant_type,assistant_name,whatsapp_phone,whatsapp_url").eq("user_id", userId).maybeSingle();
+if (profileResult.error) throw profileResult.error;
+if (!profileResult.data) return Astro.redirect("/admin", 303);
+const client = profileResult.data;
+// Agents only open their own clients; the list never links them anywhere else.
+if (!canWorkClient(staff, client.assistant_name)) return Astro.redirect("/admin", 303);
+const briefs = await listBriefs(admin, userId);
+const email = String(client.email || "").toLowerCase();
+
+const [subscriptionResult, jobProfilesResult, filtersResult, resumesResult, applicationsResult, intakeResult] = await Promise.all([
+  admin.from("subscriptions").select("plan_code,status,applications_used,applications_quota,current_period_end").eq("user_id", userId).eq("lane", "human").eq("status", "active").maybeSingle(),
+  admin.from("job_profiles").select("id,name,target_roles,locations,salary_min,resume_behavior,active").eq("user_id", userId).order("created_at", { ascending: true }),
+  admin.from("job_search_filters").select("job_profile_id,roles,locations,company_blacklist,employment_types,experience_levels,work_modes").eq("user_id", userId).order("is_active", { ascending: true }).order("updated_at", { ascending: true }),
+  admin.from("resumes").select("id,name,kind,storage_path,created_at").eq("user_id", userId).order("created_at", { ascending: false }),
+  admin.from("applications").select("id,job_id,job_profile_id,resume_id,status,notes,created_at,submitted_at").eq("user_id", userId).eq("assistant_type", "human").order("created_at", { ascending: false }).limit(500),
+  email ? admin.from("assistant_intakes").select("answers,resume_path,resume_name,created_at").eq("email", email).order("created_at", { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null, error: null }),
+]);
+const failed = subscriptionResult.error || jobProfilesResult.error || filtersResult.error || resumesResult.error || applicationsResult.error || intakeResult.error;
+if (failed) throw failed;
+
+const subscription = subscriptionResult.data;
+const jobProfiles = (jobProfilesResult.data || []).filter((profile) => profile.active);
+const filtersByProfile = new Map((filtersResult.data || []).map((row: any) => [row.job_profile_id, row]));
+const resumes = (resumesResult.data || []).filter((resume) => resume.kind !== "tailored");
+const applications = applicationsResult.data || [];
+const intake = intakeResult.data as { answers: Record<string, unknown>; resume_path: string | null; resume_name: string | null; created_at: string } | null;
+
+const jobIds = [...new Set(applications.map((item) => item.job_id))];
+const applicationIds = applications.map((item) => item.id);
+const resumePaths = [...resumes.map((resume) => resume.storage_path), intake?.resume_path].filter((path): path is string => Boolean(path));
+const [jobsResult, evidenceResult, signedResult] = await Promise.all([
+  jobIds.length ? admin.from("jobs").select("id,title,company,location,external_url,source").in("id", jobIds) : Promise.resolve({ data: [], error: null }),
+  applicationIds.length ? admin.from("application_evidence").select("id,application_id,label").in("application_id", applicationIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [], error: null }),
+  resumePaths.length ? admin.storage.from("resumes").createSignedUrls(resumePaths, 60 * 60) : Promise.resolve({ data: [], error: null }),
+]);
+if (jobsResult.error || evidenceResult.error || signedResult.error) throw jobsResult.error || evidenceResult.error || signedResult.error;
+type ClientJob = { id: string; title: string; company: string; location: string; external_url: string | null; source: string };
+const jobs = new Map<string, ClientJob>(((jobsResult.data || []) as ClientJob[]).map((job) => [job.id, job]));
+const evidenceByApplication = new Map<string, Array<{ id: string; label: string }>>();
+for (const item of evidenceResult.data || []) evidenceByApplication.set(item.application_id, [...(evidenceByApplication.get(item.application_id) || []), item]);
+const signedUrls = new Map((signedResult.data || []).filter((item) => item.signedUrl).map((item) => [item.path, item.signedUrl]));
+const resumeNames = new Map(resumes.map((resume) => [resume.id, resume.name]));
+const profileNames = new Map(jobProfiles.map((profile) => [profile.id, profile.name]));
+
+const requested = applications.filter((item) => item.status === "preparing" || item.status === "needs_input");
+const applied = applications.filter((item) => !["preparing", "needs_input"].includes(item.status));
+const remaining = subscription ? Math.max(0, subscription.applications_quota - subscription.applications_used) : 0;
+const savedAssistant = savedHumanAssistant(client.assistant_name);
+const assistant = savedAssistant ?? assignedHumanAssistant(userId, client.assistant_name);
+const groupName = `Scout · ${client.full_name || client.email} · ${assistant.firstName}`;
+const name = client.full_name || client.email || "Client";
+const list = (values?: string[] | null) => (values && values.length ? values.join(", ") : "—");
+const appliedThisWeek = applied.filter((item) => item.submitted_at && Date.now() - new Date(item.submitted_at).getTime() < 7 * 86400000).length;
+const defaultResume = resumes[0]?.id;
+const outcomeStatuses = ["submitted", "evidence_ready", "interview", "rejected", "withdrawn"];
+const sourceLabel: Record<string, string> = { assistant: "Found by assistant", extension: "Client sent from Chrome", chrome_extension: "Client sent from Chrome", dashboard: "Client added in Scout", job_board: "Client picked from Scout job board" };
+---
+<App title={`${name} · Operations`} active="admin">
+  <a href="/admin" class="text-sm font-bold text-brand-700">← All clients</a>
+  <header class="mt-3 flex flex-wrap items-start justify-between gap-4">
+    <div class="flex items-center gap-4"><img src={assistant.avatar} alt="" class="h-14 w-14 rounded-full object-cover"/><div><p class="text-sm font-extrabold text-signal-700">CLIENT WORKSPACE · {assistant.name}</p><h1 class="mt-1 text-3xl font-extrabold">{name}</h1><p class="text-sm text-ink-soft">{client.email}{client.whatsapp_phone ? ` · ${client.whatsapp_phone}` : ""}</p></div></div>
+    <div class="flex flex-wrap gap-2">
+      {subscription ? <span class="rounded-full bg-brand-100 px-4 py-2 text-sm font-bold text-brand-900">{subscription.plan_code} · {remaining} of {subscription.applications_quota} left</span> : <span class="rounded-full bg-red-50 px-4 py-2 text-sm font-bold text-red-800">No active Human plan</span>}
+      {client.whatsapp_url ? <a href={client.whatsapp_url} target="_blank" rel="noopener noreferrer" class="rounded-full bg-signal-50 px-4 py-2 text-sm font-bold text-signal-700">Open WhatsApp group ↗</a> : <a href="/admin" class="rounded-full bg-human-50 px-4 py-2 text-sm font-bold text-human-700">WhatsApp group not set up →</a>}
+    </div>
+  </header>
+
+  <section class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 1</p><strong class="mt-1 block">Read the brief</strong><p class="mt-1 text-sm text-ink-soft">The brief, job profile and resume are on the right. Ask in WhatsApp if anything is unclear.</p></div>
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 2</p><strong class="mt-1 block">Apply to requested jobs first</strong><p class="mt-1 text-sm text-ink-soft">Jobs the client sent through Scout appear in “Requested”. Open each, apply, then mark it applied with screenshots.</p></div>
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 3</p><strong class="mt-1 block">Find and log more</strong><p class="mt-1 text-sm text-ink-soft">Apply anywhere — LinkedIn, Indeed, company sites, links from WhatsApp — then log each one in “Log an application”.</p></div>
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 4</p><strong class="mt-1 block">Send the daily update</strong><p class="mt-1 text-sm text-ink-soft">Post in WhatsApp how many you applied to today. The client sees every job, resume and screenshot in their Applications page.</p></div>
+  </section>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
+    <div class="space-y-6">
+      <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
+        <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 class="text-xl font-extrabold">Requested by the client</h2><p class="mt-1 text-sm text-ink-soft">Already counted against their plan. Do these before finding new jobs.</p></div><span class="rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700">{requested.length} waiting</span></div>
+        <div class="mt-4 space-y-4">{requested.length ? requested.map((item) => { const job = jobs.get(item.job_id); return (
+          <article class="rounded-xl border border-ink/10 p-4">
+            <div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><p class="text-xs font-bold text-ink-muted">{(job && sourceLabel[job.source]) || "Client request"}{item.status === "needs_input" ? " · WAITING ON CLIENT" : ""}</p><h3 class="mt-1 text-lg font-extrabold">{job?.title || "Unknown role"}</h3><p class="text-sm text-ink-soft">{job?.company}{job?.location ? ` · ${job.location}` : ""}</p>{item.notes && <p class="mt-1 text-xs text-ink-muted">{item.notes}</p>}</div>{job?.external_url && <a href={job.external_url} target="_blank" rel="noopener noreferrer" class="rounded-full bg-ink px-4 py-2 text-sm font-extrabold text-white">Open job to apply ↗</a>}</div>
+            <details class="mt-3"><summary class="cursor-pointer text-sm font-extrabold text-brand-700">I applied — record it</summary>
+              <form data-log-form class="mt-3 grid gap-3 sm:grid-cols-2"><input type="hidden" name="user_id" value={userId}/><input type="hidden" name="application_id" value={item.id}/>
+                <label class="text-xs font-bold">Resume you started from<select name="resume_id" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm">{resumes.map((resume) => <option value={resume.id} selected={resume.id === (item.resume_id || defaultResume)}>{resume.name}</option>)}</select></label>
+                <label class="text-xs font-bold">Tailored resume you submitted (PDF)<input name="tailored_resume" type="file" accept=".pdf" class="mt-1 block w-full text-sm"/></label>
+                <label class="text-xs font-bold sm:col-span-2">Screenshots of the form answers and confirmation (required)<input name="screenshots" type="file" multiple required accept=".png,.jpg,.jpeg,.webp,.pdf" class="mt-1 block w-full text-sm"/></label>
+                <label class="text-xs font-bold sm:col-span-2">Note for the client (optional)<input name="notes" maxlength="500" placeholder="e.g. Answered the visa question as “No sponsorship needed”" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label>
+                <div class="sm:col-span-2"><button class="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-ink">Mark applied</button><p data-error class="mt-2 hidden text-xs font-bold text-red-700" role="alert"></p></div>
+              </form>
+            </details>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <details class="w-full"><summary class="inline-flex cursor-pointer rounded-full bg-surface px-3 py-1.5 text-xs font-bold">Needs client input</summary><form data-input-form={item.id} class="mt-2 flex flex-wrap gap-2"><input name="notes" required maxlength="500" placeholder="What do you need? e.g. Expected salary for this role" class="min-w-64 flex-1 rounded-lg border border-ink/15 px-3 py-2 text-sm"/><button class="rounded-full bg-ink px-4 py-2 text-xs font-extrabold text-white">Ask client</button></form><p class="mt-1 text-xs text-ink-muted">The client sees this on their Applications page. Message them in WhatsApp too.</p></details>
+              <button type="button" data-status={item.id} data-value="withdrawn" data-refund="1" class="rounded-full bg-surface px-3 py-1.5 text-xs font-bold">Can't apply (expired or not a fit)</button>
+            </div>
+          </article>); }) : <p class="rounded-xl bg-surface p-4 text-sm text-ink-muted">Nothing requested right now. Find matching jobs and log them on the right.</p>}</div>
+      </section>
+
+      <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
+        <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 class="text-xl font-extrabold">Applied</h2><p class="mt-1 text-sm text-ink-soft">What the client sees in their Applications page. Update the outcome when they hear back.</p></div><span class="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-800">{applied.length} total · {appliedThisWeek} this week</span></div>
+        <div class="mt-4 divide-y divide-ink/10">{applied.length ? applied.map((item) => { const job = jobs.get(item.job_id); const evidence = evidenceByApplication.get(item.id) || []; return (
+          <div class="flex flex-wrap items-start justify-between gap-3 py-3">
+            <div class="min-w-0"><strong class="block truncate">{job?.title || "Unknown role"} · {job?.company}</strong><p class="text-xs text-ink-muted">{item.submitted_at ? new Date(item.submitted_at).toLocaleString() : "Not submitted"}{item.resume_id && resumeNames.get(item.resume_id) ? ` · ${resumeNames.get(item.resume_id)}` : ""}{job?.source === "assistant" ? " · found by assistant" : ""}</p>
+              <div class="mt-1 flex flex-wrap gap-2">{job?.external_url && <a href={job.external_url} target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-brand-700">Job ↗</a>}{evidence.map((file) => <a href={`/api/admin/evidence?id=${file.id}`} target="_blank" class={`text-xs font-bold ${file.label === TAILORED_RESUME_LABEL ? "text-human-700" : "text-ink-soft"}`}>{file.label} ↗</a>)}{!evidence.length && <span class="text-xs font-bold text-red-700">No screenshots yet</span>}</div></div>
+            <select data-outcome={item.id} class="rounded-lg border border-ink/15 px-3 py-2 text-sm" aria-label="Outcome">{outcomeStatuses.map((status) => <option value={status} selected={status === item.status}>{status === "evidence_ready" ? "applied · evidence saved" : status.replaceAll("_", " ")}</option>)}</select>
+          </div>); }) : <p class="py-3 text-sm text-ink-muted">No applications yet.</p>}</div>
+      </section>
+    </div>
+
+    <aside class="space-y-6">
+      <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
+        <div class="flex items-start justify-between gap-3"><div><h2 class="text-xl font-extrabold">Brief</h2><p class="mt-1 text-sm text-ink-soft">{isAdmin ? "Upload the client's brief: call notes, target companies, anything the assistant must follow." : "Read this before applying. Ask your admin if something is missing."}</p></div><span class={`rounded-full px-3 py-1.5 text-xs font-bold ${briefs.length ? "bg-signal-50 text-signal-700" : "bg-human-50 text-human-700"}`}>{briefs.length ? `${briefs.length} file${briefs.length === 1 ? "" : "s"}` : "Missing"}</span></div>
+        <div class="mt-4 space-y-2">{briefs.length ? briefs.map((brief) => <div class="flex items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2.5"><a href={`/api/admin/briefs?path=${encodeURIComponent(brief.path)}`} target="_blank" rel="noopener noreferrer" class="min-w-0"><strong class="block truncate text-sm">{brief.name}</strong><span class="text-xs text-ink-muted">{brief.kind} · {new Date(brief.uploadedAt).toLocaleDateString()}</span></a>{isAdmin && <button type="button" data-delete-brief={brief.path} class="flex-none text-xs font-bold text-red-700">Delete</button>}</div>) : <p class="rounded-xl bg-human-50 p-3 text-sm text-human-700">No brief yet.{isAdmin ? " Upload one below." : " Use the intake answers and job profile until it arrives."}</p>}</div>
+        <form data-brief-form class="mt-4 space-y-3"><input type="hidden" name="user_id" value={userId}/>
+          <label class="block text-xs font-bold">Write or paste the brief<textarea name="text" rows="4" maxlength="50000" placeholder="e.g. Targets: marketing + design roles, remote or hybrid in Cluj. Avoid pure data-entry roles. Prefers fewer, well-matched applications." class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"></textarea></label>
+          <label class="block text-xs font-bold">And/or attach files (PDF, Word, text, images)<input name="files" type="file" multiple accept={BRIEF_ACCEPT} class="mt-1 block w-full text-sm"/></label>
+          <button class="rounded-full bg-ink px-5 py-2.5 text-sm font-extrabold text-white">Save brief</button>
+          <p data-error class="hidden text-xs font-bold text-red-700" role="alert"></p>
+        </form>
+      </section>
+
+      {isAdmin && <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
+        <h2 class="text-xl font-extrabold">Assistant & WhatsApp</h2>
+        <p class="mt-1 text-sm text-ink-soft">{savedAssistant ? `Assigned to ${savedAssistant.name}.` : `Not assigned yet — ${assistant.name} is suggested.`} Create the WhatsApp group “{groupName}” with the client, the assistant and you, then paste its invite link.</p>
+        <form data-assistant-form class="mt-4 space-y-3"><input type="hidden" name="user_id" value={userId}/>
+          <label class="block text-xs font-bold">Assistant<select name="assistant_name" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm">{humanAssistants.map((option) => <option value={option.name} selected={option.name === assistant.name}>{option.name}</option>)}</select></label>
+          <label class="block text-xs font-bold">WhatsApp group invite link<input name="whatsapp_url" type="url" value={client.whatsapp_url || ""} placeholder="https://chat.whatsapp.com/…" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label>
+          <button class="rounded-full bg-ink px-5 py-2.5 text-sm font-extrabold text-white">Save</button>
+          <p data-error class="hidden text-xs font-bold text-red-700" role="alert"></p>
+        </form>
+      </section>}
+
+      <section class="rounded-xl bg-brand-950 p-5 text-white shadow-card sm:p-6">
+        <h2 class="text-xl font-extrabold text-white">Log an application</h2>
+        <p class="mt-1 text-sm text-white/70">For any job you applied to outside the Requested list, including links the client sent in WhatsApp. Uses 1 of {remaining} applications left.</p>
+        <form data-log-form class="mt-4 space-y-3"><input type="hidden" name="user_id" value={userId}/>
+          <label class="block text-xs font-bold">Job link<input name="job_url" type="url" required placeholder="https://…" class="mt-1 block w-full rounded-lg px-3 py-2 text-sm text-ink"/></label>
+          <label class="block text-xs font-bold">Job title<input name="title" required maxlength="200" class="mt-1 block w-full rounded-lg px-3 py-2 text-sm text-ink"/></label>
+          <label class="block text-xs font-bold">Company<input name="company" required maxlength="200" class="mt-1 block w-full rounded-lg px-3 py-2 text-sm text-ink"/></label>
+          <label class="block text-xs font-bold">Location<input name="location" maxlength="200" placeholder="e.g. Remote · Hybrid, Cluj-Napoca" class="mt-1 block w-full rounded-lg px-3 py-2 text-sm text-ink"/></label>
+          {jobProfiles.length > 1 && <label class="block text-xs font-bold">Job profile<select name="job_profile_id" class="mt-1 block w-full rounded-lg px-3 py-2 text-sm text-ink">{jobProfiles.map((profile) => <option value={profile.id}>{profile.name}</option>)}</select></label>}
+          {jobProfiles.length === 1 && <input type="hidden" name="job_profile_id" value={jobProfiles[0].id}/>}
+          {resumes.length > 0 && <label class="block text-xs font-bold">Resume you started from<select name="resume_id" class="mt-1 block w-full rounded-lg px-3 py-2 text-sm text-ink">{resumes.map((resume) => <option value={resume.id}>{resume.name}</option>)}</select></label>}
+          <label class="block text-xs font-bold">Tailored resume you submitted (PDF)<input name="tailored_resume" type="file" accept=".pdf" class="mt-1 block w-full text-sm"/></label>
+          <label class="block text-xs font-bold">Screenshots (required)<input name="screenshots" type="file" multiple required accept=".png,.jpg,.jpeg,.webp,.pdf" class="mt-1 block w-full text-sm"/></label>
+          <label class="block text-xs font-bold">Note for the client (optional)<input name="notes" maxlength="500" class="mt-1 block w-full rounded-lg px-3 py-2 text-sm text-ink"/></label>
+          <button class="w-full rounded-full bg-brand-300 px-5 py-3 text-sm font-extrabold text-ink" disabled={!subscription || remaining === 0}>{!subscription ? "No active plan" : remaining === 0 ? "Plan used up" : "Save application"}</button>
+          <p data-error class="hidden text-xs font-bold text-red-300" role="alert"></p>
+        </form>
+      </section>
+
+      <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
+        <h2 class="text-xl font-extrabold">Job profile & resume</h2>
+        {jobProfiles.length ? jobProfiles.map((profile) => { const filters: any = filtersByProfile.get(profile.id); return (
+          <div class="mt-4 rounded-xl bg-surface p-4 text-sm"><strong>{profile.name}</strong>
+            <dl class="mt-2 space-y-1.5"><div><dt class="inline font-bold">Roles: </dt><dd class="inline">{list(filters?.roles?.length ? filters.roles : profile.target_roles)}</dd></div><div><dt class="inline font-bold">Locations: </dt><dd class="inline">{list(filters?.locations?.length ? filters.locations : profile.locations)}</dd></div>{filters?.work_modes?.length > 0 && <div><dt class="inline font-bold">Work mode: </dt><dd class="inline">{list(filters.work_modes)}</dd></div>}{filters?.experience_levels?.length > 0 && <div><dt class="inline font-bold">Level: </dt><dd class="inline">{list(filters.experience_levels)}</dd></div>}{profile.salary_min && <div><dt class="inline font-bold">Min salary: </dt><dd class="inline">{profile.salary_min.toLocaleString()}</dd></div>}{filters?.company_blacklist?.length > 0 && <div><dt class="inline font-bold">Never apply to: </dt><dd class="inline">{list(filters.company_blacklist)}</dd></div>}<div><dt class="inline font-bold">Resume: </dt><dd class="inline">{profile.resume_behavior === "original" ? "Use the original — do not tailor" : "Tailor to each job, never invent experience"}</dd></div></dl>
+          </div>); }) : <p class="mt-3 rounded-xl bg-human-50 p-3 text-sm text-human-700">No job profile in Scout yet. Use the intake answers below and confirm targets in WhatsApp.</p>}
+        <div class="mt-4"><p class="text-xs font-extrabold text-ink-muted">RESUMES</p><div class="mt-2 flex flex-wrap gap-2">{resumes.map((resume) => resume.storage_path && signedUrls.get(resume.storage_path) ? <a href={signedUrls.get(resume.storage_path)} target="_blank" rel="noopener noreferrer" class="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-900">{resume.name} ↓</a> : <span class="rounded-full bg-surface px-3 py-1.5 text-xs font-bold">{resume.name}</span>)}{intake?.resume_path && signedUrls.get(intake.resume_path) && <a href={signedUrls.get(intake.resume_path)} target="_blank" rel="noopener noreferrer" class="rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700">Intake resume · {intake.resume_name} ↓</a>}{!resumes.length && !intake?.resume_path && <span class="text-sm text-ink-muted">No resume uploaded yet.</span>}</div></div>
+        {intake && <details class="mt-4"><summary class="cursor-pointer text-sm font-extrabold">Intake answers · {new Date(intake.created_at).toLocaleDateString()}</summary><dl class="mt-3 space-y-2 text-sm">{INTAKE_KEYS.filter((key) => intake.answers?.[key] !== undefined).map((key) => <div><dt class="text-xs font-bold text-ink-muted">{INTAKE_LABELS[key]}</dt><dd class="whitespace-pre-wrap break-words">{formatIntakeAnswer(intake.answers[key])}</dd></div>)}</dl></details>}
+      </section>
+    </aside>
+  </div>
+
+  <script is:inline>
+    document.querySelectorAll("[data-log-form]").forEach((form) => form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = form.querySelector("button"), error = form.querySelector("[data-error]"), label = button.textContent;
+      button.disabled = true; button.textContent = "Saving…"; error.classList.add("hidden");
+      try {
+        const response = await fetch("/api/admin/log-application", { method: "POST", body: new FormData(form) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not save the application");
+        location.reload();
+      } catch (reason) {
+        error.textContent = reason instanceof Error ? reason.message : "Could not save the application";
+        error.classList.remove("hidden"); button.disabled = false; button.textContent = label;
+      }
+    }));
+    async function setStatus(id, status, refund, notes) {
+      const body = new FormData(); body.set("id", id); body.set("status", status); if (refund) body.set("refund", "1"); if (notes) body.set("notes", notes);
+      const response = await fetch("/api/admin/applications", { method: "POST", headers: { accept: "application/json" }, body });
+      if (!response.ok) { const data = await response.json().catch(() => ({})); throw new Error(data.error || "Update failed"); }
+    }
+    document.querySelectorAll("[data-status]").forEach((button) => button.addEventListener("click", async () => {
+      button.disabled = true;
+      try { await setStatus(button.dataset.status, button.dataset.value, button.dataset.refund === "1"); location.reload(); }
+      catch (reason) { button.disabled = false; button.textContent = reason instanceof Error ? reason.message : "Update failed"; }
+    }));
+    function submitWith(selector, url, toBody) {
+      document.querySelectorAll(selector).forEach((form) => form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = form.querySelector("button"), error = form.querySelector("[data-error]"), label = button.textContent;
+        button.disabled = true; button.textContent = "Saving…"; error.classList.add("hidden");
+        try {
+          const response = await fetch(url, toBody(form));
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Could not save");
+          location.reload();
+        } catch (reason) {
+          error.textContent = reason instanceof Error ? reason.message : "Could not save";
+          error.classList.remove("hidden"); button.disabled = false; button.textContent = label;
+        }
+      }));
+    }
+    submitWith("[data-brief-form]", "/api/admin/briefs", (form) => ({ method: "POST", body: new FormData(form) }));
+    submitWith("[data-assistant-form]", "/api/admin/assistants", (form) => ({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(form).entries())) }));
+    document.querySelectorAll("[data-delete-brief]").forEach((button) => button.addEventListener("click", async () => {
+      button.disabled = true; button.textContent = "Deleting…";
+      const response = await fetch(`/api/admin/briefs?path=${encodeURIComponent(button.dataset.deleteBrief)}`, { method: "DELETE" });
+      if (response.ok) location.reload(); else { button.disabled = false; button.textContent = "Delete failed"; }
+    }));
+    document.querySelectorAll("[data-input-form]").forEach((form) => form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = form.querySelector("button"); button.disabled = true;
+      try { await setStatus(form.dataset.inputForm, "needs_input", false, new FormData(form).get("notes")); location.reload(); }
+      catch (reason) { button.disabled = false; button.textContent = reason instanceof Error ? reason.message : "Update failed"; }
+    }));
+    document.querySelectorAll("[data-outcome]").forEach((select) => select.addEventListener("change", async () => {
+      select.disabled = true;
+      try { await setStatus(select.dataset.outcome, select.value); select.disabled = false; }
+      catch { location.reload(); }
+    }));
+  </script>
+</App>
