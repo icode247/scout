@@ -29,9 +29,7 @@ export const NAV: NavItem[] = [
   { label: "How it works", href: "/how-it-works" },
   { label: "AI assistant", href: "/ai-job-application-assistant" },
   { label: "Human assistant", href: "/human-job-application-service" },
-  { label: "Safety", href: "/safety" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Compare", href: "/compare" },
 ];
 
 export const FOOTER: { heading: string; links: NavItem[] }[] = [
