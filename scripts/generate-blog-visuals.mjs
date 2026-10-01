@@ -53,6 +53,12 @@ function logo({ x = 64, y = 48, reversed = false, scale = 1 } = {}) {
   </g>`;
 }
 
+/** Pill width for an uppercase kicker: approximate glyph width plus tracking and padding, never narrower than the original design. */
+function pillWidth(text, size, tracking, minimum) {
+  const upper = String(text).toUpperCase();
+  return Math.max(minimum, Math.ceil(upper.length * (size * 0.68 + tracking) + 28));
+}
+
 function baseSvg(width, height, content, background = C.pale) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <rect width="${width}" height="${height}" fill="${background}"/>
@@ -93,8 +99,8 @@ function cover(config) {
     <rect width="1200" height="628" fill="url(#glow)"/>
     <path d="M1030 -40C920 96 1010 184 1168 210" fill="none" stroke="${C.lime}" stroke-width="26" stroke-linecap="round" opacity=".9"/>
     ${logo({ x: 72, y: 48, reversed: true, scale: 1.2 })}
-    <rect x="72" y="126" width="178" height="34" rx="17" fill="${config.accent || C.signal}"/>
-    <text x="161" y="149" fill="${C.white}" font-family="${font}" font-size="15" font-weight="700" text-anchor="middle" letter-spacing="1.2">${esc(config.kicker.toUpperCase())}</text>
+    <rect x="72" y="112" width="${pillWidth(config.kicker, 15, 1.2, 178)}" height="34" rx="17" fill="${config.accent || C.signal}"/>
+    <text x="${72 + pillWidth(config.kicker, 15, 1.2, 178) / 2}" y="135" fill="${C.white}" font-family="${font}" font-size="15" font-weight="700" text-anchor="middle" letter-spacing="1.2">${esc(config.kicker.toUpperCase())}</text>
     ${title}
     ${textBlock(config.subtitle, 72, titleBottom + 56, { max: 48, size: 23, weight: 500, fill: "#C8D7C0", lineHeight: 1.35 })}
     ${visualCards}
@@ -113,8 +119,8 @@ function infographicHeader(config) {
     </defs>
     <rect width="1200" height="800" fill="url(#dots)"/>
     ${logo({ x: 64, y: 40, scale: 1.15 })}
-    <rect x="64" y="112" width="180" height="30" rx="15" fill="${config.accentPale || C.signalPale}"/>
-    <text x="154" y="133" fill="${config.accent || C.signal}" font-family="${font}" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1.1">${esc(config.kicker.toUpperCase())}</text>
+    <rect x="64" y="112" width="${pillWidth(config.kicker, 13, 1.1, 180)}" height="30" rx="15" fill="${config.accentPale || C.signalPale}"/>
+    <text x="${64 + pillWidth(config.kicker, 13, 1.1, 180) / 2}" y="133" fill="${config.accent || C.signal}" font-family="${font}" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1.1">${esc(config.kicker.toUpperCase())}</text>
     ${textBlock(config.title, 64, 196, { max: 42, size: 42, weight: 700, fill: C.ink, lineHeight: 1.12 })}
     ${textBlock(config.subtitle, 64, 258, { max: 86, size: 19, weight: 500, fill: C.soft, lineHeight: 1.25 })}
   `;
@@ -481,6 +487,66 @@ const posts = [
       { title: "Volume", body: "How much application work was completed." }, { title: "Quality", body: "Fit, accuracy, duplicates, and evidence.", tone: "lime" },
       { title: "Efficiency", body: "Candidate time and service cost required." }, { title: "Outcomes", body: "Assessments, screens, and live interviews.", tone: "amber" },
     ]},
+  },
+  {
+    slug: "job-search-while-working-full-time",
+    cover: { kicker: "Job search strategy", title: "Job search while working full time", subtitle: "A five-hour weekly plan that does not eat every evening", cards: ["5 focused hours a week", "Batch, don't sprinkle", "Protect sleep and one day off"], accent: C.signal },
+    info1: {"type": "cards", "kicker": "Time per application", "title": "Where one application's time goes", "subtitle": "The form averages under 5 minutes. The rest is everything around it.", "columns": 3, "items": [{"title": "Find the role", "body": "Search, filter and read the posting properly"}, {"title": "Check fit", "body": "Decide yes, maybe or no against your criteria"}, {"title": "Tailor resume", "body": "Adjust summary and top bullets for the role family"}, {"title": "Screening answers", "body": "Work authorization, notice, salary range, short answers"}, {"title": "Fill the form", "body": "Avg 4 min 52 sec and 51 clicks (Fortune 500 audit)", "tone": "lime"}, {"title": "Log and follow up", "body": "Record version, contact and next step in your tracker", "tone": "amber"}]},
+    info2: {"type": "cards", "kicker": "Sample weekly plan", "title": "A 5-hour job search week", "subtitle": "Fixed blocks around a standard workday, with Sunday off", "columns": 3, "items": [{"title": "Mon lunch, 30 min", "body": "Triage alerts into yes, maybe and no"}, {"title": "Tue evening, 60 min", "body": "Tailor 2 to 3 resume versions for the yes list"}, {"title": "Wed lunch, 30 min", "body": "Send two networking or referral messages"}, {"title": "Thu evening, 90 min", "body": "Submission batch: 3 to 5 complete applications", "tone": "lime"}, {"title": "Sat morning, 60 min", "body": "Follow-ups, tracker update, interview prep"}, {"title": "Sunday, off", "body": "Rest. The pipeline will still be there Monday", "tone": "amber"}]},
+  },
+  {
+    slug: "how-to-job-search-without-employer-finding-out",
+    cover: { kicker: "Confidential job search", title: "Job search without your boss knowing", subtitle: "Settings, habits and scripts for a discreet search while employed", cards: ["Personal devices only", "LinkedIn: Recruiters only", "Updates sharing off"], accent: C.amber },
+    info1: {"type": "cards", "kicker": "LinkedIn settings", "title": "Check these before you edit LinkedIn", "subtitle": "Defaults cause most accidental reveals", "columns": 2, "items": [{"title": "Open to Work: Recruiters only", "body": "Limits it to Recruiter users. LinkedIn can't guarantee privacy", "tone": "lime"}, {"title": "Share profile updates: off", "body": "Stops feed posts and alerts. Visitors still see changes"}, {"title": "Private mode browsing", "body": "Shows you as LinkedIn Member when viewing profiles"}, {"title": "Mark current job as current", "body": "LinkedIn uses it to hide Open to Work from your employer", "tone": "amber"}]},
+    info2: {"type": "split", "kicker": "Risk check", "title": "Lower-risk vs higher-risk moves", "subtitle": "Small defaults decide whether your search stays private", "rightTone": "amber", "sides": [{"title": "Lower risk", "items": ["Personal phone, laptop and email", "References from former colleagues", "Early, lunch or late interview slots", "Gradual profile edits, sharing off"]}, {"title": "Higher risk", "items": ["Work laptop, email or office Wi-Fi", "Public #OpenToWork frame", "Telling friends at work", "Suit on a T-shirt day"]}]},
+  },
+  {
+    slug: "do-recruitment-agencies-take-a-percentage-of-your-salary",
+    cover: { kicker: "Recruitment fees explained", title: "Do recruiters take a cut of your salary?", subtitle: "Employers pay placement fees. Here is who pays what, and when a fee is a red flag.", cards: ["Employer pays the fee", "Temp markups vs your pay", "Upfront fees: red flag"], accent: C.amber },
+    info1: {"type": "cards", "kicker": "Fee models", "title": "Who pays the recruiter", "subtitle": "Permanent placement fees come from the employer, not your paycheck.", "columns": 2, "items": [{"title": "Contingency recruiter", "body": "Employer pays about 20-25% of first-year pay, only on a hire.", "tone": "lime"}, {"title": "Retained search", "body": "Employer pays about 33% of first-year pay, success or not.", "tone": "lime"}, {"title": "Temp or contract staffing", "body": "Client pays a markup on your hourly rate. Get your rate in writing."}, {"title": "Upfront candidate fee", "body": "Fee before any placement or a job promise: treat as a likely scam.", "tone": "amber"}]},
+    info2: {"type": "split", "kicker": "Before you pay anyone", "title": "Red flags vs safe signs", "subtitle": "Quick checks when an agency or service asks you for money.", "rightTone": "amber", "sides": [{"title": "Safe signs", "items": ["Employer pays the placement fee", "Licensed or registered agency", "Written scope, price and refunds", "Proof of every application"]}, {"title": "Red flags", "items": ["Fee before any interview", "Guaranteed job for money", "Cut of salary after you join", "Cash or personal account, no receipt"]}]},
+  },
+  {
+    slug: "job-application-service-no-interviews",
+    cover: { kicker: "When interviews don't come", title: "No interviews from your application service?", subtitle: "Benchmarks, what a service controls, how to read guarantees, and what to fix first.", cards: ["Tailored: ~5.7% interview rate", "Audit 10 applications", "No honest interview guarantee"], accent: C.signal },
+    info1: {"type": "split", "kicker": "Fair expectations", "title": "What a service can and can't control", "subtitle": "Judge the service on what is actually in its hands.", "rightTone": "amber", "sides": [{"title": "Service controls", "items": ["Which jobs match your rules", "Resume tailoring quality", "Accurate form answers", "Proof of what was sent"]}, {"title": "Outside its control", "items": ["Employer hiring decisions", "Referrals and networking", "Your interview performance", "Ghost jobs and hiring freezes"]}]},
+    info2: {"type": "cards", "kicker": "Diagnostic checklist", "title": "When interviews don't come", "subtitle": "Wait 3-4 weeks and 50+ applications, then check in this order.", "columns": 3, "items": [{"title": "1. Targeting", "body": "Open 10 applications. Would you have applied to each one?", "tone": "lime"}, {"title": "2. Resume", "body": "Tailored per role, true, and clear on your target in seconds.", "tone": "lime"}, {"title": "3. Location and visa", "body": "Check authorization answers and remote-only limits."}, {"title": "4. Volume and source", "body": "Steady pace, with more career-site applications than boards."}, {"title": "5. Timing", "body": "Median 23 days to a first interview. Week two is early."}, {"title": "6. Your side", "body": "Reply to recruiters within a day; align LinkedIn and resume.", "tone": "amber"}]},
+  },
+  {
+    slug: "how-to-tailor-resume-without-lying",
+    cover: { kicker: "Job search strategy", title: "Tailor your resume without lying", subtitle: "Change the emphasis and wording. Never change the facts.", cards: ["Mirror real skills", "Reorder by relevance", "Titles and dates stay true"], accent: C.signal },
+    info1: {"type": "cards", "kicker": "How ATS screen", "title": "Where resumes actually get filtered", "subtitle": "Most automatic rejections come from form answers, not bullet wording.", "columns": 3, "items": [{"title": "Parsing", "body": "Software splits your file into fields. Plain layouts parse best.", "tone": "lime"}, {"title": "Knockout questions", "body": "Yes/no form answers like work authorization can auto-reject.", "tone": "amber"}, {"title": "Recruiter search", "body": "Recruiters filter by skills and titles. Use their exact terms.", "tone": "lime"}]},
+    info2: {"type": "split", "kicker": "Where the line is", "title": "Honest tailoring vs fabrication", "subtitle": "You may change how a true fact is presented, not the fact.", "rightTone": "amber", "sides": [{"title": "Honest tailoring", "items": ["Reorder bullets by relevance", "Use the employer's term for real skills", "Add numbers you can defend", "Clarify an internal title in brackets"]}, {"title": "Fabrication", "items": ["Inflated or fake job titles", "Degrees you didn't finish", "Shifted or stretched dates", "Skills you've never used"]}]},
+  },
+  {
+    slug: "how-to-spot-fake-job-postings",
+    cover: { kicker: "Job search safety", title: "Spot fake and ghost jobs before you apply", subtitle: "A 5-minute check that protects your time and your money.", cards: ["Verify the domain", "Cross-check careers site", "Never pay to get hired"], accent: C.amber },
+    info1: {"type": "split", "kicker": "Two different problems", "title": "Scam jobs vs ghost jobs", "subtitle": "One steals from you. The other wastes your effort.", "rightTone": "amber", "sides": [{"title": "Ghost jobs", "items": ["Real company, no active hiring", "Old or repeatedly reposted", "Costs time and hope", "Fix: deprioritize, don't over-invest"]}, {"title": "Scam jobs", "items": ["Fake employer or spoofed brand", "Asks for money or bank details", "Unsolicited chat-app recruiting", "Fix: stop, verify, report"]}]},
+    info2: {"type": "cards", "kicker": "Before you apply", "title": "The 5-minute verification routine", "subtitle": "One check per minute. Any failure means stop and verify.", "columns": 3, "items": [{"title": "1. Company domain", "body": "Official site exists and recruiter email uses that domain.", "tone": "lime"}, {"title": "2. Careers site", "body": "Same role, title, and location on the company's own page.", "tone": "lime"}, {"title": "3. LinkedIn page", "body": "Real employees, active page, consistent location.", "tone": "lime"}, {"title": "4. Recruiter identity", "body": "Profile shows real history at the company.", "tone": "lime"}, {"title": "5. Posting age", "body": "Posted recently, not reposted every few weeks.", "tone": "amber"}, {"title": "Red line", "body": "Any request to pay, deposit a check, or share bank details.", "tone": "amber"}]},
+  },
+  {
+    slug: "how-many-jobs-to-apply-for-per-week",
+    cover: { kicker: "Job search strategy", title: "How many jobs to apply to per week", subtitle: "A calculator for employed searchers, built on your own interview rate", cards: ["Start at 5 to 15 a week", "Add warm attempts", "Adjust after 4 weeks"], accent: C.signal },
+    info1: {"type": "cards", "kicker": "Weekly plan", "title": "Size your week from interviews", "subtitle": "Work backward from the interviews you want, not a quota", "columns": 2, "items": [{"title": "Pick a target", "body": "Choose first-round interviews you want in the next 8 to 12 weeks", "tone": "lime"}, {"title": "Measure your rate", "body": "Screens per qualified application over your last 30 to 50", "tone": "lime"}, {"title": "Divide", "body": "Target ÷ rate = qualified applications; ÷ weeks = weekly number"}, {"title": "Add warm attempts", "body": "One to three referral or network asks per week", "tone": "amber"}]},
+    info2: {"type": "split", "kicker": "Adjusting volume", "title": "When to raise or cut your number", "subtitle": "Change one variable at a time, after cohorts have had time to respond", "rightTone": "amber", "sides": [{"title": "Increase when", "items": ["Rate is healthy, calendar is thin", "More good roles than time", "Your timeline is shrinking", "Screens convert to rounds"]}, {"title": "Hold or cut when", "items": ["Rate under 2% after 50 apps", "Two or more active loops", "Work or sleep is slipping", "Pivoting: shift to warm paths"]}]},
+  },
+  {
+    slug: "best-time-to-apply-for-jobs",
+    cover: { kicker: "Application timing", title: "Does the time you apply matter?", subtitle: "Posting age beats the clock. What the evidence supports and what it does not", cards: ["Apply in the first days", "Exact hour: weak evidence", "Check postings twice daily"], accent: C.amber },
+    info1: {"type": "cards", "kicker": "A posting's life", "title": "Why early in the posting matters", "subtitle": "Applications and screening both cluster in the first weeks", "columns": 3, "items": [{"title": "Week one", "body": "Inbound volume runs 2.5 to 3x higher than later weeks", "tone": "lime"}, {"title": "First screens", "body": "Non-interviewed candidates archived in about 6 days (median)", "tone": "lime"}, {"title": "Later weeks", "body": "Shortlist may be full; strong fits are still worth a try", "tone": "amber"}]},
+    info2: {"type": "cards", "kicker": "Daily routine", "title": "Catch new postings while fresh", "subtitle": "A system beats a 6 a.m. alarm", "columns": 3, "items": [{"title": "Daily alerts", "body": "One alert per role family and location, sorted by newest", "tone": "lime"}, {"title": "Two checks", "body": "Morning and evening catch most roles within 12 hours"}, {"title": "Ten-minute triage", "body": "Apply today, this week, or skip"}, {"title": "One focused block", "body": "Tailor and submit same-day roles in 45 to 60 minutes", "tone": "lime"}, {"title": "Weekly sweep", "body": "Catch strong fits posted 5 to 14 days ago"}, {"title": "Track posting age", "body": "Log days since posted to see what converts for you", "tone": "amber"}]},
+  },
+  {
+    slug: "how-to-choose-target-role-before-applying",
+    cover: { kicker: "Job search strategy", title: "Pick a target role before you apply", subtitle: "A one-week process for mixed, mid-career skill sets", cards: ["3 candidate titles", "20 real postings", "1 primary + 1 backup"], accent: C.signal },
+    info1: {"type": "cards", "kicker": "The one-week plan", "title": "From mixed skills to one clear title", "subtitle": "60 to 90 minutes a day, in this order", "columns": 3, "items": [{"title": "Day 1: Inventory", "body": "List 15 to 25 skills, each with proof and an energy score", "tone": "lime"}, {"title": "Day 2: Map", "body": "Turn your top skills into 3 titles using O*NET and BLS data"}, {"title": "Days 3-4: Validate", "body": "Tally keywords across 20 real postings per title"}, {"title": "Days 5-6: Interview", "body": "Ask 1 or 2 people per title what the job is really like"}, {"title": "Day 7: Decide", "body": "Choose a primary and a backup that share keywords", "tone": "lime"}, {"title": "Then: Dealbreakers", "body": "Set work arrangement, salary floor, and contract type", "tone": "amber"}]},
+    info2: {"type": "split", "kicker": "Target role worksheet", "title": "Write it down before you apply", "subtitle": "If you cannot fill this in, you are not ready to apply at volume", "rightTone": "amber", "sides": [{"title": "Your target", "items": ["Primary title and synonyms", "Backup title and synonyms", "Top 5 proof points", "One-sentence pitch"]}, {"title": "Your dealbreakers", "items": ["Remote, hybrid, or on-site", "Base salary floor", "Contract type", "Industries to exclude"]}]},
+  },
+  {
+    slug: "how-to-help-your-partner-find-a-job",
+    cover: { kicker: "Job search strategy", title: "Helping your partner find a job", subtitle: "What actually helps, what backfires, and a weekly script", cards: ["Support they ask for", "Consent before action", "One weekly check-in"], accent: C.amber },
+    info1: {"type": "cards", "kicker": "Pick two roles, not all five", "title": "Ways a partner can genuinely help", "subtitle": "Ask which ones they want, then do only those", "columns": 2, "items": [{"title": "Admin support", "body": "Set up a tracker, organize documents, research companies", "tone": "lime"}, {"title": "Accountability partner", "body": "Hold a weekly check-in where they set their own targets"}, {"title": "Mock interviewer", "body": "Practice questions, then give one strength and one fix"}, {"title": "Connector", "body": "Ask contacts to talk with your partner, then step aside", "tone": "amber"}]},
+    info2: {"type": "split", "kicker": "Weekly check-in", "title": "20 minutes, once a week, then stop", "subtitle": "Your partner leads. You mostly ask.", "rightTone": "amber", "sides": [{"title": "Ask", "items": ["What went well this week?", "What felt hardest?", "What is next week's plan?", "What do you want from me?"]}, {"title": "Avoid", "items": ["Daily 'did you apply?' questions", "Applying without consent", "Logging in to their accounts", "Comparing them to others"]}]},
   },
 ];
 
