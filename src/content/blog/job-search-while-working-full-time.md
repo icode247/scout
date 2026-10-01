@@ -3,7 +3,7 @@ title: "How to Job Search While Working Full Time"
 description: "A realistic plan for a job search while working full time: a 5-hour weekly budget, batching, what to delegate, interview scheduling scripts, and energy rules."
 coverImage: "/assets/blog/job-search-while-working-full-time-cover.webp"
 coverAlt: "Scout guide to job searching while working full time"
-pubDate: 2026-10-01
+pubDate: 2026-08-28
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "job search while working full time"

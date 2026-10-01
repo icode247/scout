@@ -3,7 +3,7 @@ title: "How Many Jobs Should You Apply to per Week?"
 description: "How many jobs to apply to per week while employed: a calculator built on your own interview rate, ranges by search type, a weekly plan, and current hiring data."
 coverImage: "/assets/blog/how-many-jobs-to-apply-for-per-week-cover.webp"
 coverAlt: "Scout guide to how many jobs to apply for per week while employed"
-pubDate: 2026-10-01
+pubDate: 2026-09-30
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "how many jobs should I apply to per week"

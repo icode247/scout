@@ -3,7 +3,7 @@ title: "How to Help Your Partner Find a Job (What Works)"
 description: "How to help your partner find a job without nagging or overstepping: research-backed support roles, consent rules, money talks, and a weekly check-in script."
 coverImage: "/assets/blog/how-to-help-your-partner-find-a-job-cover.webp"
 coverAlt: "Scout guide to helping your partner find a job"
-pubDate: 2026-10-01
+pubDate: 2026-09-18
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "how to help my partner find a job"

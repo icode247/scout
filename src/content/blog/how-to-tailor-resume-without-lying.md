@@ -3,7 +3,7 @@ title: "How to Tailor Your Resume to Every Job Without Lying"
 description: "Tailor your resume to each job description without inventing anything: how ATS really screen, what honest tailoring looks like, and a 20-minute workflow."
 coverImage: "/assets/blog/how-to-tailor-resume-without-lying-cover.webp"
 coverAlt: "Scout guide to tailoring a resume to a job description without lying"
-pubDate: 2026-10-01
+pubDate: 2026-09-04
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "tailor resume to job description without lying"

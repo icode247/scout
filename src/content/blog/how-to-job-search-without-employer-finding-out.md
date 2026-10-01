@@ -3,7 +3,7 @@ title: "How to Job Search Without Your Employer Knowing"
 description: "Keep a job search confidential while employed: LinkedIn Open to Work limits, notification settings, work devices, references, interviews, and what to say."
 coverImage: "/assets/blog/how-to-job-search-without-employer-finding-out-cover.webp"
 coverAlt: "Scout guide to a confidential job search while employed"
-pubDate: 2026-10-01
+pubDate: 2026-09-01
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "job search while employed confidential"

@@ -3,7 +3,7 @@ title: "Does It Matter What Time of Day You Apply for Jobs?"
 description: "The best time to apply for jobs is early in a posting's life, not a magic hour. What the research shows, which stats are recycled, and a routine that works."
 coverImage: "/assets/blog/best-time-to-apply-for-jobs-cover.webp"
 coverAlt: "Scout guide to the best time to apply for jobs"
-pubDate: 2026-10-01
+pubDate: 2026-09-22
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "best time to apply for jobs"

@@ -3,7 +3,7 @@ title: "How to Spot Fake and Ghost Job Postings Before You Apply"
 description: "How to spot fake job postings and ghost jobs: red flags, a 5-minute verification routine, the latest FTC and FBI scam data, and where to report a job scam."
 coverImage: "/assets/blog/how-to-spot-fake-job-postings-cover.webp"
 coverAlt: "Scout guide to spotting fake and ghost job postings"
-pubDate: 2026-10-01
+pubDate: 2026-09-08
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "how to spot fake job postings"

@@ -3,7 +3,7 @@ title: "Do Recruitment Agencies Take a Cut of Your Salary?"
 description: "Recruiters are usually paid by the employer, not you. See typical fee percentages, where charging candidates is illegal, staffing markups, and red flags."
 coverImage: "/assets/blog/do-recruitment-agencies-take-a-percentage-of-your-salary-cover.webp"
 coverAlt: "Scout guide to recruitment agency fees and who pays them"
-pubDate: 2026-10-01
+pubDate: 2026-09-11
 author: "Scout Editorial Team"
 pillar: "Job Application Services"
 targetKeyword: "do recruitment agencies take a percentage of your salary"
