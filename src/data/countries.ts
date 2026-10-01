@@ -40,7 +40,7 @@ export const COUNTRY_PAGES: CountryPage[] = [
       { q: "Can someone apply for US jobs for me?", a: "Yes. Scout offers a dedicated Human Assistant or a lower-cost AI Assistant. You define the search and provide accurate application facts; Scout handles suitable application work and records it in your dashboard." },
       { q: "Can Scout target remote jobs in the United States?", a: "Yes. A job profile can target US-remote work, named states or cities, or a combination. You should also state where you are legally eligible to work." },
       { q: "Will Scout answer US sponsorship questions?", a: "Scout uses the work-authorization and sponsorship information you approve. Questions that cannot be answered from your profile should be escalated rather than guessed." },
-      { q: "How is Scout priced in the US?", a: "Scout prices plans in USD. AI plans are recurring subscriptions; Human Assistant plans are one-time application bundles. Check the pricing page for current allowances and terms." },
+      { q: "How is Scout priced in the US?", a: "Scout prices plans in USD. AI and Human Assistant plans are both monthly subscriptions, with a discounted 90-day option. Check the pricing page for current allowances and terms." },
     ],
   },
   {

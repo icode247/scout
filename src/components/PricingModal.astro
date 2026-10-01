@@ -78,8 +78,8 @@ const discountPercent = Math.min(...PLANS.filter((p) => p.term === "quarterly").
     const termButtons = [...document.querySelectorAll("[data-modal-term]")];
     const termHint = document.getElementById("pricing-term-hint");
     const TERM_HINTS = {
-      standard: "Monthly billing. Human bundles never expire.",
-      quarterly: "Prepay for 90 days and pay less. Human allowances are used within the 90-day window.",
+      standard: "Billed monthly. Cancel anytime.",
+      quarterly: "Prepay for 90 days and pay less.",
     };
     let lane = defaultLane;
     let term = "standard";

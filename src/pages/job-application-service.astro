@@ -26,8 +26,8 @@ const serviceLd = {
     "@type": "OfferCatalog",
     name: "Job application assistant plans",
     itemListElement: [
-      { "@type": "Offer", name: "AI Job Application Assistant", price: "39", priceCurrency: "USD", url: new URL("/ai-job-application-assistant", SITE.url).href },
-      { "@type": "Offer", name: "Human Job Application Service", price: "299", priceCurrency: "USD", url: new URL("/human-job-application-service", SITE.url).href },
+      { "@type": "Offer", name: "AI Job Application Assistant", price: "39", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "39", priceCurrency: "USD", billingDuration: "P1M" }, url: new URL("/ai-job-application-assistant", SITE.url).href },
+      { "@type": "Offer", name: "Human Job Application Service", price: "299", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "299", priceCurrency: "USD", billingDuration: "P1M" }, url: new URL("/human-job-application-service", SITE.url).href },
     ],
   },
 };
@@ -48,7 +48,7 @@ const breadcrumbLd = {
           <p class="text-lg font-bold text-brand-300">Done-for-you job applications</p>
           <h1 class="mt-4 font-display text-5xl font-extrabold leading-[.98] tracking-[-.035em] text-white sm:text-7xl">A job application service that applies for you.</h1>
           <p class="mt-6 max-w-xl text-lg leading-relaxed text-white/75">If work, family, or application fatigue has taken over your search, Scout can run the repetitive work. Choose a dedicated Human Assistant or a lower-cost AI Assistant.</p>
-          <div class="mt-8 flex flex-col gap-3 sm:flex-row"><Button href="/book-call" size="lg" class="rounded-full bg-brand-300 text-ink">Book a human strategy call</Button><Button href="/login?intent=ai" size="lg" variant="ghost" class="rounded-full text-white hover:bg-white/10">Start with AI</Button></div>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row"><Button href="/pricing#human" size="lg" class="rounded-full bg-brand-300 text-ink">Get my assistant</Button><Button href="/book-call" size="lg" variant="ghost" class="rounded-full text-white hover:bg-white/10">Book a free call</Button><Button href="/login?intent=ai" size="lg" variant="ghost" class="rounded-full text-white/70 hover:bg-white/10">Start with AI</Button></div>
         </div>
         <ProductScreenshot variant="queue" />
       </div>

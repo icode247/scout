@@ -51,7 +51,7 @@ const periodEnd = billingRow?.current_period_end ? new Date(billingRow.current_p
         </div>
         <p class="mt-2 text-xs text-ink-muted">
           {entitlement.applicationsRemaining > 0 ? `${entitlement.applicationsRemaining} remaining` : "No applications remaining"}
-          {periodEnd ? ` · renews ${new Intl.DateTimeFormat("en", { month: "long", day: "numeric", year: "numeric" }).format(periodEnd)}` : plan?.billing === "one_time" ? " · this bundle does not expire" : ""}
+          {periodEnd ? ` · renews ${new Intl.DateTimeFormat("en", { month: "long", day: "numeric", year: "numeric" }).format(periodEnd)}` : ""}
         </p>
         <div class="mt-6 flex flex-wrap gap-3">
           {billingRow?.dodo_customer_id && <a href="/api/billing/portal" class="inline-flex min-h-11 items-center rounded-full bg-ink px-5 text-sm font-extrabold text-white">Manage billing</a>}

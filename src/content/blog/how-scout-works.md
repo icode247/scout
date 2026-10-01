@@ -38,7 +38,7 @@ The **Human Assistant** assigns a real person to your search. Your assistant wor
 
 ### 3. Applications move through the queue
 
-Scout is not a one-time resume blast. AI plans provide a recurring monthly or 90-day application allowance. Human plans are one-time bundles of 250, 500, or 1,000 applications, with standard bundles that do not expire and discounted bundles designed for a 90-day campaign.
+Scout is not a one-time resume blast. AI plans provide a recurring monthly or 90-day application allowance. Human plans are monthly subscriptions with 250, 500, or 1,000 applications a month, plus a discounted 90-day option.
 
 Your assistant works within the plan, job profiles, and instructions you choose. You can also add a specific job from the dashboard or Scout browser extension and select the profile that should be used.
 
@@ -84,7 +84,7 @@ Both lanes record the job, status, and resume used. Human Assistant plans add de
 
 ### What happens when I pause or finish a plan?
 
-An AI automation can be paused, which stops new automated work until it is activated again. AI billing follows the recurring plan you select. Human Assistant bundles are one-time purchases and the application work ends when the bundle is used; standard bundles do not expire, while discounted 90-day bundles must be used within that period.
+An AI automation can be paused, which stops new automated work until it is activated again. AI billing follows the recurring plan you select. Human Assistant plans are also subscriptions: each billing period includes a fresh application allowance, and you can cancel from Settings.
 
 ### Can Scout apply to a job I find myself?
 

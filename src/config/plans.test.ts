@@ -13,9 +13,9 @@ describe("plan catalog", () => {
     }
   });
 
-  it("prices human bundles as one-time and AI plans as recurring", () => {
-    expect(PLANS.filter((p) => p.lane === "human").every((p) => p.billing === "one_time")).toBe(true);
-    expect(PLANS.filter((p) => p.lane === "ai").every((p) => p.billing === "recurring")).toBe(true);
+  it("bills every plan as a recurring subscription", () => {
+    expect(PLANS.every((p) => p.billing === "recurring")).toBe(true);
+    expect(PLANS.every((p) => p.billingMonths === (p.term === "quarterly" ? 3 : 1))).toBe(true);
   });
 
   it("matches the published standard pricing", () => {
@@ -48,23 +48,13 @@ describe("plan catalog", () => {
 });
 
 describe("quarterly term", () => {
-  it("bills AI every three months with three times the allowance", () => {
-    for (const code of ["ai_essential", "ai_plus"]) {
+  it("bills every three months with three times the allowance", () => {
+    for (const code of ["ai_essential", "ai_plus", "human_focused", "human_full", "human_campaign"]) {
       const monthly = planByCode(code)!;
       const quarterly = planByCode(`${code}_90`)!;
       expect(quarterly.billingMonths).toBe(3);
       expect(quarterly.applicationsQuota).toBe(monthly.applicationsQuota * 3);
       expect(quarterly.validityDays).toBeNull();
-    }
-  });
-
-  it("keeps the Human allowance but expires it after 90 days", () => {
-    for (const code of ["human_focused", "human_full", "human_campaign"]) {
-      const standard = planByCode(code)!;
-      const quarterly = planByCode(`${code}_90`)!;
-      expect(quarterly.applicationsQuota).toBe(standard.applicationsQuota);
-      expect(quarterly.validityDays).toBe(90);
-      expect(standard.validityDays).toBeNull();
     }
   });
 
@@ -77,13 +67,13 @@ describe("quarterly term", () => {
     }
   });
 
-  it("computes savings against three months for AI and the bundle price for Human", () => {
+  it("computes savings against three monthly charges", () => {
     // AI Plus: 3 x $79 = $237 versus $213.
     expect(savings(planByCode("ai_plus_90")!)!.cents).toBe(2400);
     expect(savings(planByCode("ai_plus_90")!)!.label).toBe("Save $24");
-    // Full Search: $499 versus $449.
-    expect(savings(planByCode("human_full_90")!)!.cents).toBe(5000);
-    expect(savings(planByCode("human_full_90")!)!.label).toBe("Save $50");
+    // Full Search: 3 x $499 = $1,497 versus $1,347.
+    expect(savings(planByCode("human_full_90")!)!.cents).toBe(15000);
+    expect(savings(planByCode("human_full_90")!)!.label).toBe("Save $150");
   });
 
   it("reports no savings for a standard plan", () => {
@@ -113,9 +103,8 @@ describe("regional pricing", () => {
     for (const plan of PLANS.filter((p) => p.term === "quarterly")) {
       const sibling = standardSibling(plan)!;
       for (const region of regions) {
-        // The comparison price is three monthly cycles for AI subscriptions
-        // and the same one-time bundle for Human, matching the USD logic.
-        const standardTotal = sibling.billing === "recurring" ? sibling.regional[region] * 3 : sibling.regional[region];
+        // The comparison price is three monthly cycles, matching the USD logic.
+        const standardTotal = sibling.regional[region] * 3;
         const discount = 1 - plan.regional[region] / standardTotal;
         expect(discount, `${plan.code} ${region}`).toBeGreaterThan(0.05);
         expect(discount, `${plan.code} ${region}`).toBeLessThan(0.15);
@@ -123,7 +112,7 @@ describe("regional pricing", () => {
     }
   });
 
-  it("discounts AI plans more deeply than Human bundles", () => {
+  it("discounts AI plans more deeply than Human plans", () => {
     // Regional amounts relative to each other must reflect the chosen policy:
     // AI near 70% off list, Human near 35%, so AI's local-to-USD ratio is
     // roughly half of Human's within a region.

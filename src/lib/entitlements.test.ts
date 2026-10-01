@@ -71,7 +71,7 @@ describe("evaluateEntitlement", () => {
     expect(evaluateEntitlement({ ...base, current_period_end: future }).canApply).toBe(true);
   });
 
-  it("keeps a one-time human bundle valid with no period end", () => {
+  it("keeps a legacy one-time human bundle valid with no period end", () => {
     const e = evaluateEntitlement({
       ...base, plan_code: "human_full", lane: "human",
       applications_quota: 500, applications_used: 12, current_period_end: null,

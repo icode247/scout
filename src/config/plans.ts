@@ -1,15 +1,14 @@
 export type Lane = "human" | "ai";
 export type Billing = "one_time" | "recurring";
 /**
- * `standard` is the default term: AI bills monthly, Human bundles never expire.
- * `quarterly` is the prepaid 90-day term at roughly 10% off — AI bills every
- * 3 months with 3x the allowance, Human keeps the same allowance but must use
- * it within 90 days, which is what the discount pays for.
+ * `standard` is the default term: every plan bills monthly.
+ * `quarterly` is the prepaid 90-day term at roughly 10% off — it bills every
+ * 3 months with 3x the monthly allowance.
  */
 export type Term = "standard" | "quarterly";
 
 export const TERMS: { value: Term; label: string; hint: string }[] = [
-  { value: "standard", label: "Standard", hint: "Monthly billing · bundles never expire" },
+  { value: "standard", label: "Standard", hint: "Billed monthly · cancel anytime" },
   { value: "quarterly", label: "90 days", hint: "Prepay 90 days and save ~10%" },
 ];
 
@@ -66,7 +65,7 @@ export interface Plan {
   /**
    * Fixed localized price per region, in the currency's smallest unit (paise,
    * kobo) — the same integer Dodo's localized-prices API takes. AI plans sit
-   * near 70% off list, Human bundles near 35% because they carry real
+   * near 70% off list, Human plans near 35% because they carry real
    * assistant labor per application.
    */
   regional: Record<RegionCode, number>;
@@ -84,12 +83,12 @@ const AI_FEATURES = {
 };
 
 export const PLANS: Plan[] = [
-  // ---- Human Assistant: one-time application bundles ----
+  // ---- Human Assistant: subscriptions ----
   {
     code: "human_focused", family: "human_focused", lane: "human", term: "standard",
-    name: "Focused Search", billing: "one_time", billingMonths: 0, validityDays: null,
-    priceCents: 29900, priceLabel: "$299", cadenceLabel: "one time",
-    applications: "250 applications", applicationsQuota: 250, profileLimit: 1,
+    name: "Focused Search", billing: "recurring", billingMonths: 1, validityDays: null,
+    priceCents: 29900, priceLabel: "$299", cadenceLabel: "/ month",
+    applications: "250 applications / month", applicationsQuota: 250, profileLimit: 1,
     blurb: "A dedicated person runs one clearly defined job search.",
     features: HUMAN_FEATURES.focused,
     productEnvKey: "DODO_PRODUCT_HUMAN_FOCUSED",
@@ -97,19 +96,19 @@ export const PLANS: Plan[] = [
   },
   {
     code: "human_focused_90", family: "human_focused", lane: "human", term: "quarterly",
-    name: "Focused Search", billing: "one_time", billingMonths: 0, validityDays: 90,
-    priceCents: 26900, priceLabel: "$269", cadenceLabel: "one time",
-    applications: "250 applications · use within 90 days", applicationsQuota: 250, profileLimit: 1,
-    blurb: "The same search, priced lower for a focused 90-day push.",
+    name: "Focused Search", billing: "recurring", billingMonths: 3, validityDays: null,
+    priceCents: 80700, priceLabel: "$807", cadenceLabel: "/ 90 days",
+    applications: "750 applications / 90 days", applicationsQuota: 750, profileLimit: 1,
+    blurb: "The same search, prepaid for 90 days at a lower rate.",
     features: HUMAN_FEATURES.focused,
     productEnvKey: "DODO_PRODUCT_HUMAN_FOCUSED_90",
-    regional: { IN: 1599900, NG: 23900000 },
+    regional: { IN: 4859900, NG: 71500000 },
   },
   {
     code: "human_full", family: "human_full", lane: "human", term: "standard",
-    name: "Full Search", billing: "one_time", billingMonths: 0, validityDays: null,
-    priceCents: 49900, priceLabel: "$499", cadenceLabel: "one time",
-    applications: "500 applications", applicationsQuota: 500, profileLimit: 2, featured: true,
+    name: "Full Search", billing: "recurring", billingMonths: 1, validityDays: null,
+    priceCents: 49900, priceLabel: "$499", cadenceLabel: "/ month",
+    applications: "500 applications / month", applicationsQuota: 500, profileLimit: 2, featured: true,
     blurb: "The complete Human Assistant service for an active search.",
     features: HUMAN_FEATURES.full,
     productEnvKey: "DODO_PRODUCT_HUMAN_FULL",
@@ -117,19 +116,19 @@ export const PLANS: Plan[] = [
   },
   {
     code: "human_full_90", family: "human_full", lane: "human", term: "quarterly",
-    name: "Full Search", billing: "one_time", billingMonths: 0, validityDays: 90,
-    priceCents: 44900, priceLabel: "$449", cadenceLabel: "one time",
-    applications: "500 applications · use within 90 days", applicationsQuota: 500, profileLimit: 2, featured: true,
-    blurb: "The complete service, priced lower for a concentrated 90-day search.",
+    name: "Full Search", billing: "recurring", billingMonths: 3, validityDays: null,
+    priceCents: 134700, priceLabel: "$1,347", cadenceLabel: "/ 90 days",
+    applications: "1,500 applications / 90 days", applicationsQuota: 1500, profileLimit: 2, featured: true,
+    blurb: "The complete service, prepaid for 90 days at a lower rate.",
     features: HUMAN_FEATURES.full,
     productEnvKey: "DODO_PRODUCT_HUMAN_FULL_90",
-    regional: { IN: 2699900, NG: 39900000 },
+    regional: { IN: 8099900, NG: 120000000 },
   },
   {
     code: "human_campaign", family: "human_campaign", lane: "human", term: "standard",
-    name: "Career Campaign", billing: "one_time", billingMonths: 0, validityDays: null,
-    priceCents: 99900, priceLabel: "$999", cadenceLabel: "one time",
-    applications: "1,000 applications", applicationsQuota: 1000, profileLimit: 4,
+    name: "Career Campaign", billing: "recurring", billingMonths: 1, validityDays: null,
+    priceCents: 99900, priceLabel: "$999", cadenceLabel: "/ month",
+    applications: "1,000 applications / month", applicationsQuota: 1000, profileLimit: 4,
     blurb: "More capacity and coordination for a broad or multi-role search.",
     features: HUMAN_FEATURES.campaign,
     productEnvKey: "DODO_PRODUCT_HUMAN_CAMPAIGN",
@@ -137,13 +136,13 @@ export const PLANS: Plan[] = [
   },
   {
     code: "human_campaign_90", family: "human_campaign", lane: "human", term: "quarterly",
-    name: "Career Campaign", billing: "one_time", billingMonths: 0, validityDays: 90,
-    priceCents: 89900, priceLabel: "$899", cadenceLabel: "one time",
-    applications: "1,000 applications · use within 90 days", applicationsQuota: 1000, profileLimit: 4,
-    blurb: "Full campaign capacity, priced lower for a 90-day window.",
+    name: "Career Campaign", billing: "recurring", billingMonths: 3, validityDays: null,
+    priceCents: 269700, priceLabel: "$2,697", cadenceLabel: "/ 90 days",
+    applications: "3,000 applications / 90 days", applicationsQuota: 3000, profileLimit: 4,
+    blurb: "Full campaign capacity, prepaid for 90 days at a lower rate.",
     features: HUMAN_FEATURES.campaign,
     productEnvKey: "DODO_PRODUCT_HUMAN_CAMPAIGN_90",
-    regional: { IN: 5399900, NG: 79900000 },
+    regional: { IN: 16199900, NG: 240000000 },
   },
 
   // ---- AI Assistant: subscriptions ----
@@ -210,7 +209,7 @@ export function standardSibling(plan: Plan): Plan | null {
 
 /**
  * What a quarterly plan saves against paying the standard way for the same
- * period: three monthly charges for AI, or the one-time bundle price for Human.
+ * period: three monthly charges.
  */
 export function savings(plan: Plan): { cents: number; percent: number; label: string } | null {
   const sibling = standardSibling(plan);
