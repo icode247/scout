@@ -36,19 +36,18 @@ function signIn(context: APIContext) {
 /**
  * A page that signs in only when submitted. Email security scanners open every
  * link in a message; if this GET verified the one-time token, the scanner would
- * use it up and the member would see "invalid or expired". Scanners do not submit
- * forms, so the token survives until a person opens it. The script submits it
- * straight away for people, and the button covers browsers without JavaScript.
+ * use it up and the member would see "invalid or expired". Some scanners also run
+ * scripts, so nothing submits automatically: the person taps the button.
  */
 function continuePage(tokenHash: string, type: OtpType, next: string) {
   const field = (name: string, value: string) => `<input type="hidden" name="${name}" value="${escapeHtml(value)}">`;
   return new Response(`<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>Signing you in · Scout</title>
+<title>Sign in · Scout</title>
 <style>body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#f4ffeb;font-family:Arial,sans-serif;color:#14210f}main{max-width:380px;padding:32px 24px;text-align:center}button{margin-top:20px;border:0;border-radius:999px;background:#14210f;color:#fff;font-weight:700;font-size:16px;padding:14px 26px;cursor:pointer}p{color:#3d4a35}</style>
-</head><body><main><h1 style="margin:0;font-size:26px">Signing you in…</h1><p>One moment while Scout opens your account.</p>
+</head><body><main><h1 style="margin:0;font-size:26px">Almost there</h1><p>Tap the button to open your Scout account.</p>
 <form id="continue" method="post" action="/auth/callback">${field("token_hash", tokenHash)}${field("type", type)}${field("next", next)}<button type="submit">Continue to Scout</button></form></main>
-<script>document.getElementById("continue").submit();</script></body></html>`, {
+</body></html>`, {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" },
   });
 }
@@ -81,8 +80,14 @@ export const POST: APIRoute = async (context) => {
   const type = otpType(form?.get("type"));
   const { supabase, finish, failed } = signIn(context);
   if (!tokenHash || !type) return failed(next);
-  const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-  if (error) return failed(next);
-  await recordSignIn(data?.user, "magic_link");
+  // "email" is Supabase's documented type for token-hash sign-in links; links
+  // minted as "magiclink" are retried with their own type for older emails.
+  let result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "email" });
+  if (result.error && type !== "email") result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+  if (result.error) {
+    console.error("[auth] sign-in link rejected", { code: (result.error as any).code, status: result.error.status, message: result.error.message });
+    return failed(next);
+  }
+  await recordSignIn(result.data?.user, "magic_link");
   return finish(next);
 };
