@@ -37,6 +37,7 @@ export const POST: APIRoute = async (context) => {
     if (resume.size > INTAKE_MAX_RESUME_BYTES) return json({ error: "Your resume must be under 4 MB." }, { status: 400 });
     await validateResumeFile(resume);
     const answers = cleanIntakeAnswers(fields);
+    if (!answers.streetAddress || !answers.currentCity || !answers.country) return json({ error: "Add your address: first line, town or city, and country." }, { status: 400 });
     if (!answers.workAuthorizationCountries) return json({ error: "Add at least one country you're allowed to work in." }, { status: 400 });
 
     const supabase = createSupabaseServiceClient();

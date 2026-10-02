@@ -1,12 +1,15 @@
 /**
  * The Human Assistant intake questionnaire (/intake): a public link operations can
  * send any client, signed in or not. It asks only for the answers a resume does not
- * reliably carry — the resume parser supplies name, contact, address, experience,
- * education and skills. Answers are stored under the applicant-profile keys so an
+ * reliably carry — the resume parser supplies name, email, experience, education and
+ * skills. Address and phone are asked directly: resumes often leave them out, and
+ * application forms require them. Answers are stored under the applicant-profile keys so an
  * assistant can copy them straight into the client's job profile.
  */
 export const INTAKE_KEYS = [
-  "whatsappPhone", "middleName", "nationality", "timezone",
+  "whatsappPhone", "phoneCountryCode", "phoneNumber",
+  "streetAddress", "addressLine2", "currentCity", "state", "zipcode", "country",
+  "middleName", "nationality", "timezone",
   "workAuthorizationCountries", "workAuthorization", "requiresSponsorship", "securityClearance",
   "desiredSalary", "desiredSalaryCurrency", "desiredSalaryNegotiable", "currentSalary", "currentSalaryCurrency",
   "noticePeriod", "remotePreference", "willingToRelocate",
@@ -16,7 +19,10 @@ export const INTAKE_KEYS = [
 ] as const;
 
 export const INTAKE_LABELS: Record<(typeof INTAKE_KEYS)[number], string> = {
-  whatsappPhone: "WhatsApp number", middleName: "Middle name", nationality: "Nationality", timezone: "Timezone",
+  whatsappPhone: "WhatsApp number", phoneCountryCode: "Phone country code", phoneNumber: "Phone number",
+  streetAddress: "Address line 1", addressLine2: "Address line 2", currentCity: "Town / city", state: "County / state",
+  zipcode: "Post code", country: "Country of residence",
+  middleName: "Middle name", nationality: "Nationality", timezone: "Timezone",
   workAuthorizationCountries: "Authorized to work in", workAuthorization: "Work authorization", requiresSponsorship: "Requires sponsorship", securityClearance: "Security clearance",
   desiredSalary: "Expected annual salary", desiredSalaryCurrency: "Expected salary currency", desiredSalaryNegotiable: "Salary negotiable",
   currentSalary: "Current annual salary", currentSalaryCurrency: "Current salary currency",

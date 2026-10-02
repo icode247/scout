@@ -58,8 +58,9 @@ describe("formatIntakeAnswer", () => {
 describe("INTAKE_KEYS", () => {
   it("are applicant-profile keys, so answers copy straight into a job profile", () => {
     // nationality and howDidYouHearAboutUs are FastApply fields the /profiles editor does not collect yet;
-    // workAuthorizationCountries and whatsappPhone are for the assistant only.
-    const notInEditor = new Set(["nationality", "howDidYouHearAboutUs", "workAuthorizationCountries", "whatsappPhone"]);
+    // workAuthorizationCountries, whatsappPhone and addressLine2 are for the assistant only
+    // (the profile keeps one streetAddress line).
+    const notInEditor = new Set(["nationality", "howDidYouHearAboutUs", "workAuthorizationCountries", "whatsappPhone", "addressLine2"]);
     for (const key of INTAKE_KEYS) if (!notInEditor.has(key)) expect(isApplicantKey(key)).toBe(true);
   });
 
