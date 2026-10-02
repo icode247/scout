@@ -14,8 +14,8 @@ export function getStaticPaths() {
 }
 
 const { competitor } = Astro.props;
-const title = `Scout vs ${competitor.name}: which job application service fits?`;
-const description = `Compare Scout with ${competitor.name}, including service model, application workflow, human support, controls, and the job seekers each option fits.`;
+const title = competitor.seoTitle ?? `Scout vs ${competitor.name}: which job application service fits?`;
+const description = competitor.seoDescription ?? `Compare Scout with ${competitor.name}, including service model, application workflow, human support, controls, and the job seekers each option fits.`;
 const researchChecked = competitor.researchChecked ?? "July 23, 2026";
 const buyingQuestions = competitor.buyingQuestions ?? [];
 const competitorIndex = competitors.findIndex((item) => item.slug === competitor.slug);

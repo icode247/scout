@@ -12,6 +12,9 @@ export type Competitor = {
   sourceLabel: string;
   researchChecked?: string;
   buyingQuestions?: Array<{ question: string; answer: string }>;
+  /** Overrides the default "Scout vs X" title when people search for something specific, like X's cost. */
+  seoTitle?: string;
+  seoDescription?: string;
 };
 
 export const competitors: Competitor[] = [
@@ -250,13 +253,19 @@ export const competitors: Competitor[] = [
     summary: "ApplyAll and Scout both handle applications for job seekers. ApplyAll sells hand-reviewed application packages with an interview guarantee; Scout offers separate Human and AI fulfillment lanes.",
     bestFor: "Choose ApplyAll when you want a fixed package of hand-reviewed applications, its supported role and geography coverage fits, and its refund-backed interview guarantee is important to you.",
     scoutBestFor: "Choose Scout when you want ongoing profile-based control, an AI or Human service choice, browser-extension delegation, and detailed evidence on the Human lane.",
-    competitorStrengths: ["Finds, ranks, and submits jobs with human verification.", "Current packages use one-time pricing and application allotments.", "Publishes an interview guarantee with defined refund terms."],
+    seoTitle: "ApplyAll Cost and Pricing, Compared With Scout",
+    seoDescription: "ApplyAll costs $249 one time for 100 hand-reviewed applications or $299 for 200, with a 30-day interview guarantee. See how that compares with Scout's plans.",
+    competitorStrengths: ["Finds, ranks, and submits jobs with human verification.", "One-time packages: $249 for 100 applications or $299 for 200.", "Publishes an interview guarantee with defined refund terms."],
     scoutDifferences: ["Human and AI execution are offered as separate lanes.", "Multiple job profiles and resume behavior support distinct searches.", "Human service provides a dedicated WhatsApp group and detailed evidence."],
-    rows: [["Core service","Human-reviewed application packages","Human or AI application service"],["Job matching","Outcome-informed ranking","Profile rules and fit controls"],["Buying model","One-time application allotment","Choose a fulfillment plan"],["Guarantee","Defined interview refund guarantee","No invented hiring guarantee"],["Human communication","Support team","Dedicated WhatsApp assistant on Human"]],
-    sourceUrl: "https://applyall.com/job-application-service",
-    sourceLabel: "ApplyAll job application service",
-    researchChecked: "August 21, 2026",
+    rows: [["Core service","Human-reviewed application packages","Human or AI application service"],["Job matching","Outcome-informed ranking","Profile rules and fit controls"],["Price","$249 for 100 or $299 for 200 applications, one time","Human from $299/month for 250; AI from $39/month for 75"],["Buying model","One-time application allotment","Monthly plan, cancel anytime"],["Guarantee","Defined interview refund guarantee","No invented hiring guarantee"],["Human communication","Support team","Dedicated WhatsApp assistant on Human"]],
+    sourceUrl: "https://applyall.com/",
+    sourceLabel: "ApplyAll official website and pricing",
+    researchChecked: "October 2, 2026",
     buyingQuestions: [
+      {
+        question: "How much does ApplyAll cost?",
+        answer: "ApplyAll's website lists two one-time packages: Standard at $249 for 100 hand-reviewed applications (about $2.49 each) and Premium at $299 for 200 (about $1.50 each), both with no subscription and its 30-day interview guarantee. A VIP Career Coaching plan with unlimited applications and coaching is listed without a published price. For comparison, Scout's Human Assistant starts at $299 a month for 250 applications (about $1.20 each) with a dedicated assistant and WhatsApp, and the AI Assistant starts at $39 a month for 75. Scout does not offer an interview guarantee, so weigh that against price per application.",
+      },
       {
         question: "What exactly qualifies for ApplyAll's guarantee?",
         answer: "ApplyAll currently defines a qualifying interview as a live first-round conversation with someone at the hiring company within 30 days after application completion. Its page excludes automated assessments and third-party recruiter screens. Read the full eligibility and refund terms before treating the guarantee as equivalent to a job offer.",
