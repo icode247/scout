@@ -48,6 +48,8 @@ export interface ScoutEmailInput {
   html: string;
   idempotencyKey?: string;
   headers?: Record<string, string>;
+  /** Overrides the default "Kate from Scout" sender, e.g. for account emails. */
+  from?: string;
 }
 
 export async function sendScoutEmail(input: ScoutEmailInput) {
@@ -67,7 +69,7 @@ export async function sendScoutEmail(input: ScoutEmailInput) {
         ...(input.idempotencyKey ? { "idempotency-key": input.idempotencyKey } : {}),
       },
       body: JSON.stringify({
-        from: fromAddress(),
+        from: input.from || fromAddress(),
         reply_to: replyToAddress(),
         to: [input.to],
         subject: input.subject,
