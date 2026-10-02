@@ -30,6 +30,32 @@ export function evidenceProblem(files: File[]): string | null {
   return null;
 }
 
+/** Types the evidence bucket may hold; Word is there for tailored resumes. */
+const BUCKET_TYPES = [...EVIDENCE_TYPES, DOCX_TYPE];
+
+/**
+ * The evidence bucket was created allowing only images and PDF. When it rejects
+ * a type Scout now stores, widen its allow-list (keeping whatever it already
+ * allows) instead of failing the upload. Returns true when the type was added.
+ */
+async function allowEvidenceType(admin: SupabaseClient, contentType: string) {
+  if (!BUCKET_TYPES.includes(contentType)) return false;
+  const bucket = await admin.storage.getBucket("application-evidence");
+  if (bucket.error) return false;
+  const current = bucket.data.allowed_mime_types || [];
+  if (!current.length || current.includes(contentType)) return false;
+  const updated = await admin.storage.updateBucket("application-evidence", {
+    public: bucket.data.public,
+    allowedMimeTypes: [...new Set([...current, ...BUCKET_TYPES])],
+    fileSizeLimit: bucket.data.file_size_limit ?? undefined,
+  });
+  if (updated.error) {
+    console.error("[evidence] could not allow", contentType, updated.error.message);
+    return false;
+  }
+  return true;
+}
+
 /**
  * Stores files in the private evidence bucket and records one row per file. A
  * row that fails to insert removes its upload so storage never holds orphans.
@@ -40,7 +66,10 @@ export async function storeEvidence(admin: SupabaseClient, userId: string, appli
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
     const path = `${userId}/${applicationId}/${crypto.randomUUID()}-${safeName}`;
     const contentType = typeOf(file);
-    const uploaded = await admin.storage.from("application-evidence").upload(path, file, { contentType, upsert: false });
+    let uploaded = await admin.storage.from("application-evidence").upload(path, file, { contentType, upsert: false });
+    if (uploaded.error && /mime type .* is not supported/i.test(uploaded.error.message) && await allowEvidenceType(admin, contentType)) {
+      uploaded = await admin.storage.from("application-evidence").upload(path, file, { contentType, upsert: false });
+    }
     if (uploaded.error) throw uploaded.error;
     const row = await admin.from("application_evidence").insert({
       user_id: userId, application_id: applicationId, label,
