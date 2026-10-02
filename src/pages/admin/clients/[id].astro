@@ -1,7 +1,7 @@
 ---
 import App from "../../../layouts/App.astro";
 import { canWorkClient, createAdminClient, staffMember } from "../../../lib/admin";
-import { assignedHumanAssistant, humanAssistants, savedHumanAssistant } from "../../../lib/human-assistants";
+import { activeHumanAssistants, assignedHumanAssistant, savedHumanAssistant } from "../../../lib/human-assistants";
 import { BRIEF_ACCEPT, listBriefs } from "../../../lib/client-briefs";
 import { INTAKE_KEYS, INTAKE_LABELS, formatIntakeAnswer } from "../../../lib/applicant-intake";
 import { TAILORED_RESUME_LABEL } from "../../../lib/application-evidence";
@@ -138,7 +138,7 @@ const sourceLabel: Record<string, string> = { assistant: "Found by assistant", e
         <h2 class="text-xl font-extrabold">Assistant & WhatsApp</h2>
         <p class="mt-1 text-sm text-ink-soft">{savedAssistant ? `Assigned to ${savedAssistant.name}.` : `Not assigned yet — ${assistant.name} is suggested.`} Create the WhatsApp group “{groupName}” with the client, the assistant and you, then paste its invite link.</p>
         <form data-assistant-form class="mt-4 space-y-3"><input type="hidden" name="user_id" value={userId}/>
-          <label class="block text-xs font-bold">Assistant<select name="assistant_name" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm">{humanAssistants.map((option) => <option value={option.name} selected={option.name === assistant.name}>{option.name}</option>)}</select></label>
+          <label class="block text-xs font-bold">Assistant<select name="assistant_name" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm">{[...activeHumanAssistants(), ...(savedAssistant && savedAssistant.active === false ? [savedAssistant] : [])].map((option) => <option value={option.name} selected={option.name === assistant.name}>{option.name}</option>)}</select></label>
           <label class="block text-xs font-bold">WhatsApp group invite link<input name="whatsapp_url" type="url" value={client.whatsapp_url || ""} placeholder="https://chat.whatsapp.com/…" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label>
           <button class="rounded-full bg-ink px-5 py-2.5 text-sm font-extrabold text-white">Save</button>
           <p data-error class="hidden text-xs font-bold text-red-700" role="alert"></p>

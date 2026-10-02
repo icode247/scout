@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { createAdminClient, requireAdmin } from "../../../lib/admin";
 import { assertSameOrigin, errorMessage, json, readBody } from "../../../lib/api";
-import { humanAssistants } from "../../../lib/human-assistants";
+import { activeHumanAssistants } from "../../../lib/human-assistants";
 
 export const prerender = false;
 
@@ -21,7 +21,7 @@ export const POST: APIRoute = async (context) => {
     const assistantName = String(body.assistant_name || "").trim();
     const whatsappUrl = String(body.whatsapp_url || "").trim();
     if (!userId) return json({ error: "Member is required" }, { status: 400 });
-    if (!humanAssistants.some((assistant) => assistant.name === assistantName)) return json({ error: "Choose a valid Human Assistant" }, { status: 400 });
+    if (!activeHumanAssistants().some((assistant) => assistant.name === assistantName)) return json({ error: "Choose a valid Human Assistant" }, { status: 400 });
     // The assistant can be assigned before the group exists; the link is added later.
     if (whatsappUrl && !validGroupUrl(whatsappUrl)) return json({ error: "Enter a valid WhatsApp group invite link" }, { status: 400 });
     const admin = createAdminClient();

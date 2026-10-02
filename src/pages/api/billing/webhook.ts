@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { planByCode } from "../../../config/plans";
 import { verifyWebhookSignature } from "../../../lib/dodo";
 import { sendSubscriptionConfirmationEmail } from "../../../lib/email";
-import { assignedHumanAssistant } from "../../../lib/human-assistants";
+import { assignedHumanAssistant, refreshHumanAssistants } from "../../../lib/human-assistants";
 import { createSupabaseServiceClient } from "../../../lib/supabase";
 import { serverEnv } from "../../../lib/server-env";
 import { getPostHogServer } from "../../../lib/posthog-server";
@@ -101,6 +101,7 @@ export const POST: APIRoute = async (context) => {
     if (written.error) return reply({ error: written.error.message }, 500);
 
     // This is the only place a human assistant is assigned — payment has cleared.
+    if (plan.lane === "human") await refreshHumanAssistants(supabase).catch((error) => console.error("[webhook] roster refresh failed", error));
     const assistant = plan.lane === "human" ? assignedHumanAssistant(userId) : null;
     const profileUpdate = assistant
       ? { assistant_type: "human", assistant_name: assistant.name, updated_at: new Date().toISOString() }

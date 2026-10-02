@@ -1,10 +1,11 @@
 import { defineMiddleware } from "astro:middleware";
 import type { User } from "@supabase/supabase-js";
-import { createSupabaseServerClient, createSupabaseTokenClient, decodeSessionEmail, demoModeEnabled, getSupabaseConfig } from "./lib/supabase";
+import { createSupabaseServerClient, createSupabaseServiceClient, createSupabaseTokenClient, decodeSessionEmail, demoModeEnabled, getSupabaseConfig } from "./lib/supabase";
 import { getDemoState } from "./lib/demo-store";
 import { EMPTY_ENTITLEMENT, loadEntitlement } from "./lib/entitlements";
 import { isNonIndexablePath } from "./config/seo";
 import { staffMember } from "./lib/admin";
+import { refreshHumanAssistants } from "./lib/human-assistants";
 
 const memberPrefixes = ["/dashboard", "/agent", "/jobs", "/ai-jobs", "/applications", "/profiles", "/settings"];
 const adminPrefixes = ["/admin"];
@@ -69,6 +70,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 });
 
+/** Cached for a minute per instance; never blocks a request on failure. */
+async function loadAssistantRoster() {
+  try { await refreshHumanAssistants(createSupabaseServiceClient()); }
+  catch (error) { console.error("[middleware] assistant roster refresh failed", error); }
+}
+
 const handle = async (context: Parameters<Parameters<typeof defineMiddleware>[0]>[0], next: Parameters<Parameters<typeof defineMiddleware>[0]>[1]) => {
   context.locals.demoMode = false;
   context.locals.entitlement = EMPTY_ENTITLEMENT;
@@ -97,6 +104,8 @@ const handle = async (context: Parameters<Parameters<typeof defineMiddleware>[0]
 
   const config = getSupabaseConfig();
   if (config.configured) {
+    // Signed-in pages show assistant names and photos from the admin-managed roster.
+    await loadAssistantRoster();
     const bearer = context.request.headers.get("authorization");
     const acceptsBearer = pathname.startsWith("/api/extension") || matchesPrefix(pathname, protectedApiPrefixes);
     if (acceptsBearer && bearer?.startsWith("Bearer ")) {
