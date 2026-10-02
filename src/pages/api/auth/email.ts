@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { assertSameOrigin, safeNext } from "../../../lib/api";
 import { createSupabaseServerClient, demoModeEnabled, getSupabaseConfig, publicSiteUrl, sealSupabaseCookies } from "../../../lib/supabase";
 import { rateLimit, clientIp } from "../../../lib/rate-limit";
+import { sendSignInLink } from "../../../lib/magic-link";
 
 export const prerender = false;
 
@@ -27,6 +28,17 @@ export const POST: APIRoute = async (context) => {
   const ipAllowed = (await rateLimit(supabase, `auth-otp-ip:${ip}`, { max: 10, windowSeconds: 60 })).allowed;
   const emailAllowed = (await rateLimit(supabase, `auth-otp-email:${email}`, { max: 5, windowSeconds: 600 })).allowed;
   if (!ipAllowed || !emailAllowed) return context.redirect(`/login?error=rate&next=${encodeURIComponent(next)}`, 303);
+
+  // Scout's own link works on any device. Fall back to Supabase's email only when
+  // Resend is not configured or our send fails, so sign-in never goes dark.
+  try {
+    if (await sendSignInLink(email, next, publicSiteUrl(context.request))) {
+      sealSupabaseCookies(supabase);
+      return context.redirect(`/login?sent=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}`, 303);
+    }
+  } catch (sendError) {
+    console.error("[auth] Scout sign-in email failed; falling back to Supabase", sendError);
+  }
 
   const callback = new URL("/auth/callback", publicSiteUrl(context.request));
   callback.searchParams.set("next", next);

@@ -9,7 +9,7 @@ const error = Astro.url.searchParams.get("error");
 // Arriving from a plan button: account first, then straight on to payment.
 const buyingPlan = next.startsWith("/checkout/start");
 const heading = buyingPlan ? "Create your account to continue to checkout" : intent === "ai" ? "Start with your AI Assistant" : intent === "human" ? "Continue with Human Assistant" : "Welcome to Scout";
-const errors: Record<string,string> = { email: "Enter a valid email address.", send: "We could not send that link. Try again.", rate: "Too many sign-in attempts. Wait a minute and try again.", oauth: "Google sign-in could not start.", callback: "That login link is invalid or expired.", configuration: "Authentication is not configured yet." };
+const errors: Record<string,string> = { email: "Enter a valid email address.", send: "We could not send that link. Try again.", rate: "Too many sign-in attempts. Wait a minute and try again.", oauth: "Google sign-in could not start.", callback: "That sign-in link has expired or was already used. Enter your email below and we will send you a fresh one. It works on any device.", configuration: "Authentication is not configured yet." };
 ---
 <Auth title="Sign in to Scout" description="Sign in to Scout with Google or a secure email link.">
   <section class="min-h-[calc(100dvh-5rem)] bg-brand-950 p-4 sm:p-8">
