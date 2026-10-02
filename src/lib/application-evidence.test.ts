@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EVIDENCE_MAX_BYTES, evidenceFiles, evidenceProblem } from "./application-evidence";
+import { DOCX_TYPE, EVIDENCE_MAX_BYTES, evidenceFiles, evidenceProblem, tailoredResumeType } from "./application-evidence";
 
 const file = (name: string, type: string, size = 10) => new File([new Uint8Array(size)], name, { type });
 
@@ -18,5 +18,15 @@ describe("application evidence", () => {
     form.append("screenshots", file("empty.png", "image/png", 0));
     form.append("screenshots", file("real.png", "image/png"));
     expect(evidenceFiles(form, "screenshots").map((item) => item.name)).toEqual(["real.png"]);
+  });
+});
+
+describe("tailoredResumeType", () => {
+  it("accepts PDF and Word files, even when the browser sends no type", () => {
+    expect(tailoredResumeType(file("cv.pdf", "application/pdf"))).toBe("application/pdf");
+    expect(tailoredResumeType(file("cv.docx", DOCX_TYPE))).toBe(DOCX_TYPE);
+    expect(tailoredResumeType(file("CV.DOCX", ""))).toBe(DOCX_TYPE);
+    expect(tailoredResumeType(file("cv.docx", "application/octet-stream"))).toBe(DOCX_TYPE);
+    expect(tailoredResumeType(file("cv.png", "image/png"))).toBeNull();
   });
 });

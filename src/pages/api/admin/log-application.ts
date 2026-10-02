@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { assertCanWorkClient, createAdminClient, requireStaff } from "../../../lib/admin";
 import { assertSameOrigin, errorMessage, json } from "../../../lib/api";
-import { TAILORED_RESUME_LABEL, evidenceFiles, evidenceProblem, storeEvidence } from "../../../lib/application-evidence";
+import { EVIDENCE_MAX_BYTES, TAILORED_RESUME_LABEL, evidenceFiles, evidenceProblem, storeEvidence, tailoredResumeType } from "../../../lib/application-evidence";
 
 export const prerender = false;
 
@@ -37,9 +37,10 @@ export const POST: APIRoute = async (context) => {
     const tailored = evidenceFiles(form, "tailored_resume");
     if (!userId) return json({ error: "Client is required" }, { status: 400 });
     if (!screenshots.length) return json({ error: "Add at least one screenshot of the submitted form or confirmation page" }, { status: 400 });
-    const problem = evidenceProblem([...screenshots, ...tailored]);
+    const problem = evidenceProblem(screenshots);
     if (problem) return json({ error: problem }, { status: 400 });
-    if (tailored.some((file) => file.type !== "application/pdf")) return json({ error: "Upload the tailored resume as a PDF" }, { status: 400 });
+    if (tailored.some((file) => !tailoredResumeType(file))) return json({ error: "Upload the tailored resume as a PDF or Word (.docx) file" }, { status: 400 });
+    if (tailored.some((file) => file.size > EVIDENCE_MAX_BYTES)) return json({ error: "The tailored resume must be under 10 MB" }, { status: 400 });
 
     const admin = createAdminClient();
     await assertCanWorkClient(staff, admin, userId);
@@ -107,7 +108,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     await storeEvidence(admin, userId, application.id, screenshots, "Application answers");
-    if (tailored.length) await storeEvidence(admin, userId, application.id, tailored, TAILORED_RESUME_LABEL);
+    if (tailored.length) await storeEvidence(admin, userId, application.id, tailored, TAILORED_RESUME_LABEL, (file) => tailoredResumeType(file)!);
     const jobUpdate = await admin.from("jobs").update({ status: "applied", updated_at: now }).eq("id", application.job_id);
     if (jobUpdate.error) throw jobUpdate.error;
     return json({ application });
