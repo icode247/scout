@@ -4,7 +4,6 @@ import { FirstApplyError } from "../../../lib/first-apply";
 import { JobBoardError } from "../../../lib/job-board";
 import { sanitizeJobDescription } from "../../../lib/job-description";
 import { initialsFor, normalizeBoardJob, salaryLabel } from "../../../lib/board-ingest";
-import { searchJobBoard } from "../../../lib/job-board";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit";
 export const prerender = false;
 export const maxDuration = 60;
@@ -12,27 +11,11 @@ export const maxDuration = 60;
 // widen-the-dates retry without ever letting a request outlive the function.
 const BOARD_TIMEOUT_MS = 45000;
 
-/**
- * A board page costs 2-24s upstream, so an instance keeps the last few payloads for a
- * few minutes. This is a request cache, not a corpus: it holds raw board responses keyed
- * by the exact upstream query, never anything member-specific (profile, assistant and
- * blacklist are applied after), and it dies with the instance.
- */
-const CACHE_TTL_MS = 180_000;
-const CACHE_MAX = 40;
-const boardCache = new Map<string, { at: number; payload: any }>();
-async function fetchBoard(params: Record<string, string | number>) {
-  const key = JSON.stringify(params);
-  const hit = boardCache.get(key);
-  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.payload;
-  const payload = await searchJobBoard(params, { timeoutMs: BOARD_TIMEOUT_MS });
-  boardCache.set(key, { at: Date.now(), payload });
-  if (boardCache.size > CACHE_MAX) boardCache.delete(boardCache.keys().next().value!);
-  return payload;
-}
+const fetchBoard = (params: Record<string, string | number>) => fetchBoardCached(params, BOARD_TIMEOUT_MS);
+import { defaultSearchConfig, fetchBoardCached } from "../../../lib/client-matches";
 import { boardSearchParams, dateWindowDays, nextBoardOffset, posted, postedWindow } from "../../../lib/board-search";
 function filterFields(body:any){const roles=list(body.roles).slice(0,20),locations=list(body.locations).slice(0,20);if(!roles.length)throw new Error("Add at least one target role.");return{roles,locations,company_blacklist:list(body.companyBlacklist).slice(0,50),employment_types:list(body.employmentTypes),experience_levels:list(body.experienceLevels),work_modes:list(body.workModes),platforms:list(body.platforms).length?list(body.platforms):["greenhouse","lever","ashby","workable","recruitee","workday","smartrecruiters"],date_posted:posted(String(body.datePosted||"7d"))}}
-async function contextFor(c:any,id:string,filterId=""){const user=requireUser(c);if(c.locals.demoMode)return{user,profile:{id,name:"Demo",applicant_profile:{}},config:{roles:["Software Engineer"],locations:["Remote"],platforms:["greenhouse","lever"],work_modes:["remote"],employment_types:["full-time"],experience_levels:[],company_blacklist:[],date_posted:"7d"}};const db=c.locals.supabase!,[profileResult,configResult]=await Promise.all([db.from("job_profiles").select("*").eq("id",id).eq("user_id",user.id).single(),filterId?db.from("job_search_filters").select("*").eq("id",filterId).eq("job_profile_id",id).eq("user_id",user.id).maybeSingle():db.from("job_search_filters").select("*").eq("job_profile_id",id).eq("user_id",user.id).eq("is_active",true).order("updated_at",{ascending:false}).limit(1).maybeSingle()]);if(profileResult.error)throw new Error("Job profile not found.");if(configResult.error)throw configResult.error;const profile=profileResult.data,applicant=profile.applicant_profile||{},config=configResult.data||{roles:(profile.target_roles?.length?profile.target_roles:[applicant.headline].filter(Boolean)),locations:(profile.locations?.length?profile.locations:[applicant.currentCity,applicant.country].filter(Boolean)),platforms:["greenhouse","lever","ashby","workable","recruitee","workday","smartrecruiters"],work_modes:applicant.remotePreference?[String(applicant.remotePreference).toLowerCase().replace("on-site","onsite")]:[],employment_types:[],experience_levels:[],company_blacklist:[],date_posted:"7d"};if(!config.roles?.length)throw new Error("Add a target role in Search filters.");return{user,profile,config}}
+async function contextFor(c:any,id:string,filterId=""){const user=requireUser(c);if(c.locals.demoMode)return{user,profile:{id,name:"Demo",applicant_profile:{}},config:{roles:["Software Engineer"],locations:["Remote"],platforms:["greenhouse","lever"],work_modes:["remote"],employment_types:["full-time"],experience_levels:[],company_blacklist:[],date_posted:"7d"}};const db=c.locals.supabase!,[profileResult,configResult]=await Promise.all([db.from("job_profiles").select("*").eq("id",id).eq("user_id",user.id).single(),filterId?db.from("job_search_filters").select("*").eq("id",filterId).eq("job_profile_id",id).eq("user_id",user.id).maybeSingle():db.from("job_search_filters").select("*").eq("job_profile_id",id).eq("user_id",user.id).eq("is_active",true).order("updated_at",{ascending:false}).limit(1).maybeSingle()]);if(profileResult.error)throw new Error("Job profile not found.");if(configResult.error)throw configResult.error;const profile=profileResult.data,config=configResult.data||defaultSearchConfig(profile);if(!config.roles?.length)throw new Error("Add a target role in Search filters.");return{user,profile,config}}
 
 /** Shapes a normalized board job into the object the jobs page already renders. */
 function presentRow(row: any, profileId: string, assistantType: string, profileName: string, filterId: string | null) {

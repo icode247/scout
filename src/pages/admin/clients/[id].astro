@@ -26,7 +26,7 @@ const email = String(client.email || "").toLowerCase();
 const [subscriptionResult, jobProfilesResult, filtersResult, resumesResult, applicationsResult, intakeResult] = await Promise.all([
   admin.from("subscriptions").select("plan_code,status,applications_used,applications_quota,current_period_end").eq("user_id", userId).eq("lane", "human").eq("status", "active").maybeSingle(),
   admin.from("job_profiles").select("id,name,target_roles,locations,salary_min,resume_behavior,active").eq("user_id", userId).order("created_at", { ascending: true }),
-  admin.from("job_search_filters").select("job_profile_id,roles,locations,company_blacklist,employment_types,experience_levels,work_modes").eq("user_id", userId).order("is_active", { ascending: true }).order("updated_at", { ascending: true }),
+  admin.from("job_search_filters").select("id,name,is_active,job_profile_id,roles,locations,company_blacklist,employment_types,experience_levels,work_modes").eq("user_id", userId).order("is_active", { ascending: true }).order("updated_at", { ascending: true }),
   admin.from("resumes").select("id,name,kind,storage_path,created_at").eq("user_id", userId).order("created_at", { ascending: false }),
   admin.from("applications").select("id,job_id,job_profile_id,resume_id,status,notes,created_at,submitted_at").eq("user_id", userId).eq("assistant_type", "human").order("created_at", { ascending: false }).limit(500),
   email ? admin.from("assistant_intakes").select("answers,resume_path,resume_name,created_at").eq("email", email).order("created_at", { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null, error: null }),
@@ -69,6 +69,16 @@ const list = (values?: string[] | null) => (values && values.length ? values.joi
 const appliedThisWeek = applied.filter((item) => item.submitted_at && Date.now() - new Date(item.submitted_at).getTime() < 7 * 86400000).length;
 const defaultResume = resumes[0]?.id;
 const outcomeStatuses = ["submitted", "evidence_ready", "interview", "rejected", "withdrawn"];
+// The searches the client can run on their own Jobs page: each saved search, plus
+// any active profile that has none (it searches on the profile's own targets).
+const activeProfileIds = new Set(jobProfiles.map((profile) => profile.id));
+const savedSearches = ((filtersResult.data || []) as any[]).filter((row) => activeProfileIds.has(row.job_profile_id));
+const searchOptions = [
+  ...savedSearches.map((row) => ({ value: `filter:${row.id}`, label: row.name || profileNames.get(row.job_profile_id) || "Saved search", active: Boolean(row.is_active) })),
+  ...jobProfiles.filter((profile) => !savedSearches.some((row) => row.job_profile_id === profile.id)).map((profile) => ({ value: `profile:${profile.id}`, label: `${profile.name} (profile targets)`, active: false })),
+];
+const defaultSearch = searchOptions.find((option) => option.active)?.value ?? searchOptions[0]?.value ?? "";
+const firstName = client.full_name ? client.full_name.split(" ")[0] : "the client";
 const sourceLabel: Record<string, string> = { assistant: "Found by assistant", extension: "Client sent from Chrome", chrome_extension: "Client sent from Chrome", dashboard: "Client added in Scout", job_board: "Client picked from Scout job board" };
 ---
 <App title={`${name} · Operations`} active="admin">
@@ -84,7 +94,7 @@ const sourceLabel: Record<string, string> = { assistant: "Found by assistant", e
   <section class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
     <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 1</p><strong class="mt-1 block">Read the brief</strong><p class="mt-1 text-sm text-ink-soft">The brief, job profile and resume are on the right. Ask in WhatsApp if anything is unclear.</p></div>
     <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 2</p><strong class="mt-1 block">Apply to requested jobs first</strong><p class="mt-1 text-sm text-ink-soft">Jobs the client sent through Scout appear in “Requested”. Open each, apply, then mark it applied with screenshots.</p></div>
-    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 3</p><strong class="mt-1 block">Find and log more</strong><p class="mt-1 text-sm text-ink-soft">Apply anywhere — LinkedIn, Indeed, company sites, links from WhatsApp. Paste the link in “Check before you apply” first, then log each one in “Log an application”.</p></div>
+    <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 3</p><strong class="mt-1 block">Find and log more</strong><p class="mt-1 text-sm text-ink-soft">Start with “Jobs matching preferences”, the same list the client sees. Then look anywhere else — LinkedIn, Indeed, company sites, WhatsApp links — and check each link before you apply.</p></div>
     <div class="rounded-xl bg-white p-4 shadow-card"><p class="text-xs font-extrabold text-ink-muted">STEP 4</p><strong class="mt-1 block">Send the daily update</strong><p class="mt-1 text-sm text-ink-soft">Post in WhatsApp how many you applied to today. The client sees every job, resume and screenshot in their Applications page.</p></div>
   </section>
 
@@ -109,6 +119,16 @@ const sourceLabel: Record<string, string> = { assistant: "Found by assistant", e
               <button type="button" data-status={item.id} data-value="withdrawn" data-refund="1" class="rounded-full bg-surface px-3 py-1.5 text-xs font-bold">Can't apply (expired or not a fit)</button>
             </div>
           </article>); }) : <p class="rounded-xl bg-surface p-4 text-sm text-ink-muted">Nothing requested right now. Find matching jobs and log them on the right.</p>}</div>
+      </section>
+
+      <section data-matches data-user={userId} data-search={defaultSearch} class="rounded-xl bg-white p-5 shadow-card sm:p-6">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div class="min-w-0"><h2 class="text-xl font-extrabold">Jobs matching {firstName}'s preferences</h2><p class="mt-1 text-sm text-ink-soft">The same list the client sees on their Jobs page: their saved search on the Scout job board, plus jobs they saved. Apply, then log each one. Logging uses 1 application.</p></div>
+          {searchOptions.length > 1 && <label class="text-xs font-bold">Search<select data-matches-search class="mt-1 block rounded-lg border border-ink/15 px-3 py-2 text-sm">{searchOptions.map((option) => <option value={option.value} selected={option.value === defaultSearch}>{option.label}{option.active ? " · client's current" : ""}</option>)}</select></label>}
+        </div>
+        <p data-matches-note class="mt-3 text-xs font-bold text-ink-muted" role="status" aria-live="polite">{searchOptions.length ? "Loading matching jobs…" : "No job profile in Scout yet, so there is no search to run. Confirm targets in WhatsApp."}</p>
+        <div data-matches-list class="mt-2 divide-y divide-ink/10"></div>
+        <button type="button" data-matches-more class="mt-4 hidden rounded-full bg-surface px-4 py-2 text-sm font-bold">Show more jobs</button>
       </section>
 
       <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
@@ -160,7 +180,7 @@ const sourceLabel: Record<string, string> = { assistant: "Found by assistant", e
 
       <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
         <h2 class="text-xl font-extrabold">Check before you apply</h2>
-        <p class="mt-1 text-sm text-ink-soft">Paste a job link to see whether {client.full_name ? client.full_name.split(" ")[0] : "the client"} already applied there, asked for it, or saved it. Covers every lane, including Scout AI and jobs the client added themselves.</p>
+        <p class="mt-1 text-sm text-ink-soft">Paste a job link to see whether {firstName} already applied there, asked for it, or saved it. Covers every lane, including Scout AI and jobs the client added themselves.</p>
         <form data-check-form class="mt-4 space-y-3"><input type="hidden" name="user_id" value={userId}/>
           <label class="block text-xs font-bold">Job link<input name="job_url" type="text" inputmode="url" autocomplete="off" placeholder="https://…" class="mt-1 block w-full rounded-lg border border-ink/15 px-3 py-2 text-sm"/></label>
           <details><summary class="cursor-pointer text-xs font-bold text-ink-muted">No link? Check by job title and company</summary>
@@ -172,7 +192,7 @@ const sourceLabel: Record<string, string> = { assistant: "Found by assistant", e
         </form>
       </section>
 
-      <section class="rounded-xl bg-brand-950 p-5 text-white shadow-card sm:p-6">
+      <section id="log-application" class="rounded-xl bg-brand-950 p-5 text-white shadow-card sm:p-6">
         <h2 class="text-xl font-extrabold text-white">Log an application</h2>
         <p class="mt-1 text-sm text-white/70">For any job you applied to outside the Requested list, including links the client sent in WhatsApp. Uses 1 of {remaining} applications left.</p>
         <form data-log-form data-precheck class="mt-4 space-y-3"><input type="hidden" name="user_id" value={userId}/>
@@ -254,6 +274,78 @@ const sourceLabel: Record<string, string> = { assistant: "Found by assistant", e
       };
       form.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(run, 600); });
       form.addEventListener("focusout", () => { clearTimeout(timer); run(); });
+    });
+    // The client's own Jobs feed, for the assistant: loaded when scrolled to, since
+    // a board search can take several seconds and the page reloads after every save.
+    document.querySelectorAll("[data-matches]").forEach((section) => {
+      const list = section.querySelector("[data-matches-list]"), note = section.querySelector("[data-matches-note]"), more = section.querySelector("[data-matches-more]"), picker = section.querySelector("[data-matches-search]");
+      const logForm = document.querySelector("[data-precheck]");
+      let search = section.dataset.search, nextOffset = null, relaxed = false, loading = false, shown = 0, run = 0;
+      if (!search) return;
+      const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
+      const postedLabel = (value) => { const time = new Date(value || "").getTime(); if (Number.isNaN(time)) return ""; const days = Math.max(0, Math.round((Date.now() - time) / 86400000)); return days === 0 ? "Posted today" : days === 1 ? "Posted yesterday" : `Posted ${days} days ago`; };
+      function startLog(job) {
+        if (!logForm) return;
+        const fields = logForm.elements;
+        fields.job_url.value = job.external_url || ""; fields.title.value = job.title || ""; fields.company.value = job.company || ""; fields.location.value = job.location || "";
+        if (fields.job_profile_id && job.job_profile_id) fields.job_profile_id.value = job.job_profile_id;
+        logForm.dispatchEvent(new Event("input", { bubbles: true }));
+        document.getElementById("log-application").scrollIntoView({ behavior: "smooth", block: "start" });
+        fields.screenshots.focus({ preventScroll: true });
+      }
+      function row(job) {
+        const listing = job.listing, applied = Boolean(listing && listing.applied), loggable = !listing || (listing.jobStatus === "saved" && !applied);
+        const article = el("article", `py-4 ${applied ? "opacity-60" : ""}`);
+        const head = el("div", "flex flex-wrap items-start justify-between gap-3");
+        const identity = el("div", "flex min-w-0 items-start gap-3");
+        const mark = el("span", "flex h-10 w-10 flex-none items-center justify-center overflow-hidden rounded-lg bg-surface text-xs font-extrabold", job.logo ? "" : job.initials);
+        if (job.logo) { const image = document.createElement("img"); image.src = job.logo; image.alt = ""; image.loading = "lazy"; image.referrerPolicy = "no-referrer"; image.className = "h-full w-full object-contain"; image.addEventListener("error", () => { mark.textContent = job.initials; }); mark.append(image); }
+        const copy = el("div", "min-w-0");
+        copy.append(el("strong", "block", job.title), el("p", "text-sm text-ink-soft", [job.company, job.location].filter(Boolean).join(" · ")), el("p", "text-xs text-ink-muted", [postedLabel(job.posted_at), job.workplace_type, job.employment_type, job.salary].filter(Boolean).join(" · ")));
+        const badges = el("div", "mt-1 flex flex-wrap gap-1.5");
+        if (job.origin === "client") badges.append(el("span", "rounded-full bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-900", job.saved ? "Saved by the client" : "Added by the client"));
+        if (listing && !(job.origin === "client" && loggable)) badges.append(el("span", `rounded-full px-2 py-0.5 text-xs font-bold ${applied ? "bg-red-50 text-red-900" : "bg-human-50 text-human-700"}`, listing.summary));
+        if (badges.childElementCount) copy.append(badges);
+        identity.append(mark, copy);
+        const actions = el("div", "flex flex-none flex-wrap gap-2");
+        if (job.external_url) { const open = el("a", "rounded-full bg-ink px-4 py-2 text-sm font-extrabold text-white", "Open job to apply ↗"); open.href = job.external_url; open.target = "_blank"; open.rel = "noopener noreferrer"; actions.append(open); }
+        if (loggable && logForm) { const log = el("button", "rounded-full bg-brand-100 px-4 py-2 text-sm font-extrabold text-brand-900", "I applied — log it"); log.type = "button"; log.addEventListener("click", () => startLog(job)); actions.append(log); }
+        head.append(identity, actions);
+        article.append(head);
+        if (job.summaryHtml) { const details = el("details", "mt-2"); details.append(el("summary", "cursor-pointer text-xs font-extrabold text-brand-700", "Job description")); const body = el("div", "prose prose-sm mt-2 max-h-96 max-w-none overflow-y-auto rounded-xl bg-surface p-4 text-sm"); body.innerHTML = job.summaryHtml; details.append(body); article.append(details); }
+        return article;
+      }
+      async function load(reset) {
+        if (loading && !reset) return;
+        const mine = ++run; loading = true;
+        if (reset) { list.replaceChildren(); nextOffset = null; relaxed = false; shown = 0; note.textContent = "Loading matching jobs…"; }
+        more.disabled = true; more.textContent = "Loading…";
+        try {
+          const [kind, id] = search.split(":");
+          const query = new URLSearchParams({ user_id: section.dataset.user, offset: String(nextOffset || 0) });
+          query.set(kind === "filter" ? "filterId" : "profileId", id);
+          if (relaxed) query.set("relaxed", "1");
+          const response = await fetch(`/api/admin/client-jobs?${query}`, { headers: { accept: "application/json" } });
+          const data = await response.json().catch(() => ({}));
+          if (mine !== run) return;
+          if (!response.ok) throw new Error(data.error || "Could not load matching jobs");
+          list.append(...data.jobs.map(row)); shown += data.jobs.length;
+          nextOffset = data.nextOffset; relaxed = Boolean(data.relaxedDate);
+          const about = data.search ? `${data.search.name}: ${[data.search.roles.join(", "), data.search.locations.join(", ")].filter(Boolean).join(" · ")}` : "";
+          note.textContent = shown ? `${about}${relaxed && data.dateWindowDays ? ` · nothing in the last ${data.dateWindowDays} days, so older jobs are shown` : ""}` : (data.emptyReason || "No matching jobs right now.");
+          more.classList.toggle("hidden", nextOffset === null || nextOffset === undefined);
+        } catch (reason) {
+          if (mine !== run) return;
+          note.textContent = `${reason instanceof Error ? reason.message : "Could not load matching jobs"}`;
+          more.classList.remove("hidden");
+        } finally {
+          if (mine === run) { loading = false; more.disabled = false; more.textContent = shown ? "Show more jobs" : "Try again"; }
+        }
+      }
+      more.addEventListener("click", () => load(false));
+      if (picker) picker.addEventListener("change", () => { search = picker.value; load(true); });
+      const observer = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting)) { observer.disconnect(); load(true); } }, { rootMargin: "300px" });
+      observer.observe(section);
     });
     document.querySelectorAll("[data-log-form]").forEach((form) => form.addEventListener("submit", async (event) => {
       event.preventDefault();

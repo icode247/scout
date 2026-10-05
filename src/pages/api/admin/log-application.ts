@@ -74,28 +74,40 @@ export const POST: APIRoute = async (context) => {
       if (!subscription.data) return json({ error: "This client has no active Human plan" }, { status: 400 });
       if (subscription.data.applications_used >= subscription.data.applications_quota) return json({ error: "This client has used every application in their plan. Tell them in WhatsApp before applying to more." }, { status: 400 });
 
-      const duplicate = await admin.from("jobs").select("id").eq("user_id", userId).eq("external_url", jobUrl).limit(1).maybeSingle();
-      if (duplicate.error) throw duplicate.error;
-      if (duplicate.data) return json({ error: "This job is already on the client's list. Find it under Requested or Applied." }, { status: 409 });
+      // A job the client only saved (never sent, never applied) is on their list
+      // without an application. Applying to it completes that row instead of
+      // being refused as a duplicate; anything with an application stays refused.
+      const duplicates = await admin.from("jobs").select("id,job_profile_id").eq("user_id", userId).eq("external_url", jobUrl).limit(20);
+      if (duplicates.error) throw duplicates.error;
+      let savedJob: { id: string; job_profile_id: string | null } | null = null;
+      if (duplicates.data?.length) {
+        const worked = await admin.from("applications").select("id").eq("user_id", userId).in("job_id", duplicates.data.map((row) => row.id)).limit(1);
+        if (worked.error) throw worked.error;
+        if (worked.data?.length) return json({ error: "This job is already on the client's list. Find it under Requested or Applied." }, { status: 409 });
+        savedJob = duplicates.data[0];
+      }
 
       if (jobProfileId) {
         const owned = await admin.from("job_profiles").select("id").eq("id", jobProfileId).eq("user_id", userId).maybeSingle();
         if (owned.error || !owned.data) return json({ error: "That job profile does not belong to this client" }, { status: 400 });
       }
 
-      const job = await admin.from("jobs").insert({
-        user_id: userId, job_profile_id: jobProfileId, title, company,
-        location: text(form, "location", 200), external_url: jobUrl,
-        source: "assistant", status: "applied", assistant_type: "human",
-      }).select("id").single();
+      const job = savedJob
+        ? await admin.from("jobs").update({ assistant_type: "human", job_profile_id: savedJob.job_profile_id || jobProfileId, updated_at: now }).eq("id", savedJob.id).eq("user_id", userId).select("id,job_profile_id").single()
+        : await admin.from("jobs").insert({
+          user_id: userId, job_profile_id: jobProfileId, title, company,
+          location: text(form, "location", 200), external_url: jobUrl,
+          source: "assistant", status: "applied", assistant_type: "human",
+        }).select("id,job_profile_id").single();
       if (job.error) throw job.error;
       const inserted = await admin.from("applications").insert({
-        user_id: userId, job_id: job.data.id, job_profile_id: jobProfileId, resume_id: resumeId,
+        user_id: userId, job_id: job.data.id, job_profile_id: job.data.job_profile_id, resume_id: resumeId,
         assistant_type: "human", status: "evidence_ready", submitted_at: now,
-        notes: note || "Found and applied by your assistant.",
+        notes: note || (savedJob ? "Applied by your assistant from your saved jobs." : "Found and applied by your assistant."),
       }).select("id,job_id").single();
       if (inserted.error) {
-        await admin.from("jobs").delete().eq("id", job.data.id);
+        // Only a row this request created is rolled back; the client's saved job stays.
+        if (!savedJob) await admin.from("jobs").delete().eq("id", job.data.id);
         throw inserted.error;
       }
       application = inserted.data;
