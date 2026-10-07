@@ -13,6 +13,7 @@ export function getStaticPaths() {
 
 const { page } = Astro.props;
 const pagePath = `/job-application-service/${page.slug}`;
+const otherCountries = COUNTRY_PAGES.filter((item) => item.slug !== page.slug);
 const serviceLd = {
   "@context": "https://schema.org",
   "@type": "Service",
@@ -74,6 +75,18 @@ const breadcrumbLd = {
         <article class="rounded-xl bg-brand-950 p-7 text-white sm:p-9"><p class="font-bold text-human-500">Human Assistant</p><h3 class="mt-3 text-2xl font-extrabold text-white">Best when the search needs judgement.</h3><p class="mt-4 leading-relaxed text-white/75">For {page.humanBestFor}. Work with a dedicated assistant in WhatsApp and receive detailed evidence of important form answers.</p><a href="/human-job-application-service" class="mt-6 inline-flex font-extrabold text-brand-300">Explore Human Assistant →</a></article>
         <article class="rounded-xl bg-brand-200 p-7 sm:p-9"><p class="font-bold text-brand-800">AI Assistant</p><h3 class="mt-3 text-2xl font-extrabold">Best when the rules stay stable.</h3><p class="mt-4 leading-relaxed text-ink-soft">For {page.aiBestFor}. See the role, status and {page.documentName} used for each application at a lower recurring price.</p><a href="/ai-job-application-assistant" class="mt-6 inline-flex font-extrabold text-brand-800">Explore AI Assistant →</a></article>
       </div>
+    </Container>
+  </section>
+
+  <section class="bg-brand-50 py-16 sm:py-20">
+    <Container>
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div><p class="font-bold text-brand-700">Country guides</p><h2 class="mt-2 font-display text-3xl font-extrabold sm:text-4xl">Applying in another market?</h2></div>
+        <a href="/job-application-service" class="text-sm font-extrabold text-brand-700">About the job application service →</a>
+      </div>
+      <nav class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Job application service in other countries">
+        {otherCountries.map((country) => <a href={`/job-application-service/${country.slug}`} class="rounded-xl bg-white p-5 font-extrabold shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">{country.name} <span class="text-brand-700" aria-hidden="true">→</span></a>)}
+      </nav>
     </Container>
   </section>
 

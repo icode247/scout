@@ -19,7 +19,8 @@ const description = competitor.seoDescription ?? `Compare Scout with ${competito
 const researchChecked = competitor.researchChecked ?? "July 23, 2026";
 const buyingQuestions = competitor.buyingQuestions ?? [];
 const competitorIndex = competitors.findIndex((item) => item.slug === competitor.slug);
-const relatedCompetitors = [1, 2, 3].map((offset) => competitors[(competitorIndex + offset) % competitors.length]);
+// Every other comparison, starting with the next one, so each page is linked from all of its siblings.
+const relatedCompetitors = [...competitors.slice(competitorIndex + 1), ...competitors.slice(0, competitorIndex)];
 
 const breadcrumbLd = {
   "@context": "https://schema.org",
@@ -165,7 +166,7 @@ const breadcrumbLd = {
         <div><p class="font-bold text-brand-700">Keep comparing</p><h2 class="mt-2 font-display text-3xl font-extrabold sm:text-4xl">Related service alternatives</h2></div>
         <a href="/compare" class="text-sm font-extrabold text-brand-700">View every comparison →</a>
       </div>
-      <nav class="mt-8 grid gap-4 md:grid-cols-3" aria-label="Related service comparisons">
+      <nav class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Related service comparisons">
         {relatedCompetitors.map((item) => <a href={`/compare/${item.slug}`} class="rounded-xl bg-white p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-lift"><span class="text-sm font-bold text-ink-muted">{item.category}</span><strong class="mt-2 block text-lg">Scout vs {item.name} <span class="text-brand-700" aria-hidden="true">→</span></strong></a>)}
       </nav>
     </Container>

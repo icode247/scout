@@ -8,10 +8,20 @@ export const prerender = true;
 
 export async function getStaticPaths() {
   const posts = (await getCollection("blog")).filter((p) => !p.data.draft);
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  // Three other posts, closest topic first: same pillar, then shared tags, then newest.
+  // Declared here because getStaticPaths cannot see the rest of the frontmatter.
+  const relatedTo = (post: (typeof posts)[number]) => {
+    const score = (other: (typeof posts)[number]) =>
+      (other.data.pillar && other.data.pillar === post.data.pillar ? 10 : 0) + other.data.tags.filter((tag) => post.data.tags.includes(tag)).length;
+    return posts
+      .filter((other) => other.id !== post.id)
+      .sort((x, y) => score(y) - score(x) || y.data.pubDate.getTime() - x.data.pubDate.getTime())
+      .slice(0, 3);
+  };
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post, related: relatedTo(post) } }));
 }
 
-const { post } = Astro.props;
+const { post, related } = Astro.props;
 const { Content } = await render(post);
 const d = post.data;
 const fmt = (date: Date) => date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -76,6 +86,27 @@ const breadcrumbLd = {
         </div>
       )}
     </article>
+
+    {related.length > 0 && (
+      <section class="border-t border-black/5 py-16">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <h2 class="font-display text-3xl font-extrabold tracking-tight">Keep reading</h2>
+          <a href="/blog" class="text-sm font-extrabold text-brand-700">All articles →</a>
+        </div>
+        <div class="mt-8 grid gap-6 md:grid-cols-3">
+          {related.map((p) => (
+            <a href={`/blog/${p.id}`} class="flex flex-col overflow-hidden rounded-3xl border border-black/5 bg-white shadow-card transition-shadow hover:shadow-lift">
+              <img src={p.data.coverImage} alt={p.data.coverAlt} width="1200" height="628" loading="lazy" class="aspect-[1200/628] w-full object-cover" />
+              <div class="flex flex-1 flex-col p-7">
+                {p.data.pillar && <span class="text-xs font-semibold uppercase tracking-wide text-brand-600">{p.data.pillar}</span>}
+                <h3 class="mt-2 text-lg font-bold leading-snug">{p.data.title}</h3>
+                <p class="mt-2 flex-1 text-sm text-ink-soft">{p.data.description}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
   </Container>
 
   <script type="application/ld+json" set:html={JSON.stringify(articleLd)} />

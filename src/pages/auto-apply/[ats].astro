@@ -6,10 +6,13 @@ import Button from "../../components/Button.astro";
 import FAQ from "../../components/FAQ.astro";
 import { SITE } from "../../config/site";
 
+export const prerender = true;
+
 export function getStaticPaths() {
   return ATS_PAGES.map((page) => ({ params: { ats: page.slug }, props: { page } }));
 }
 const { page } = Astro.props;
+const otherPlatforms = ATS_PAGES.filter((item) => item.slug !== page.slug);
 
 const breadcrumbLd = {
   "@context": "https://schema.org",
@@ -53,6 +56,11 @@ const breadcrumbLd = {
     <div class="border-t border-black/5 py-16">
       <FAQ items={page.faqs} heading={`${page.name} auto-apply: questions`} />
     </div>
+
+    <nav class="mb-12 flex flex-wrap items-center gap-3" aria-label="Other supported platforms">
+      <span class="text-sm font-bold text-ink-muted">Also supported:</span>
+      {otherPlatforms.map((item) => <a href={`/auto-apply/${item.slug}`} class="rounded-full bg-surface px-4 py-2 text-sm font-bold text-ink hover:bg-brand-200">{item.name}</a>)}
+    </nav>
 
     <section class="mb-12 rounded-3xl bg-surface-soft px-6 py-12 text-center sm:px-10">
       <h2 class="text-3xl font-bold tracking-tight">Stop filling out {page.name} forms.</h2>

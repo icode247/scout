@@ -9,9 +9,15 @@ import ProductScreenshot from "../components/ProductScreenshot.astro";
 import { SITE } from "../config/site";
 import { planByCode, regionalPriceLabel } from "../config/plans";
 import { visitorRegion } from "../lib/region";
+import { getCollection } from "astro:content";
 
 // The hero quotes the entry Human plan in the visitor's own currency, matching
 // what the pricing page and checkout show them. Renders per request.
+const latestPosts = (await getCollection("blog"))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
+  .slice(0, 3);
+
 const focused = planByCode("human_focused")!;
 const region = visitorRegion(Astro.request);
 const focusedPrice = region ? regionalPriceLabel(focused, region) : focused.priceLabel;
@@ -226,6 +232,29 @@ const appLd = {
       <div class="mt-7 text-center"><a href="/pricing" class="font-extrabold text-brand-700">Compare every plan and application limit →</a></div>
     </Container>
   </section>
+
+  {latestPosts.length > 0 && (
+    <section class="bg-white py-20 sm:py-28">
+      <Container>
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div><p class="font-bold text-brand-700">From the blog</p><h2 class="mt-2 font-display text-4xl font-extrabold sm:text-5xl">Guides for a search that runs without you.</h2></div>
+          <a href="/blog" class="text-sm font-extrabold text-brand-700">All articles →</a>
+        </div>
+        <div class="mt-10 grid gap-6 md:grid-cols-3">
+          {latestPosts.map((p) => (
+            <a href={`/blog/${p.id}`} class="flex flex-col overflow-hidden rounded-3xl border border-black/5 bg-white shadow-card transition-shadow hover:shadow-lift">
+              <img src={p.data.coverImage} alt={p.data.coverAlt} width="1200" height="628" loading="lazy" class="aspect-[1200/628] w-full object-cover" />
+              <div class="flex flex-1 flex-col p-7">
+                {p.data.pillar && <span class="text-xs font-semibold uppercase tracking-wide text-brand-600">{p.data.pillar}</span>}
+                <h3 class="mt-2 text-lg font-bold leading-snug">{p.data.title}</h3>
+                <p class="mt-2 flex-1 text-sm text-ink-soft">{p.data.description}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </Container>
+    </section>
+  )}
 
   <Container>
     <div class="reveal py-16 sm:py-24">
