@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { APPLICANT_KEYS, applicantPrefill, isApplicantKey } from "./applicant-profile";
+import { APPLICANT_KEYS, applicantPrefill, cleanApplicantProfile, isApplicantKey } from "./applicant-profile";
+import { draftFromProfile, profileFromDraft } from "../components/profile/draft";
 
 const user = { id: "user-1", email: "alex@example.com" } as any;
 
@@ -28,7 +28,8 @@ describe("applicantPrefill", () => {
   it("returns the answers the resume covered, keyed as the editor's controls", () => {
     expect(prefill).toMatchObject({
       firstName: "Alex", lastName: "Kim", email: "alex@example.com",
-      phoneCountryCode: "+1", phoneNumber: "5550102040",
+      // FastApply's ISO id: "+1" alone cannot tell the United States from Canada.
+      phoneCountryCode: "US", phoneNumber: "5550102040",
       streetAddress: "12 Mill Lane", currentCity: "Austin", state: "Texas",
       zipcode: "73301", country: "United States",
       headline: "Senior Backend Engineer", yearsOfExperience: 10,
@@ -48,7 +49,7 @@ describe("applicantPrefill", () => {
   });
 
   it("omits answers no resume supplies, leaving them for the member", () => {
-    for (const key of ["timezone", "dateOfBirth", "noticePeriod", "gender", "race", "veteranStatus"]) {
+    for (const key of ["timezone", "dateOfBirth", "noticePeriod", "sensitiveDataConsent", "gender", "race", "veteranStatus"]) {
       expect(prefill).not.toHaveProperty(key);
     }
   });
@@ -81,21 +82,45 @@ describe("APPLICANT_KEYS", () => {
   it("rejects keys outside the editor", () => {
     expect(isApplicantKey("resume_id")).toBe(false);
     expect(isApplicantKey("applicant_profile")).toBe(false);
+    // The consent stamp is the server's to set, never a form field.
+    expect(isApplicantKey("sensitiveDataConsentAt")).toBe(false);
   });
 
-  // A control the key list does not know about is silently dropped by the profiles API,
-  // and a key with no control can never be answered. Both have shipped before.
-  it("covers every control the applicant editor renders", () => {
-    const markup = readFileSync(new URL("../components/ApplicantProfileFields.astro", import.meta.url), "utf8");
-    const rendered = [...markup.matchAll(/data-applicant-key="([^"]+)"/g)].map((match) => match[1]);
-    // Hidden inputs that serialize the dynamic sections into the keys below them.
-    const serializers: Record<string, string> = {
-      educationJson: "education", experienceJson: "experience",
-      referencesText: "references", additionalLinksText: "additionalLinks",
-    };
-    const answered = new Set(rendered.map((key) => serializers[key] ?? key));
-    expect(rendered.length).toBeGreaterThan(0);
-    for (const key of answered) expect(isApplicantKey(key)).toBe(true);
-    for (const key of APPLICANT_KEYS) expect(answered.has(key)).toBe(true);
+  // A key the editor cannot hold is silently dropped on the next save, and one the profiles API
+  // does not know is never stored. Both have shipped before.
+  it("every stored answer survives a round trip through the editor and the profiles API", () => {
+    const stored = cleanApplicantProfile(FULL_PROFILE);
+    const roundTrip = cleanApplicantProfile(profileFromDraft(draftFromProfile(stored)));
+    expect(roundTrip).toEqual(stored);
+    // A negotiable expected salary is not stored as a number; every other key is.
+    for (const key of APPLICANT_KEYS.filter((key) => key !== "desiredSalary")) expect(stored).toHaveProperty(key);
+    expect(stored).not.toHaveProperty("desiredSalary");
+    for (const key of Object.keys(profileFromDraft(draftFromProfile(stored)))) expect(isApplicantKey(key)).toBe(true);
   });
 });
+
+/** One answer for every key the profiles API stores, in the shapes the editor writes. */
+const FULL_PROFILE = {
+  firstName: "Alex", middleName: "R", lastName: "Kim", email: "alex@example.com", phoneCountryCode: "CA", phoneNumber: "4165550123",
+  streetAddress: "1 King St W", currentCity: "Toronto", state: "Ontario", zipcode: "M5H 1A1", country: "Canada",
+  timezone: "America/New_York (EST)", dateOfBirth: "1990-02-14", citizenships: ["Canada", "Ireland"], nationality: "Canada",
+  languages: ["English", "French"], languageProficiencies: [{ language: "English", level: "Native or bilingual" }, { language: "French", level: "Limited working" }],
+  headline: "Payments engineer", summary: "Builds ledgers.", yearsOfExperience: 9, skills: ["Go"], certifications: ["CKA"], coverLetter: "Hello.",
+  experience: [{ title: "Staff Engineer", company: "Northstar", location: "Remote", startDate: "March 2021", endDate: "Present", description: "Ledgers." }],
+  education: [{ school: "UofT", degree: "Bachelor's Degree", major: "CS", gpa: "3.7", startDate: "2008", endDate: "2012", location: "Toronto" }],
+  projects: [{ name: "Ledger", description: "Double-entry engine.", url: "https://example.com" }],
+  desiredSalary: "180000", desiredSalaryCurrency: "CAD", desiredSalaryNegotiable: true, currentSalary: "150000", currentSalaryCurrency: "CAD",
+  workAuthorizations: [
+    { country: "Canada", status: "citizen", visaType: null, expiresAt: null, needsSponsorship: false },
+    { country: "United States", status: "work_visa", visaType: "TN", expiresAt: "2027-01-31", needsSponsorship: true },
+  ],
+  workAuthorization: "Citizen", requiresSponsorship: "No",
+  securityClearance: "Secret", securityClearanceCountry: "Canada", noticePeriod: "1 month", remotePreference: "Hybrid", willingToRelocate: "Yes",
+  willingToTravel: "Up to 50%", driversLicense: "Yes", backgroundCheckConsent: "Yes", drugTestConsent: "No",
+  linkedinURL: "https://linkedin.com/in/alex", githubURL: "https://github.com/alex", website: "https://alex.dev", twitterURL: "https://x.com/alex",
+  additionalLinks: { Dribbble: "https://dribbble.com/alex" }, references: [{ name: "Jane", email: "jane@x.co", phone: "+1 555", type: "Work" }],
+  howDidYouHearAboutUs: "LinkedIn", sensitiveDataConsent: "granted",
+  gender: "Male", ethnicity: "Not Hispanic or Latino", race: "Asian", veteranStatus: "No, I am not a protected veteran",
+  disabilityStatus: "Prefer not to say", maritalStatus: "Married", pronouns: "He/Him", criminalRecord: "No",
+  sexualOrientation: "Gay", genderSameAsBirthSex: "Yes", religion: "No religion",
+};

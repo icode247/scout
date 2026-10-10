@@ -25,6 +25,8 @@ export const NON_INDEXABLE_PATH_PREFIXES = [
   "/profiles",
   "/settings",
   "/swipe-apply",
+  // Candidates' shared video introductions (/v/<token>): reachable by link only.
+  "/v",
   "/variants",
 ] as const;
 

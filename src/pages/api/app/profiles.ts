@@ -3,11 +3,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { assertSameOrigin, errorMessage, json, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
 import { extractResume, validateResumeFile } from "../../../lib/resume";
-import { fastApplyProfilePayload } from "../../../lib/fastapply-applicant";
-import { isApplicantKey } from "../../../lib/applicant-profile";
+import { fastApplyProfilePayload } from "../../../lib/applicant-payload";
+import { answersForSave, cleanApplicantProfile } from "../../../lib/applicant-profile";
+import { reconcileSelfIdConsent } from "../../../lib/self-id-consent";
 import { assertProfileLimit, assertResumeLimit } from "../../../lib/entitlements";
-import { normalizeMonthYear } from "../../../lib/month-year";
 import { getPostHogServer } from "../../../lib/posthog-server";
+import { removeMediaObjects } from "../../../lib/profile-media";
+import { retireProfileUpstream } from "../../../lib/fastapply-applicant";
+import { isStoredPhoto, isStoredVideo, ownsMediaPath } from "../../../lib/profile-media-rules";
 
 export const prerender = false;
 export const maxDuration = 60;
@@ -17,21 +20,9 @@ function applicantProfile(value: unknown) {
   let parsed: unknown;
   try { parsed = JSON.parse(String(value)); } catch { throw new Error("Application details could not be read"); }
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Application details must be an object");
-  const clean: Record<string, any> = {};
-  for (const [key, item] of Object.entries(parsed)) {
-    if (!isApplicantKey(key)) continue;
-    if (typeof item === "string") clean[key] = item.trim().slice(0, key === "summary" || key === "coverLetter" ? 10_000 : 1_000);
-    else if (typeof item === "boolean") clean[key] = item;
-    else if (key === "yearsOfExperience" && typeof item === "number" && Number.isFinite(item) && item >= 0 && item <= 80) clean[key] = item;
-    else if ((key === "skills" || key === "languages" || key === "certifications") && Array.isArray(item)) clean[key] = item.map(String).map(entry => entry.trim().slice(0, 200)).filter(Boolean).slice(0, 100);
-    // Dates are canonicalized rather than merely trimmed: the editor's month/year selects
-    // can be bypassed, and a date the model cannot place on a timeline is worse than none.
-    else if (key === "education" && Array.isArray(item)) clean[key] = item.slice(0, 30).map((entry:any) => ({ school: String(entry?.school || "").trim().slice(0, 1_000), degree: String(entry?.degree || "").trim().slice(0, 1_000), major: String(entry?.major || entry?.field || entry?.fieldOfStudy || "").trim().slice(0, 1_000), gpa: String(entry?.gpa || "").trim().slice(0, 100), startDate: normalizeMonthYear(entry?.startDate, false), endDate: normalizeMonthYear(entry?.endDate), location: String(entry?.location || "").trim().slice(0, 1_000) })).filter((entry:any) => entry.school || entry.degree || entry.major);
-    else if (key === "experience" && Array.isArray(item)) clean[key] = item.slice(0, 50).map((entry:any) => ({ title: String(entry?.title || entry?.role || entry?.position || "").trim().slice(0, 1_000), company: String(entry?.company || "").trim().slice(0, 1_000), location: String(entry?.location || "").trim().slice(0, 1_000), startDate: normalizeMonthYear(entry?.startDate, false), endDate: normalizeMonthYear(entry?.endDate), description: String(entry?.description || "").trim().slice(0, 10_000) })).filter((entry:any) => entry.title || entry.company);
-    else if (key === "references" && Array.isArray(item)) clean[key] = item.slice(0, 20).map((reference:any) => ({ name: String(reference?.name || "").trim().slice(0, 200), email: String(reference?.email || "").trim().slice(0, 320), phone: String(reference?.phone || "").trim().slice(0, 80), type: String(reference?.type || "").trim().slice(0, 80) })).filter((reference:any) => reference.name);
-    else if (key === "additionalLinks" && item && typeof item === "object" && !Array.isArray(item)) clean[key] = Object.fromEntries(Object.entries(item).slice(0, 20).map(([label,url]) => [label.trim().slice(0, 100), String(url).trim().slice(0, 2_000)]).filter(([label,url]) => label && url));
-  }
-  return clean;
+  // One cleaning rule for every writer (lib/applicant-profile.ts): FastApply's canonical values,
+  // folded countries, the phone country as an ISO id, and the paired fields kept in step.
+  return cleanApplicantProfile(parsed as Record<string, unknown>);
 }
 
 function profileRecord(body: Record<string, any>, assistantType: "human" | "ai") {
@@ -116,6 +107,10 @@ export const POST: APIRoute = async (context) => {
     const { body, files, resumeIds } = multipartBody(form);
     const record = profileRecord(body, context.locals.scoutProfile?.assistant_type === "human" ? "human" : "ai");
 
+    // Self-identification answers obey the member's consent decision (lib/self-id-consent.ts);
+    // a new profile has nothing stored to reconcile against.
+    record.applicant_profile = reconcileSelfIdConsent(record.applicant_profile, null);
+
     if (context.locals.demoMode) {
       const state = getDemoState(user.id, user.email);
       if (record.active) assertProfileLimit(context.locals.entitlement, state.jobProfiles.filter((item) => item.active).length);
@@ -178,12 +173,16 @@ export const PATCH: APIRoute = async (context) => {
     const id = String(body.id || "");
     if (!id) return json({ error: "Profile id is required" }, { status: 400 });
     const record = profileRecord(body, context.locals.scoutProfile?.assistant_type === "human" ? "human" : "ai");
+    // A form posted before the answers editor was listening carries no `applicant_profile` at all.
+    // That means "unchanged", never "empty": saving {} would erase every answer the profile holds.
+    const answersSent = form.has("applicant_profile");
 
     if (context.locals.demoMode) {
       const state = getDemoState(user.id, user.email);
       const profile = state.jobProfiles.find((item) => item.id === id);
       if (!profile) return json({ error: "Profile not found" }, { status: 404 });
       if (record.active && !profile.active) assertProfileLimit(context.locals.entitlement, state.jobProfiles.filter((item) => item.active).length);
+      record.applicant_profile = answersForSave(answersSent, record.applicant_profile, (profile as any).applicant_profile);
       const uploaded = files.map((file) => {
         const resume = { id: crypto.randomUUID(), name: file.name, kind: "original" as const, storage_path: null, created_at: new Date().toISOString(), extraction_status: "failed" };
         state.resumes.unshift(resume);
@@ -196,8 +195,12 @@ export const PATCH: APIRoute = async (context) => {
     }
 
     const supabase = context.locals.supabase!;
-    const existingProfile = await supabase.from("job_profiles").select("id,active").eq("id", id).eq("user_id", user.id).single();
+    const existingProfile = await supabase.from("job_profiles").select("id,active,applicant_profile").eq("id", id).eq("user_id", user.id).single();
     if (existingProfile.error) return json({ error: "Profile not found" }, { status: 404 });
+    // The consent decision and the answers it gates are reconciled against the stored profile: a
+    // form without a decision never withdraws consent or clears answers by accident, and the
+    // stamp moves only when the decision does (lib/self-id-consent.ts).
+    record.applicant_profile = answersForSave(answersSent, record.applicant_profile, existingProfile.data.applicant_profile);
     // Resuming a paused profile consumes a slot, so it is checked like a creation.
     // Editing an already-active profile is not, or a downgraded member could never save.
     if (record.active && !existingProfile.data.active) {
@@ -253,9 +256,28 @@ export const DELETE: APIRoute = async (context) => {
       state.jobProfiles = state.jobProfiles.filter((item) => item.id !== id);
       return json({ ok: true });
     }
-    const result = await context.locals.supabase!.from("job_profiles").delete().eq("id", id).eq("user_id", user.id).select("id").maybeSingle();
+    const db = context.locals.supabase!;
+    const owned = await db.from("job_profiles").select("id").eq("id", id).eq("user_id", user.id).maybeSingle();
+    if (owned.error) throw owned.error;
+    if (!owned.data) return json({ error: "Profile not found" }, { status: 404 });
+    // First, while the rows that point at them still exist: this profile's Scout AI automation and
+    // FastApply's applicant. Both rows go with the profile, and nothing could stop either afterwards.
+    try {
+      await retireProfileUpstream(db, user.id, id);
+    } catch (error) {
+      console.error("[profiles] could not retire the profile upstream", id, error);
+      return json({ error: "Scout could not stop this profile's Scout AI just now, so nothing was deleted. Try again in a minute." }, { status: 502 });
+    }
+    // select("*"), not the media columns by name: deleting must work before the media migration runs.
+    const result = await db.from("job_profiles").delete().eq("id", id).eq("user_id", user.id).select("*").maybeSingle();
     if (result.error) throw result.error;
     if (!result.data) return json({ error: "Profile not found" }, { status: 404 });
+    // The profile's photo and video go with it (the files are in the member's own folder).
+    const deleted = result.data as { id: string; photo: unknown; video: unknown };
+    await removeMediaObjects(db, [
+      isStoredPhoto(deleted.photo) && ownsMediaPath(user.id, id, deleted.photo.path) ? deleted.photo.path : null,
+      isStoredVideo(deleted.video) && ownsMediaPath(user.id, id, deleted.video.path) ? deleted.video.path : null,
+    ]);
     const posthogDelete = getPostHogServer();
     if (posthogDelete) {
       posthogDelete.capture({ distinctId: user.id, event: "job_profile_deleted" });
