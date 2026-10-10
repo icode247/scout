@@ -6,6 +6,9 @@
  * application forms require them. Answers are stored under the applicant-profile keys so an
  * assistant can copy them straight into the client's job profile.
  */
+import { SELF_ID_CONSENT_DECLINE_LABEL, SELF_ID_CONSENT_GRANT_LABEL } from "./privacy";
+import { normalizeSensitiveConsent, applySelfIdConsent } from "./self-id-consent";
+
 export const INTAKE_KEYS = [
   "whatsappPhone", "phoneCountryCode", "phoneNumber",
   "streetAddress", "addressLine2", "currentCity", "state", "zipcode", "country",
@@ -15,7 +18,7 @@ export const INTAKE_KEYS = [
   "noticePeriod", "remotePreference", "willingToRelocate",
   "twitterURL", "additionalLinks", "references",
   "coverLetter", "howDidYouHearAboutUs",
-  "dateOfBirth", "gender", "ethnicity", "race", "veteranStatus", "disabilityStatus",
+  "dateOfBirth", "sensitiveDataConsent", "gender", "ethnicity", "race", "veteranStatus", "disabilityStatus",
 ] as const;
 
 export const INTAKE_LABELS: Record<(typeof INTAKE_KEYS)[number], string> = {
@@ -29,7 +32,8 @@ export const INTAKE_LABELS: Record<(typeof INTAKE_KEYS)[number], string> = {
   noticePeriod: "Notice period", remotePreference: "Work arrangement", willingToRelocate: "Willing to relocate",
   twitterURL: "X / Twitter", additionalLinks: "Other links", references: "References",
   coverLetter: "Cover letter template", howDidYouHearAboutUs: "\"How did you hear about us?\" answer",
-  dateOfBirth: "Date of birth", gender: "Gender", ethnicity: "Hispanic or Latino", race: "Race",
+  dateOfBirth: "Date of birth", sensitiveDataConsent: "Self-identification answers",
+  gender: "Gender", ethnicity: "Hispanic or Latino", race: "Race",
   veteranStatus: "Veteran status", disabilityStatus: "Disability status",
 };
 
@@ -89,12 +93,21 @@ export function cleanIntakeAnswers(raw: Record<string, unknown>) {
     else if (key === "references") { const references = parseReferences(cleaned); if (references.length) answers[key] = references; }
     else answers[key] = cleaned;
   }
-  return answers;
+  // Self-identification answers (privacy.ts) are kept only under the client's explicit choice:
+  // as given with "granted", as "Prefer not to say" with "declined", not at all otherwise. The
+  // stamp records when they chose; FastApply keeps its own and never receives this one.
+  const consent = normalizeSensitiveConsent(answers.sensitiveDataConsent);
+  const decided = applySelfIdConsent(answers, consent);
+  if (consent) decided.sensitiveDataConsentAt = new Date().toISOString();
+  return decided;
 }
 
 /** Renders a stored answer as one line of text for the operations queue. */
 export function formatIntakeAnswer(value: unknown): string {
   if (value === true) return "Yes";
+  // The consent decision reads as the choice the client made, not its stored value.
+  if (value === "granted") return SELF_ID_CONSENT_GRANT_LABEL;
+  if (value === "declined") return SELF_ID_CONSENT_DECLINE_LABEL;
   if (Array.isArray(value) && value.every((item) => typeof item === "string")) return value.join(", ");
   if (Array.isArray(value)) return value.map((item: any) => [item.name, item.type, item.email, item.phone].filter(Boolean).join(" · ")).join("\n");
   if (value && typeof value === "object") return Object.entries(value).map(([label, url]) => `${label}: ${url}`).join("\n");

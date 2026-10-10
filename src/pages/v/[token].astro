@@ -1,0 +1,68 @@
+---
+/**
+ * The public watch page for a member's showcase video: the link Scout AI (through FastApply)
+ * puts into "video introduction" questions, and the one Human Assistants paste into forms.
+ *
+ * It shows the video only while the member's "use in my applications" is on, for a file stored
+ * in that member's own folder. Unknown, malformed and switched-off tokens all read the same.
+ */
+import Base from "../../layouts/Base.astro";
+import { createSupabaseServiceClient } from "../../lib/supabase";
+import { MEDIA_URL_TTL_SECONDS, signedMediaUrl } from "../../lib/profile-media";
+import { isShareToken, isStoredVideo, ownsMediaPath, videoSourceType } from "../../lib/profile-media-rules";
+
+export const prerender = false;
+
+const token = Astro.params.token || "";
+let video: { url: string; mimeType: string; firstName: string } | null = null;
+
+if (isShareToken(token)) {
+  try {
+    const db = createSupabaseServiceClient();
+    const found = await db.from("job_profiles")
+      .select("id,user_id,video,applicant_profile")
+      .eq("video->>shareToken", token)
+      .maybeSingle();
+    const row = found.data as { id: string; user_id: string; video: unknown; applicant_profile: Record<string, any> | null } | null;
+    if (row && isStoredVideo(row.video) && row.video.useInApplications !== false && ownsMediaPath(row.user_id, row.id, row.video.path)) {
+      const url = await signedMediaUrl(db, row.video.path, MEDIA_URL_TTL_SECONDS);
+      const firstName = String(row.applicant_profile?.firstName || "").trim().slice(0, 60);
+      if (url) video = { url, mimeType: row.video.mimeType, firstName };
+    }
+  } catch (error) {
+    console.error("[watch-page] lookup failed", error);
+  }
+}
+if (!video) Astro.response.status = 404;
+Astro.response.headers.set("cache-control", "private, no-store");
+Astro.response.headers.set("x-robots-tag", "noindex, nofollow");
+---
+<Base title={video ? `${video.firstName ? `${video.firstName}'s` : "A"} video introduction | Scout` : "Video not available | Scout"} description="A candidate's short video introduction, shared through Scout." noindex={true}>
+  <section class="min-h-[calc(100dvh-5rem)] bg-[#f4f8ee] py-12 sm:py-20">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6">
+      {video ? (
+        <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+          <div class="bg-ink">
+            <video controls playsinline preload="metadata" class="mx-auto block max-h-[70dvh] w-full bg-ink">
+              <source src={video.url} type={videoSourceType(video.mimeType)} />
+              Your browser cannot play this video.
+            </video>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6">
+            <div>
+              <h1 class="text-xl font-extrabold">{video.firstName ? `${video.firstName}'s video introduction` : "Video introduction"}</h1>
+              <p class="mt-1 text-sm text-ink-soft">Shared with a job application through Scout.</p>
+            </div>
+            <img src="/brand/concept-a/logo-horizontal.svg" alt="Scout" class="h-7 w-auto" />
+          </div>
+        </div>
+      ) : (
+        <div class="mx-auto max-w-lg rounded-2xl bg-white p-8 text-center shadow-card sm:p-10">
+          <img src="/brand/concept-a/logo-horizontal.svg" alt="Scout" class="mx-auto h-10 w-auto" />
+          <h1 class="mt-8 text-2xl font-extrabold">This video is not available</h1>
+          <p class="mt-3 leading-relaxed text-ink-soft">The link may be mistyped, or the candidate stopped sharing it.</p>
+        </div>
+      )}
+    </div>
+  </section>
+</Base>

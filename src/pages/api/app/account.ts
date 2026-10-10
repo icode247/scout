@@ -109,6 +109,7 @@ export const POST: APIRoute = async (context) => {
 
     await purgeBucket(admin, "resumes", user.id);
     await purgeBucket(admin, "application-evidence", user.id);
+    await purgeBucket(admin, "profile-media", user.id);
 
     const posthog = getPostHogServer();
     if (posthog) {

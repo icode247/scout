@@ -5,6 +5,7 @@ import { activeHumanAssistants, assignedHumanAssistant, savedHumanAssistant } fr
 import { BRIEF_ACCEPT, listBriefs } from "../../../lib/client-briefs";
 import { INTAKE_KEYS, INTAKE_LABELS, formatIntakeAnswer } from "../../../lib/applicant-intake";
 import { TAILORED_RESUME_LABEL } from "../../../lib/application-evidence";
+import { profileMediaView } from "../../../lib/profile-media";
 export const prerender = false;
 const staff = staffMember(Astro.locals.user);
 if (!staff) return Astro.redirect("/dashboard", 303);
@@ -25,7 +26,8 @@ const email = String(client.email || "").toLowerCase();
 
 const [subscriptionResult, jobProfilesResult, filtersResult, resumesResult, applicationsResult, intakeResult] = await Promise.all([
   admin.from("subscriptions").select("plan_code,status,applications_used,applications_quota,current_period_end").eq("user_id", userId).eq("lane", "human").eq("status", "active").maybeSingle(),
-  admin.from("job_profiles").select("id,name,target_roles,locations,salary_min,resume_behavior,active").eq("user_id", userId).order("created_at", { ascending: true }),
+  // select("*") rather than naming photo and video: the page must keep working before the media migration runs.
+  admin.from("job_profiles").select("*").eq("user_id", userId).order("created_at", { ascending: true }),
   admin.from("job_search_filters").select("id,name,is_active,job_profile_id,roles,locations,company_blacklist,employment_types,experience_levels,work_modes").eq("user_id", userId).order("is_active", { ascending: true }).order("updated_at", { ascending: true }),
   admin.from("resumes").select("id,name,kind,storage_path,created_at").eq("user_id", userId).order("created_at", { ascending: false }),
   admin.from("applications").select("id,job_id,job_profile_id,resume_id,status,notes,created_at,submitted_at").eq("user_id", userId).eq("assistant_type", "human").order("created_at", { ascending: false }).limit(500),
@@ -36,6 +38,9 @@ if (failed) throw failed;
 
 const subscription = subscriptionResult.data;
 const jobProfiles = (jobProfilesResult.data || []).filter((profile) => profile.active);
+// The client's photo and video introduction, for forms that ask for them (links last an hour).
+const mediaByProfile = new Map(await Promise.all(jobProfiles.filter((profile: any) => profile.photo || profile.video)
+  .map(async (profile: any) => [profile.id, await profileMediaView(admin, profile)] as const)));
 const filtersByProfile = new Map((filtersResult.data || []).map((row: any) => [row.job_profile_id, row]));
 const resumes = (resumesResult.data || []).filter((resume) => resume.kind !== "tailored");
 const applications = applicationsResult.data || [];
@@ -215,7 +220,7 @@ const sourceLabel: Record<string, string> = { assistant: "Found by assistant", e
       <section class="rounded-xl bg-white p-5 shadow-card sm:p-6">
         <h2 class="text-xl font-extrabold">Job profile & resume</h2>
         {jobProfiles.length ? jobProfiles.map((profile) => { const filters: any = filtersByProfile.get(profile.id); return (
-          <div class="mt-4 rounded-xl bg-surface p-4 text-sm"><strong>{profile.name}</strong>
+          <div class="mt-4 rounded-xl bg-surface p-4 text-sm"><strong>{profile.name}</strong>{(() => { const media = mediaByProfile.get(profile.id); return media && (media.photo?.url || media.video) ? <div class="mt-2 flex flex-wrap gap-2">{media.photo?.url && <a href={media.photo.url} target="_blank" rel="noopener noreferrer" class="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-900">Photo ↓{media.photo.useInApplications ? "" : " (client chose not to send it)"}</a>}{media.video?.url && <a href={media.video.url} target="_blank" rel="noopener noreferrer" class="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-900">Video ↓{media.video.useInApplications ? "" : " (client chose not to send it)"}</a>}{media.video?.watchUrl && <a href={media.video.watchUrl} target="_blank" rel="noopener noreferrer" class="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-brand-900">Video link for forms ↗</a>}</div> : null; })()}
             <dl class="mt-2 space-y-1.5"><div><dt class="inline font-bold">Roles: </dt><dd class="inline">{list(filters?.roles?.length ? filters.roles : profile.target_roles)}</dd></div><div><dt class="inline font-bold">Locations: </dt><dd class="inline">{list(filters?.locations?.length ? filters.locations : profile.locations)}</dd></div>{filters?.work_modes?.length > 0 && <div><dt class="inline font-bold">Work mode: </dt><dd class="inline">{list(filters.work_modes)}</dd></div>}{filters?.experience_levels?.length > 0 && <div><dt class="inline font-bold">Level: </dt><dd class="inline">{list(filters.experience_levels)}</dd></div>}{profile.salary_min && <div><dt class="inline font-bold">Min salary: </dt><dd class="inline">{profile.salary_min.toLocaleString()}</dd></div>}{filters?.company_blacklist?.length > 0 && <div><dt class="inline font-bold">Never apply to: </dt><dd class="inline">{list(filters.company_blacklist)}</dd></div>}<div><dt class="inline font-bold">Resume: </dt><dd class="inline">{profile.resume_behavior === "original" ? "Use the original — do not tailor" : "Tailor to each job, never invent experience"}</dd></div></dl>
           </div>); }) : <p class="mt-3 rounded-xl bg-human-50 p-3 text-sm text-human-700">No job profile in Scout yet. Use the intake answers below and confirm targets in WhatsApp.</p>}
         <div class="mt-4"><p class="text-xs font-extrabold text-ink-muted">RESUMES</p><div class="mt-2 flex flex-wrap gap-2">{resumes.map((resume) => resume.storage_path && signedUrls.get(resume.storage_path) ? <a href={signedUrls.get(resume.storage_path)} target="_blank" rel="noopener noreferrer" class="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-900">{resume.name} ↓</a> : <span class="rounded-full bg-surface px-3 py-1.5 text-xs font-bold">{resume.name}</span>)}{intake?.resume_path && signedUrls.get(intake.resume_path) && <a href={signedUrls.get(intake.resume_path)} target="_blank" rel="noopener noreferrer" class="rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700">Intake resume · {intake.resume_name} ↓</a>}{!resumes.length && !intake?.resume_path && <span class="text-sm text-ink-muted">No resume uploaded yet.</span>}</div></div>

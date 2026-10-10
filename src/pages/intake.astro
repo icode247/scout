@@ -3,8 +3,9 @@ import Base from "../layouts/Base.astro";
 import IntakeChoices from "../components/IntakeChoices.astro";
 import {
   CURRENCIES, DISABILITY_STATUSES, ETHNICITIES, GENDERS, NOTICE_PERIODS, RACES, TIMEZONES,
-  VETERAN_STATUSES, WORK_ARRANGEMENTS, WORK_AUTHORIZATIONS, YES_NO,
+  SENSITIVE_CONSENT_CHOICES, VETERAN_STATUSES, WORK_ARRANGEMENTS, WORK_AUTHORIZATIONS, YES_NO,
 } from "../lib/applicant-options";
+import { SELF_ID_CONSENT_BODY, SELF_ID_CONSENT_HEADING } from "../lib/privacy";
 export const prerender = false;
 
 // Operations can send a personal link (/intake?email=…&name=…) so the client only confirms who they are.
@@ -215,11 +216,22 @@ const workAuthLabels: Record<string, string> = {
                 <label class="intake-label" for="dateOfBirth">Date of birth</label>
                 <input id="dateOfBirth" name="dateOfBirth" type="date" autocomplete="bday" class="intake-input sm:!w-60" />
               </div>
-              <IntakeChoices name="gender" legend="Gender" choices={GENDERS} />
-              <IntakeChoices name="ethnicity" legend="Are you Hispanic or Latino?" choices={ETHNICITIES} />
-              <IntakeChoices name="race" legend="Race" choices={RACES} />
-              <IntakeChoices name="veteranStatus" legend="Veteran status" choices={VETERAN_STATUSES} />
-              <IntakeChoices name="disabilityStatus" legend="Disability" choices={DISABILITY_STATUSES} />
+              <!-- Self-identification answers (lib/privacy.ts): the choice first, the questions only under "Use my answers". -->
+              <div class="intake-field rounded-xl border border-brand-300 bg-brand-100/60 p-4" data-self-id-consent>
+                <span class="intake-label">{SELF_ID_CONSENT_HEADING}</span>
+                <p class="intake-hint">{SELF_ID_CONSENT_BODY} <a href="/privacy" target="_blank" rel="noopener noreferrer" class="font-bold underline">Privacy Policy</a></p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  {SENSITIVE_CONSENT_CHOICES.map((choice) => <label class="intake-chip"><input type="radio" name="sensitiveDataConsent" value={choice.value} /><span>{choice.label}</span></label>)}
+                </div>
+                <p class="intake-hint">Either choice is fine. The questions below open up only if you choose “Use my answers”.</p>
+              </div>
+              <div data-self-id-answers class="grid gap-6">
+                <IntakeChoices name="gender" legend="Gender" choices={GENDERS} />
+                <IntakeChoices name="ethnicity" legend="Are you Hispanic or Latino?" choices={ETHNICITIES} />
+                <IntakeChoices name="race" legend="Race" choices={RACES} />
+                <IntakeChoices name="veteranStatus" legend="Veteran status" choices={VETERAN_STATUSES} />
+                <IntakeChoices name="disabilityStatus" legend="Disability" choices={DISABILITY_STATUSES} />
+              </div>
             </div>
           </details>
 
@@ -259,6 +271,7 @@ const workAuthLabels: Record<string, string> = {
     .intake-chip input:checked + span { background: rgb(38 70 12); border-color: rgb(38 70 12); color: white; }
     .intake-chip input:checked + span::before { content: "✓"; margin-right: .4rem; }
     .intake-chip input:focus-visible + span { box-shadow: 0 0 0 3px rgb(190 227 150); }
+    .intake-chip input:disabled + span { cursor: not-allowed; }
     .intake-error { display: none; align-items: center; gap: .4rem; margin-top: .45rem; font-size: .85rem; font-weight: 700; color: rgb(185 28 28); }
     .intake-error > span[aria-hidden] { display: inline-grid; place-items: center; width: 1.1rem; height: 1.1rem; border-radius: 999px; background: rgb(185 28 28); color: white; font-size: .7rem; }
     /* Errors appear only after someone has interacted with the field or tried to send. */
@@ -429,6 +442,19 @@ const workAuthLabels: Record<string, string> = {
     form.querySelector("[data-add-link]")!.addEventListener("click", () => addLink().focus());
     form.querySelector("[data-add-reference]")!.addEventListener("click", () => addReference().focus());
     addLink();
+
+    // Self-identification answers open up only under "Use my answers" (lib/privacy.ts). The server
+    // applies the same rule, so a chip that is disabled here is never stored.
+    const consentRadios = [...form.querySelectorAll<HTMLInputElement>('input[name="sensitiveDataConsent"]')];
+    const selfIdAnswers = form.querySelector<HTMLElement>("[data-self-id-answers]")!;
+    const syncSelfId = () => {
+      const locked = !consentRadios.some((radio) => radio.checked && radio.value === "granted");
+      selfIdAnswers.querySelectorAll("input").forEach((input) => { input.disabled = locked; if (locked) input.checked = false; });
+      selfIdAnswers.classList.toggle("opacity-50", locked);
+      selfIdAnswers.setAttribute("aria-disabled", String(locked));
+    };
+    consentRadios.forEach((radio) => radio.addEventListener("change", syncSelfId));
+    syncSelfId();
 
     const serializeRows = (data: FormData) => {
       data.set("workAuthorizationCountries", chosenCountries.join("\n"));
