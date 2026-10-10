@@ -11,6 +11,12 @@ import { basename, join } from "node:path";
 import { SITE } from "./src/config/site.ts";
 import { isNonIndexablePath } from "./src/config/seo.ts";
 
+// `astro build` bundles sanitize-html and its CommonJS closure (see ssr.noExternal
+// below). The dev server must not: Vite's SSR module runner evaluates a
+// noExternal CommonJS file as ESM and dies at its first `require(...)` with
+// "require is not defined". In dev, Node loads the package natively instead.
+const isBuild = process.argv.includes("build");
+
 const blogDirectory = new URL("./src/content/blog/", import.meta.url);
 const blogLastModified = new Map(
   readdirSync(blogDirectory)
@@ -112,12 +118,13 @@ export default defineConfig({
       // no default export as ESM — the same crash one layer down. So the
       // whole transitive dependency closure of sanitize-html is bundled;
       // no runtime import of any of these may remain in the server output.
-      noExternal: [
+      // Build only — see `isBuild` above for why the dev server leaves these external.
+      noExternal: isBuild ? [
         "sanitize-html", "htmlparser2", "dayjs", "deepmerge", "dom-serializer",
         "domelementtype", "domhandler", "domutils", "entities",
         "escape-string-regexp", "is-plain-object", "launder", "nanoid",
         "parse-srcset", "picocolors", "postcss", "source-map-js",
-      ],
+      ] : [],
     },
   },
 });
