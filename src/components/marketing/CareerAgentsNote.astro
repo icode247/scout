@@ -1,0 +1,13 @@
+---
+import ClintonDecision from "../ClintonDecision.astro";
+import { COMPETITOR_PRICES_ENABLED } from "../../config/marketing-decisions";
+
+// TODO(CLINTON-DECISION): "The Career Agents figure is a vendor's statement about its own market. I re-fetched the page on November 1, 2026 and the figure is there; the page shows dollar signs but does not name a currency or a country version."
+---
+{COMPETITOR_PRICES_ENABLED ? (
+  <p>The Career Agents figure is a vendor's statement about its own market. I re-fetched the page on November 1, 2026 and the figure is there; the page shows dollar signs but does not name a currency or a country version.</p>
+) : (
+  <ClintonDecision id="career-agents-note">
+    The Career Agents price note is withheld until that figure is re-checked on publish day.
+  </ClintonDecision>
+)}

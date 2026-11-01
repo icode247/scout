@@ -1,0 +1,38 @@
+---
+import FAQ from "../FAQ.astro";
+import { SALARY_PERCENTAGE_CLAIM_ENABLED } from "../../config/marketing-decisions";
+
+/**
+ * TODO(CLINTON-DECISION): FAQPage JSON-LD stays off until Clinton names the author.
+ * TODO(CLINTON-DECISION): salary answer when approved:
+ * "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+ */
+const salaryAnswer = SALARY_PERCENTAGE_CLAIM_ENABLED
+  ? "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+  : "No. The price of your plan is the only fee. There is no placement fee. Pending Clinton's decision: the salary-percentage claim is withheld because it is not in the US pricing file.";
+
+const items = [
+  {
+    q: "How much does a job application service cost?",
+    a: "At Scout it costs $39 to $999 a month. AI Assistant plans are $39 (AI Essential, 75 applications a month) and $79 (AI Plus, 200 applications). Human Assistant plans are $299 (Focused Search, 250 applications), $499 (Full Search, 500 applications) and $999 (Career Campaign, 1,000 applications). Prepaying 90 days costs about 10% less. Other providers publish different prices for different models; see the dated table above.",
+  },
+  {
+    q: "How much does it cost to hire someone to apply for jobs for you?",
+    a: "At Scout, a dedicated Human Assistant costs $299, $499 or $999 a month, depending on the plan, and the lower-cost AI Assistant costs $39 or $79 a month. Read more about [paying someone to apply for jobs](/blog/pay-someone-to-apply-for-jobs-for-you), including the options and the red flags.",
+  },
+  { q: "Is there a placement fee or a cut of my salary?", a: salaryAnswer },
+  {
+    q: "What is the 90-day prepaid price?",
+    a: "$105 for AI Essential, $213 for AI Plus, $807 for Focused Search, $1,347 for Full Search and $2,697 for Career Campaign. That is about 10% less than paying the monthly price for three months.",
+  },
+  {
+    q: "What does each application cost?",
+    a: "Divide the monthly price by the monthly allowance. That gives about $0.52 on AI Essential, $0.40 on AI Plus, $1.20 on Focused Search and $1.00 on both Full Search and Career Campaign. This is a unit price for the work, not a measure of results, and it leaves out the time you spend reviewing.",
+  },
+  {
+    q: "Does paying more guarantee interviews or offers?",
+    a: "No. You pay for the application work: finding suitable openings, preparing your materials and completing the applications. Employers decide who they interview and hire, and Scout does not guarantee interviews or offers.",
+  },
+];
+---
+<FAQ items={items} schema={false} class="not-prose" />

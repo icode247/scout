@@ -1,0 +1,49 @@
+---
+import FAQ from "../FAQ.astro";
+import { HUMAN_PLAN_FEATURES_ENABLED, SALARY_PERCENTAGE_CLAIM_ENABLED } from "../../config/marketing-decisions";
+
+/**
+ * TODO(CLINTON-DECISION): FAQPage JSON-LD stays off until Clinton names the author.
+ * TODO(CLINTON-DECISION): proof answer when the feature list is approved:
+ * "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
+ * TODO(CLINTON-DECISION): salary answer when approved:
+ * "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+ */
+const proofAnswer = HUMAN_PLAN_FEATURES_ENABLED
+  ? "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
+  : "At minimum, the employer, role, link, date, status and resume version for every application. Pending Clinton's decision: the Scout record and Human-plan screenshot claims in this answer are withheld. They are not in the US pricing file.";
+
+const salaryAnswer = SALARY_PERCENTAGE_CLAIM_ENABLED
+  ? "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+  : "No. The price of your plan is the only fee. There is no placement fee. Pending Clinton's decision: the salary-percentage claim is withheld because it is not in the US pricing file.";
+
+const items = [
+  {
+    q: "Can you pay someone to apply for jobs for you?",
+    a: "Yes. You can hire a freelancer, a managed application service, an AI assistant or a reverse recruiter to do the application work. You stay responsible for the facts submitted in your name, and employers decide who gets interviewed and hired.",
+  },
+  {
+    q: "How much does it cost to pay someone to apply for jobs?",
+    a: "At Scout it costs $39 to $999 a month. AI Assistant plans are $39 (AI Essential, 75 applications a month) and $79 (AI Plus, 200 applications). Human Assistant plans are $299 (Focused Search, 250 applications), $499 (Full Search, 500 applications) and $999 (Career Campaign, 1,000 applications). Prepaying 90 days costs about 10% less. Other providers publish different prices; see [how much a job application service costs](/blog/job-application-service-cost).",
+  },
+  {
+    q: "Is it legal to pay someone to apply for jobs?",
+    a: "Hiring administrative help is generally lawful, but every answer must stay truthful, and you should review employer instructions and each platform's terms. Seek qualified advice for a specific legal concern.",
+  },
+  {
+    q: "Will employers know someone helped me?",
+    a: "Not always, but that does not make misrepresentation acceptable. You remain responsible for the information submitted in your name.",
+  },
+  {
+    q: "Does paying for a service guarantee interviews or a job?",
+    a: "No. You pay for the application work: finding suitable openings, preparing your materials and completing the applications. Employers decide who they interview and hire, and Scout does not guarantee interviews or offers.",
+  },
+  {
+    q: "Should the assistant write my resume?",
+    a: "Only under an explicit policy. Keep your source resume, approve factual changes and retain the version sent to each employer. Tailoring should emphasize your real experience and never invent a skill, title or result.",
+  },
+  { q: "What proof should I receive?", a: proofAnswer },
+  { q: "Is there a placement fee or a cut of my salary?", a: salaryAnswer },
+];
+---
+<FAQ items={items} schema={false} class="not-prose" />

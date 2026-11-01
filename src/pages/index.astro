@@ -1,5 +1,6 @@
 ---
 import CustomerResult from "../components/CustomerResult.astro";
+import ClintonDecision from "../components/ClintonDecision.astro";
 import Base from "../layouts/Base.astro";
 import Container from "../components/Container.astro";
 import Button from "../components/Button.astro";
@@ -7,8 +8,12 @@ import FAQ from "../components/FAQ.astro";
 import DemoSection from "../components/DemoSection.astro";
 import ServiceJourney from "../components/ServiceJourney.astro";
 import ProductScreenshot from "../components/ProductScreenshot.astro";
+import HumanPlanFeatures from "../components/marketing/HumanPlanFeatures.astro";
+import UsdPlanTable from "../components/marketing/UsdPlanTable.astro";
 import { SITE } from "../config/site";
 import { planByCode, regionalPriceLabel } from "../config/plans";
+import { fivePlanOffers } from "../config/offer-catalog";
+import { OFFER_SCHEMA_ENABLED, UNVERIFIED_SOCIAL_PROOF_ENABLED } from "../config/marketing-decisions";
 import { visitorRegion } from "../lib/region";
 import { getCollection } from "astro:content";
 
@@ -34,9 +39,9 @@ const reviewCards = [
 ];
 
 const steps = [
-  { title: "Tell us your target", body: "Roles, locations, salary, dealbreakers, resume, and repeated ATS answers." },
-  { title: "We build your queue", body: "Scout finds matching jobs daily and prepares the application packet." },
-  { title: "Applications go out", body: "Your selected Human or AI Assistant applies and records the completed work." },
+  { title: "Tell us your target", body: "Add your roles, locations, salary, dealbreakers, resume and repeated application answers." },
+  { title: "We build your queue", body: "Scout finds matching jobs and prepares the application packet." },
+  { title: "Applications go out", body: "Your Human or AI Assistant applies and records the completed work." },
 ];
 
 const proof = [
@@ -48,6 +53,15 @@ const proof = [
   "Works across major job boards and ATS systems",
 ];
 
+/*
+TODO(CLINTON-DECISION): new home FAQ answers withheld until confirmed.
+How do I start? "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin. No call is required."
+What is the difference between the AI plans and the Human plans? "Both assistants apply for you and show the job, its status and the resume used. The AI Assistant uses automated fulfillment, so it costs less and starts immediately. Human Assistant plans add a dedicated person you reach in a WhatsApp group and screenshots or records of important form answers, which is why they cost more."
+Can I cancel anytime? "Plans are monthly subscriptions, and you can cancel anytime from Settings. The 90-day option bills every three months at a lower rate."
+Can I use different job profiles for different roles? "Yes. You can create separate job profiles for different roles, locations and resumes. Your plan sets how many can be active at the same time."
+*/
+const held = (what: string) => `Pending Clinton's decision: this answer is withheld. ${what}`;
+
 const faqs = [
   { q: "Can someone apply for jobs for me while I work full time?", a: "Yes. That is what Scout is for. You set your target roles, locations, work arrangement, and dealbreakers once. Your assistant finds matching openings, tailors your resume for each one, and submits the applications. You review progress in your dashboard and handle the interviews." },
   { q: "Will you invent experience when tailoring my resume?", a: "No. We adjust the wording and emphasis of your real experience to match each job description. We do not add jobs, skills, projects, or results you do not have." },
@@ -55,8 +69,17 @@ const faqs = [
   { q: "Do you guarantee interviews?", a: "No. You pay for the application work: finding suitable openings, preparing your materials, and submitting applications. Employers decide who they interview and hire." },
   { q: "Do you charge a percentage of my salary if I get hired?", a: "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary." },
   { q: "Is this just another auto-apply bot?", a: "No. Scout is a done-for-you application service. You choose either a dedicated Human Assistant or a lower-cost AI Assistant. Both apply and report the work." },
+  { q: "How much does Scout cost?", a: "Scout has five plans, all in US dollars. The AI Assistant plans are AI Essential at $39 a month for 75 applications and AI Plus at $79 a month for 200 applications. The Human Assistant plans are Focused Search at $299 a month for 250 applications, Full Search at $499 a month for 500 applications and Career Campaign at $999 a month for 1,000 applications. There is no placement fee." },
+  { q: "Is it cheaper to pay for 90 days at once?", a: "Yes. Prepaying 90 days costs $105 for AI Essential, $213 for AI Plus, $807 for Focused Search, $1,347 for Full Search and $2,697 for Career Campaign. That is about 10% less than paying the monthly price for three months, which would be $117, $237, $897, $1,497 and $2,997." },
+  { q: "How much does one application cost?", a: "Divide the monthly price by the monthly allowance. That gives about $0.52 on AI Essential, $0.40 on AI Plus, $1.20 on Focused Search and $1.00 on both Full Search and Career Campaign. This is a unit price for the work at full use, not a measure of results, and it leaves out the time you spend reviewing." },
+  { q: "How do I start?", a: held("It depends on “no call is required” and “Activate a plan from your dashboard,” which are not confirmed. “No call is required” also conflicts with “Start with a strategy call” on the job application service page.") },
+  { q: "What is the difference between the AI plans and the Human plans?", a: held("The AI versus Human explanation (automated fulfillment, WhatsApp, and screenshots) is not in the US pricing file.") },
+  { q: "Can I cancel anytime?", a: held("Cancellation and 90-day billing terms are not in the US pricing file.") },
+  { q: "Can I use different job profiles for different roles?", a: held("Active job-profile limits are not in the US pricing file.") },
 ];
 
+// TODO(CLINTON-DECISION): Offer schema stays off. When OFFER_SCHEMA_ENABLED is true,
+// the five-plan USD catalog replaces the old two-offer block visitors could not see.
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -64,13 +87,10 @@ const appLd = {
   operatingSystem: "Web",
   applicationCategory: "BusinessApplication",
   description: SITE.description,
-  offers: [
-    { "@type": "Offer", name: "AI Job Application Assistant", price: "39", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "39", priceCurrency: "USD", billingDuration: "P1M" }, url: new URL("/ai-job-application-assistant", SITE.url).href },
-    { "@type": "Offer", name: "Human Job Application Service", price: "299", priceCurrency: "USD", priceSpecification: { "@type": "UnitPriceSpecification", price: "299", priceCurrency: "USD", billingDuration: "P1M" }, url: new URL("/human-job-application-service", SITE.url).href },
-  ],
+  ...(OFFER_SCHEMA_ENABLED ? { offers: fivePlanOffers } : {}),
 };
 ---
-<Base title="Job Application Service for Busy Professionals" description="A dedicated human assistant finds matching jobs, tailors your resume using your real experience, and applies for you. See plans, pricing, and application records.">
+<Base title="Job Application Service From $39/mo | Human and AI" description="AI plans from $39 a month, Human plans from $299. Scout finds matching jobs, tailors your resume from your real experience and applies for you.">
   <section class="relative min-h-[calc(100dvh-5rem)] overflow-hidden bg-brand-950 text-white lg:min-h-[calc(100dvh-10.5rem)]">
     <img src="/assets/scout-operations-desk.webp" alt="A human application assistant reviewing job packets beside Scout's automated queue" width="1728" height="920" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover object-[66%_center]" />
     <div class="absolute inset-0 bg-[linear-gradient(90deg,rgba(16,33,13,0.98)_0%,rgba(16,33,13,0.9)_34%,rgba(16,33,13,0.2)_72%)]"></div>
@@ -90,18 +110,38 @@ const appLd = {
     </Container>
   </section>
 
-  <section class="border-b border-ink/10 bg-white py-7">
-    <Container>
-      <div class="flex flex-col items-center justify-between gap-5 lg:flex-row">
-        <p class="text-sm font-extrabold uppercase tracking-[0.12em] text-ink-muted">Trusted by job seekers from</p>
-        <div class="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-base font-extrabold text-ink-soft">
-          {trustedOrganizations.map((organization) => <span>{organization}</span>)}
+  {UNVERIFIED_SOCIAL_PROOF_ENABLED ? (
+    <section class="border-b border-ink/10 bg-white py-7">
+      <Container>
+        <div class="flex flex-col items-center justify-between gap-5 lg:flex-row">
+          <p class="text-sm font-extrabold uppercase tracking-[0.12em] text-ink-muted">Trusted by job seekers from</p>
+          <div class="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-base font-extrabold text-ink-soft">
+            {trustedOrganizations.map((organization) => <span>{organization}</span>)}
+          </div>
         </div>
-      </div>
-    </Container>
-  </section>
+      </Container>
+    </section>
+  ) : (
+    <section class="border-b border-ink/10 bg-white py-7">
+      <Container>
+        <ClintonDecision id="logo-strip">
+          The “Trusted by job seekers from” logo strip is withheld. The company names cannot be verified from the marketing files.
+        </ClintonDecision>
+      </Container>
+    </section>
+  )}
 
-  <section class="bg-white py-10 sm:py-14"><Container><CustomerResult /></Container></section>
+  {UNVERIFIED_SOCIAL_PROOF_ENABLED ? (
+    <section class="bg-white py-10 sm:py-14"><Container><CustomerResult /></Container></section>
+  ) : (
+    <section class="bg-white py-10 sm:py-14">
+      <Container>
+        <ClintonDecision id="interview-quotes">
+          The interview-invitation quote is withheld. It cannot be verified from the marketing files.
+        </ClintonDecision>
+      </Container>
+    </section>
+  )}
 
   <ServiceJourney />
 
@@ -140,6 +180,7 @@ const appLd = {
           ))}
         </div>
       </div>
+      <p class="mt-8 text-sm text-brand-100/80">See <a href="/how-it-works" class="font-extrabold text-white underline underline-offset-2">how Scout works</a> and <a href="/safety" class="font-extrabold text-white underline underline-offset-2">application safety</a>.</p>
     </Container>
   </section>
 
@@ -178,24 +219,34 @@ const appLd = {
     </Container>
   </section>
 
-  <section class="overflow-hidden bg-brand-950 py-20 text-white sm:py-28">
-    <Container>
-      <div class="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-        <div><p class="text-sm font-extrabold uppercase tracking-[0.12em] text-brand-300">Wall of progress</p><h2 class="mt-4 max-w-3xl font-display text-4xl font-extrabold leading-tight text-white sm:text-6xl">What job seekers say after Scout takes the forms off their plate.</h2></div>
-        <p class="max-w-sm text-base leading-relaxed text-white/65">AI for affordable throughput. Human assistance for the applications that need judgment.</p>
-      </div>
-      <div class="mt-12 grid gap-4 md:grid-cols-2">
-        {reviewCards.map((review, i) => (
-          <article class={`reveal flex min-h-[290px] flex-col rounded-2xl p-6 text-ink shadow-card ${i === 1 || i === 2 ? "bg-brand-200" : "bg-white"}`} style={`--reveal-delay:${(i % 2) * 70}ms`}>
-            <p class="text-lg tracking-[0.12em] text-human-500" aria-label="5 out of 5 stars">★★★★★</p>
-            <h3 class="mt-6 text-xl font-extrabold">{review.title}</h3>
-            <blockquote class="mt-4 flex-1 leading-relaxed text-ink-soft">“{review.quote}”</blockquote>
-            <footer class="mt-8 flex items-center gap-3 border-t border-ink/10 pt-4"><img src={review.avatar} alt="" width="48" height="48" loading="lazy" class="h-12 w-12 rounded-full object-cover" /><div><strong>{review.name}</strong><p class="mt-1 text-sm text-ink-muted">{review.detail}</p></div></footer>
-          </article>
-        ))}
-      </div>
-    </Container>
-  </section>
+  {UNVERIFIED_SOCIAL_PROOF_ENABLED ? (
+    <section class="overflow-hidden bg-brand-950 py-20 text-white sm:py-28">
+      <Container>
+        <div class="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <div><p class="text-sm font-extrabold uppercase tracking-[0.12em] text-brand-300">Wall of progress</p><h2 class="mt-4 max-w-3xl font-display text-4xl font-extrabold leading-tight text-white sm:text-6xl">What job seekers say after Scout takes the forms off their plate.</h2></div>
+          <p class="max-w-sm text-base leading-relaxed text-white/65">AI for affordable throughput. Human assistance for the applications that need judgment.</p>
+        </div>
+        <div class="mt-12 grid gap-4 md:grid-cols-2">
+          {reviewCards.map((review, i) => (
+            <article class={`reveal flex min-h-[290px] flex-col rounded-2xl p-6 text-ink shadow-card ${i === 1 || i === 2 ? "bg-brand-200" : "bg-white"}`} style={`--reveal-delay:${(i % 2) * 70}ms`}>
+              <p class="text-lg tracking-[0.12em] text-human-500" aria-label="5 out of 5 stars">★★★★★</p>
+              <h3 class="mt-6 text-xl font-extrabold">{review.title}</h3>
+              <blockquote class="mt-4 flex-1 leading-relaxed text-ink-soft">“{review.quote}”</blockquote>
+              <footer class="mt-8 flex items-center gap-3 border-t border-ink/10 pt-4"><img src={review.avatar} alt="" width="48" height="48" loading="lazy" class="h-12 w-12 rounded-full object-cover" /><div><strong>{review.name}</strong><p class="mt-1 text-sm text-ink-muted">{review.detail}</p></div></footer>
+            </article>
+          ))}
+        </div>
+      </Container>
+    </section>
+  ) : (
+    <section class="bg-brand-950 py-20 text-white sm:py-28">
+      <Container>
+        <ClintonDecision id="testimonials">
+          The four named testimonials are withheld. They cannot be verified from the marketing files.
+        </ClintonDecision>
+      </Container>
+    </section>
+  )}
 
   <section class="bg-white py-20 sm:py-28">
     <Container>
@@ -227,12 +278,16 @@ const appLd = {
 
   <section class="bg-surface py-20 sm:py-28">
     <Container>
-      <div class="mx-auto max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold leading-tight sm:text-6xl">Two services should not pretend to have the same price.</h2><p class="mx-auto mt-5 max-w-2xl text-lg text-ink-soft">Both are monthly plans. Human adds a dedicated person; AI costs less and starts immediately.</p></div>
-      <div class="mt-12 grid gap-5 lg:grid-cols-2">
-        <article class="rounded-2xl bg-brand-950 p-7 text-white sm:p-9"><span class="rounded-full bg-human-500 px-3 py-1.5 text-xs font-bold">HUMAN ASSISTANT</span><h3 class="mt-7 font-display text-4xl font-extrabold text-white">{focused.name}: {focusedPrice} / month</h3><p class="mt-4 text-white/70">{focused.applicationsQuota} applications a month with a dedicated person, WhatsApp access, resume control, and evidence of important form answers. Larger plans are available.</p><div class="mt-7 flex flex-wrap items-center gap-4"><Button href="/login?intent=human" class="rounded-full bg-brand-300 text-ink">Get started</Button><a href="/pricing" class="text-sm font-bold text-white/75 underline underline-offset-2 hover:text-white">Compare plans</a></div></article>
-        <article class="rounded-2xl bg-brand-200 p-7 sm:p-9"><span class="rounded-full bg-brand-950 px-3 py-1.5 text-xs font-bold text-white">AI ASSISTANT</span><h3 class="mt-7 font-display text-4xl font-extrabold">Monthly plans from $39</h3><p class="mt-4 text-ink-soft">Guided resume import, tailored materials, multiple profiles, and a record of each job and resume used.</p><Button href="/login?intent=ai" class="mt-7 rounded-full bg-ink text-white">Start with AI</Button></article>
+      <div class="mx-auto max-w-3xl text-center">
+        <h2 class="font-display text-4xl font-extrabold leading-tight sm:text-6xl">What does Scout cost?</h2>
+        <p class="mx-auto mt-5 max-w-2xl text-lg text-ink-soft">Plans start at $39 a month for the AI Assistant and $299 a month for a dedicated Human Assistant. All prices are in US dollars. Prepay for 90 days and save about 10%. There is no placement fee.</p>
       </div>
-      <div class="mt-7 text-center"><a href="/pricing" class="font-extrabold text-brand-700">Compare every plan and application limit →</a></div>
+      <UsdPlanTable />
+      <div class="mx-auto max-w-3xl text-lg text-ink-soft">
+        <p>Cost per application is the monthly price divided by the monthly allowance, at full use. It is our arithmetic, not a measure of results. Both assistants apply for you; the Human Assistant plans add a dedicated person<HumanPlanFeatures variant="screenshot-clause" /></p>
+        <p class="mt-4">Compare every feature on the <a href="/pricing" class="font-extrabold text-brand-700">pricing page</a>, read about the <a href="/human-job-application-service" class="font-extrabold text-brand-700">Human Assistant plans</a> and the <a href="/ai-job-application-assistant" class="font-extrabold text-brand-700">AI Assistant plans</a>, or see <a href="/job-application-service" class="font-extrabold text-brand-700">Scout's job application service</a>. For a wider price comparison, read <a href="/blog/job-application-service-cost" class="font-extrabold text-brand-700">how much a job application service costs</a> and <a href="/blog/pay-someone-to-apply-for-jobs-for-you" class="font-extrabold text-brand-700">paying someone to apply for jobs</a>.</p>
+        <p class="mt-4">Scout cannot guarantee interviews or offers. Employers decide who they interview and hire.</p>
+      </div>
     </Container>
   </section>
 

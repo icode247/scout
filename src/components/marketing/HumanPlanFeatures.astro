@@ -1,0 +1,74 @@
+---
+import ClintonDecision from "../ClintonDecision.astro";
+import { HUMAN_PLAN_FEATURES_ENABLED } from "../../config/marketing-decisions";
+
+interface Props {
+  variant: "cost-list" | "service-table" | "screenshot-clause" | "pay-watchout" | "proof-clause" | "price-driver";
+}
+const { variant } = Astro.props;
+---
+{HUMAN_PLAN_FEATURES_ENABLED ? (
+  variant === "cost-list" ? (
+    <ul>
+      <li><strong>Focused Search ($299 a month, 250 applications):</strong> one Human Assistant, one active job profile, a dedicated WhatsApp group, dashboard tracking, the resume used for every job, and screenshots of important form answers.</li>
+      <li><strong>Full Search ($499 a month, 500 applications):</strong> one dedicated Human Assistant, up to two active job profiles, a tailored resume for each job and detailed answer screenshots.</li>
+      <li><strong>Career Campaign ($999 a month, 1,000 applications):</strong> two Human Assistants, up to four active job profiles, priority WhatsApp support, tailored resumes and cover notes, detailed answer screenshots and a weekly campaign review.</li>
+    </ul>
+  ) : variant === "service-table" ? (
+    <div class="not-prose my-8 overflow-x-auto">
+      <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+        <thead>
+          <tr class="border-b border-ink/10">
+            <th class="p-3 font-extrabold">Plan</th>
+            <th class="p-3 font-extrabold">What it includes (from the pricing page)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI Essential</td><td class="p-3">The AI Assistant, 75 applications a month</td></tr>
+          <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI Plus</td><td class="p-3">The AI Assistant, 200 applications a month</td></tr>
+          <tr class="border-b border-ink/10"><td class="p-3 font-bold">Focused Search</td><td class="p-3">A dedicated Human Assistant, one active job profile, a dedicated WhatsApp group, dashboard tracking, the resume used for every job, and screenshots of important form answers</td></tr>
+          <tr class="border-b border-ink/10"><td class="p-3 font-bold">Full Search</td><td class="p-3">A dedicated Human Assistant, up to two active job profiles, a dedicated WhatsApp group, a tailored resume for each job, detailed answer screenshots, and jobs added from the dashboard or Chrome</td></tr>
+          <tr class="border-b border-ink/10"><td class="p-3 font-bold">Career Campaign</td><td class="p-3">Two Human Assistants, up to four active job profiles, priority WhatsApp support, tailored resumes and cover notes, detailed answer screenshots and a weekly campaign review</td></tr>
+        </tbody>
+      </table>
+    </div>
+  ) : variant === "screenshot-clause" ? (
+    <span> and screenshots or records of important form answers.</span>
+  ) : variant === "pay-watchout" ? (
+    <span>It is software, not a person; the Human plans are the ones that add screenshots of important form answers</span>
+  ) : variant === "proof-clause" ? (
+    <span>With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers.</span>
+  ) : (
+    <span>Human Assistant plans add screenshots of important form answers.</span>
+  )
+) : variant === "service-table" ? (
+  <div class="not-prose my-8 overflow-x-auto">
+    <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+      <thead>
+        <tr class="border-b border-ink/10">
+          <th class="p-3 font-extrabold">Plan</th>
+          <th class="p-3 font-extrabold">What it includes (from the pricing page)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI Essential</td><td class="p-3">The AI Assistant, 75 applications a month</td></tr>
+        <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI Plus</td><td class="p-3">The AI Assistant, 200 applications a month</td></tr>
+        <tr class="border-b border-ink/10"><td class="p-3 font-bold">Focused Search</td><td class="p-3">Pending Clinton's decision: this feature list is withheld. It is not in the US pricing file. The plan price is $299 a month for 250 applications.</td></tr>
+        <tr class="border-b border-ink/10"><td class="p-3 font-bold">Full Search</td><td class="p-3">Pending Clinton's decision: this feature list is withheld. It is not in the US pricing file. The plan price is $499 a month for 500 applications.</td></tr>
+        <tr class="border-b border-ink/10"><td class="p-3 font-bold">Career Campaign</td><td class="p-3">Pending Clinton's decision: this feature list is withheld. It is not in the US pricing file. The plan price is $999 a month for 1,000 applications.</td></tr>
+      </tbody>
+    </table>
+  </div>
+) : variant === "pay-watchout" ? (
+  <span>It is software, not a person. Pending Clinton's decision: the Human-plan screenshot claim is withheld.</span>
+) : variant === "proof-clause" ? (
+  <span>Pending Clinton's decision: the Scout record and Human-plan screenshot claims in this answer are withheld. They are not in the US pricing file.</span>
+) : variant === "price-driver" ? (
+  <span>Pending Clinton's decision: the Human-plan screenshot claim is withheld.</span>
+) : variant === "screenshot-clause" ? (
+  <span>. Pending Clinton's decision: the claim that Human plans add screenshots or records of important form answers is withheld.</span>
+) : (
+  <ClintonDecision id="human-plan-features">
+    The Focused Search, Full Search, and Career Campaign feature lists are withheld until Clinton confirms them. They are not in the US pricing file. The prices and allowances stay: Focused Search is $299 a month for 250 applications, Full Search is $499 for 500, and Career Campaign is $999 for 1,000.
+  </ClintonDecision>
+)}

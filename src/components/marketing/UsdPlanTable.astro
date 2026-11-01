@@ -1,0 +1,49 @@
+---
+/**
+ * Fixed USD plan table. Figures are the November 1, 2026 US pricing file:
+ * AI Essential $39 / 75 / $105, AI Plus $79 / 200 / $213,
+ * Focused Search $299 / 250 / $807, Full Search $499 / 500 / $1,347,
+ * Career Campaign $999 / 1,000 / $2,697.
+ * Cost per application and the 90-day savings are the draft's arithmetic.
+ */
+interface Props {
+  showSavings?: boolean;
+}
+const { showSavings = false } = Astro.props;
+
+const rows = [
+  ["AI Essential", "AI Assistant", "$39", "75", "about $0.52", "$105", "$12 (3 × $39 = $117)"],
+  ["AI Plus", "AI Assistant", "$79", "200", "about $0.40", "$213", "$24 (3 × $79 = $237)"],
+  ["Focused Search", "Human Assistant", "$299", "250", "about $1.20", "$807", "$90 (3 × $299 = $897)"],
+  ["Full Search", "Human Assistant", "$499", "500", "about $1.00", "$1,347", "$150 (3 × $499 = $1,497)"],
+  ["Career Campaign", "Human Assistant", "$999", "1,000", "about $1.00", "$2,697", "$300 (3 × $999 = $2,997)"],
+];
+
+const headers = [
+  "Plan",
+  "Who does the work",
+  "Price per month",
+  "Applications per month",
+  "Cost per application (calculated)",
+  "90 days prepaid",
+  ...(showSavings ? ["Saving vs 3 monthly payments (calculated)"] : []),
+];
+---
+<div class="not-prose my-8 overflow-x-auto">
+  <table class="w-full min-w-[760px] border-collapse text-left text-sm">
+    <thead>
+      <tr class="border-b border-ink/10">
+        {headers.map((header) => <th class="p-3 font-extrabold text-ink">{header}</th>)}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr class="border-b border-ink/10">
+          {row.slice(0, showSavings ? 7 : 6).map((cell, index) => (
+            <td class:list={["p-3 align-top text-ink-soft", index === 0 && "font-bold text-ink"]}>{cell}</td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
