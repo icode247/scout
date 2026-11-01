@@ -29,7 +29,7 @@ const signedIn = Boolean(Astro.locals.sessionEmail);
         ) : (
           <>
             <a href="/login" class="px-2 py-2 text-sm font-bold text-ink-soft hover:text-ink">Sign in</a>
-            <Button href="/pricing#human" size="md" class="rounded-full bg-ink px-5 text-white hover:bg-brand-950">Get started</Button>
+            <Button href="/login?intent=human" size="md" class="rounded-full bg-ink px-5 text-white hover:bg-brand-950">Get started</Button>
           </>
         )}
       </div>
@@ -49,8 +49,8 @@ const signedIn = Boolean(Astro.locals.sessionEmail);
           ) : (
             <>
               <a href="/login" class="mt-1 block rounded-lg px-3 py-2 text-center text-sm font-bold text-ink-soft">Sign in</a>
-              <a href="/book-call" class="mt-1 block rounded-lg px-3 py-2 text-center text-sm font-bold text-ink-soft">Book a free call</a>
-              <a href="/pricing#human" class="mt-1 block rounded-full bg-ink px-3 py-2 text-center text-sm font-medium text-white">Get started</a>
+              <a href="/pricing" class="mt-1 block rounded-lg px-3 py-2 text-center text-sm font-bold text-ink-soft">View plans</a>
+              <a href="/login?intent=human" class="mt-1 block rounded-full bg-ink px-3 py-2 text-center text-sm font-medium text-white">Get started</a>
             </>
           )}
         </div>

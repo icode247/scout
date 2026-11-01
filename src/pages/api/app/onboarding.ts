@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { assertSameOrigin, errorMessage, json, list, requireUser } from "../../../lib/api";
 import { getDemoState } from "../../../lib/demo-store";
-import { assignedHumanAssistant } from "../../../lib/human-assistants";
+import { assignedHumanAssistant, allHumanAssistants, savedHumanAssistant } from "../../../lib/human-assistants";
 import { fastApplyProfilePayload } from "../../../lib/fastapply-applicant";
 import { getPostHogServer } from "../../../lib/posthog-server";
 import { sendGoogleAnalyticsEvent } from "../../../lib/google-analytics";
@@ -72,13 +72,14 @@ export const POST: APIRoute = async (context) => {
       throw linked.error;
     }
 
-    // Onboarding records the lane the member *wants*; it does not grant an
-    // assistant. A named Human Assistant is only assigned once payment clears,
-    // in the Dodo webhook — otherwise anyone could sign up and land on a real
-    // person's desk for free.
+    // Reserve a real roster member during setup. Paid entitlements still gate
+    // applications and entry into the operations queue.
+    const existingAssistant = savedHumanAssistant(context.locals.scoutProfile?.assistant_name);
+    const humanAssistant = existingAssistant || (allHumanAssistants().some(item => item.active !== false)
+      ? assignedHumanAssistant(user.id) : null);
     const profileUpdate = await supabase.from("profiles").update({
       assistant_type: assistant, onboarding_complete: true,
-      assistant_name: assistant === "ai" ? "Scout AI" : null,
+      assistant_name: assistant === "ai" ? "Scout AI" : humanAssistant?.name ?? null,
       whatsapp_phone: assistant === "human" ? whatsappPhone : null,
       updated_at: new Date().toISOString(),
     }).eq("user_id", user.id);
@@ -92,10 +93,7 @@ export const POST: APIRoute = async (context) => {
     await sendGoogleAnalyticsEvent({ userId: user.id, name: "onboarding_completed", params: { assistant_type: assistant, target_roles_count: roles.length, has_salary_min: !!salary } })
       .catch((analyticsError) => console.error("[google-analytics] onboarding event failed", analyticsError));
 
-    // Send members straight to the plan that unlocks the lane they chose; the
-    // dashboard is reachable either way, but this is the conversion moment.
-    const redirect = context.locals.entitlement?.paid ? "/dashboard" : `/pricing?lane=${assistant}`;
-    return json({ ok: true, redirect });
+    return json({ ok: true, redirect: "/dashboard" });
   } catch (error) {
     if (error instanceof Response) return error;
     return json({ error: errorMessage(error) }, { status: 400 });

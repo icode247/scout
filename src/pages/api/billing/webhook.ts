@@ -160,9 +160,13 @@ export const POST: APIRoute = async (context) => {
       : await supabase.from("subscriptions").insert(row);
     if (written.error) return failed(written.error.message);
 
-    // This is the only place a human assistant is assigned — payment has cleared.
+    // Keep the assistant reserved during onboarding (or assigned by operations).
     if (plan.lane === "human") await refreshHumanAssistants(supabase).catch((error) => console.error("[webhook] roster refresh failed", error));
-    const assistant = plan.lane === "human" ? assignedHumanAssistant(userId) : null;
+    const savedProfile = plan.lane === "human"
+      ? await supabase.from("profiles").select("assistant_name").eq("user_id", userId).maybeSingle()
+      : { data: null, error: null };
+    if (savedProfile.error) return failed(savedProfile.error.message);
+    const assistant = plan.lane === "human" ? assignedHumanAssistant(userId, savedProfile.data?.assistant_name) : null;
     const profileUpdate = assistant
       ? { assistant_type: "human", assistant_name: assistant.name, updated_at: new Date().toISOString() }
       : { assistant_type: "ai", assistant_name: "Scout AI", updated_at: new Date().toISOString() };
