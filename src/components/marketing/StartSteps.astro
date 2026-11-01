@@ -1,0 +1,32 @@
+---
+import ClintonDecision from "../ClintonDecision.astro";
+
+/**
+ * Steps 2–4 and “Activate a plan from your dashboard” are the draft wording,
+ * verified by Clinton on Nov 1, 2026.
+ * “No call is required to start” stays withheld (strategy-call decision).
+ */
+interface Props {
+  variant: "cost" | "pay";
+}
+const { variant } = Astro.props;
+---
+<ol>
+  <li>
+    <strong>Create your account and import your resume.</strong> Choose Human or AI.
+    <ClintonDecision id="no-call-required">
+      “No call is required to start” is withheld. It conflicts with “Start with a strategy call” on the job application service page, and Clinton has not chosen which is right.
+    </ClintonDecision>
+  </li>
+  {variant === "cost" ? (
+    <li><strong>Check your job profile.</strong> Make sure your target roles, locations and dealbreakers say what you actually want.</li>
+  ) : (
+    <li><strong>Check your job profile</strong> so your roles, locations and dealbreakers say what you want.</li>
+  )}
+  {variant === "cost" ? (
+    <li><strong>Activate a plan from your dashboard.</strong> Your dashboard opens with your profile saved.</li>
+  ) : (
+    <li><strong>Activate a plan from your dashboard.</strong></li>
+  )}
+  <li><strong>Start your first applications</strong> and follow each one in your tracker, with the resume used for each.</li>
+</ol>

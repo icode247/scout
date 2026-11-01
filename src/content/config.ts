@@ -10,6 +10,14 @@ const blog = defineCollection({
     coverAlt: z.string(),
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
+    /** Title tag, without the trailing "| Scout". The visible H1 stays `title`. */
+    seoTitle: z.string().optional(),
+    /** "Prices checked …" replaces the published/updated line when set. */
+    bylineNote: z.string().optional(),
+    /** Article JSON-LD. Off until a named author is approved. */
+    articleSchema: z.boolean().default(true),
+    /** Shows the author/reviewer hold under the byline. */
+    authorPending: z.boolean().default(false),
     author: z.string().default("The Scout Team"),
     pillar: z.string().optional(),
     targetKeyword: z.string().optional(),

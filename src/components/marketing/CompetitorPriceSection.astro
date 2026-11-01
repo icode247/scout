@@ -1,0 +1,59 @@
+---
+import ClintonDecision from "../ClintonDecision.astro";
+import { COMPETITOR_PRICES_ENABLED } from "../../config/marketing-decisions";
+
+/**
+ * TODO(CLINTON-DECISION): re-check every competitor row on publish day.
+ * Currency and country version were not named on the source pages.
+ * Rendered only when COMPETITOR_PRICES_ENABLED is true.
+ */
+---
+{COMPETITOR_PRICES_ENABLED ? (
+  <section>
+    <h2>What do other services publish? (re-fetched November 1, 2026)</h2>
+    <p>Prices change often. Each figure below is the provider's own published price. We re-fetched every page on November 1, 2026 (about 12:58 Lagos time) and confirmed the figure on the page. Each page shows dollar signs but does not name the currency or say which country version it is, so we make no claim about which version we saw. These are vendor statements about their own services; Scout has not tested these services, and an "application" does not mean the same thing at every provider.</p>
+    <div class="not-prose my-8 overflow-x-auto">
+      <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+        <thead>
+          <tr class="border-b border-ink/10">
+            <th class="p-3 font-extrabold">Provider and model</th>
+            <th class="p-3 font-extrabold">Published price</th>
+            <th class="p-3 font-extrabold">Source and date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-ink/10">
+            <td class="p-3">Scale.jobs, one-time packages</td>
+            <td class="p-3">$399 for 500 applications, $599 for 1,000, $999 for 1,500</td>
+            <td class="p-3">scale.jobs/pricing/one-time, fetched November 1, 2026</td>
+          </tr>
+          <tr class="border-b border-ink/10">
+            <td class="p-3">Scale.jobs, monthly plans</td>
+            <td class="p-3">$99 a month for 100 applications, $149 for 250, $199 for 500, $499 for 750</td>
+            <td class="p-3">scale.jobs/pricing/subscription, fetched November 1, 2026</td>
+          </tr>
+          <tr class="border-b border-ink/10">
+            <td class="p-3">Careerify, monthly human service</td>
+            <td class="p-3">$150 to $720 a month for an estimated 50 to 300 applications (the page calls the counts estimates)</td>
+            <td class="p-3">careerify.io/apply-to-jobs-for-me, page marked "Updated 28 October 2026", fetched November 1, 2026</td>
+          </tr>
+          <tr class="border-b border-ink/10">
+            <td class="p-3">Career Agents, application services (market range as the page states it)</td>
+            <td class="p-3">$200 to $1,100 per pack, or $150 to $700 per month</td>
+            <td class="p-3">careeragents.org/blog/pay-someone-to-apply-for-jobs/, post dated August 3, 2026, fetched November 1, 2026</td>
+          </tr>
+          <tr class="border-b border-ink/10">
+            <td class="p-3">Career Agents, reverse recruiters (as the page states it)</td>
+            <td class="p-3">Roughly $1,500 to $4,500 a month; executive packages up to $15,000</td>
+            <td class="p-3">same page and dates</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Two details to read before you compare. Scale.jobs' one-time page says "We don't do subscriptions" while its separate monthly page lists subscriptions, so both are shown. On the monthly page, the $199 plan shows a $99 price next to "We Find Jobs" and next to "AI Custom Resumes", so check what each plan includes on the live page.</p>
+  </section>
+) : (
+  <ClintonDecision id="competitor-prices">
+    Competitor prices are withheld until they are re-checked on publish day. The November 1, 2026 table (Scale.jobs, Careerify, and Career Agents) stays in the source and is not shown.
+  </ClintonDecision>
+)}

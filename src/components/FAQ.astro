@@ -1,7 +1,37 @@
 ---
 interface QA { q: string; a: string; }
-interface Props { items: QA[]; heading?: string; class?: string; }
-const { items, heading = "Frequently asked questions", class: cls = "" } = Astro.props;
+interface Props { items: QA[]; heading?: string; class?: string; schema?: boolean; }
+const { items, heading = "Frequently asked questions", class: cls = "", schema = true } = Astro.props;
+
+const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** Visible FAQ text. Markdown links become their anchor words so JSON-LD matches the page. */
+function visibleAnswer(answer: string) {
+  return answer.replace(LINK, "$1");
+}
+
+function answerHtml(answer: string) {
+  const parts: string[] = [];
+  let last = 0;
+  for (const match of answer.matchAll(LINK)) {
+    const index = match.index ?? 0;
+    parts.push(escapeHtml(answer.slice(last, index)));
+    const href = match[2];
+    const text = escapeHtml(match[1]);
+    if (href.startsWith("/") || href.startsWith("https://")) {
+      parts.push(`<a href="${escapeHtml(href)}" class="font-semibold text-brand-700 underline underline-offset-2">${text}</a>`);
+    } else {
+      parts.push(text);
+    }
+    last = index + match[0].length;
+  }
+  parts.push(escapeHtml(answer.slice(last)));
+  return parts.join("");
+}
 
 const ld = {
   "@context": "https://schema.org",
@@ -9,7 +39,7 @@ const ld = {
   mainEntity: items.map((i) => ({
     "@type": "Question",
     name: i.q,
-    acceptedAnswer: { "@type": "Answer", text: i.a },
+    acceptedAnswer: { "@type": "Answer", text: visibleAnswer(i.a) },
   })),
 };
 ---
@@ -22,9 +52,13 @@ const ld = {
           {i.q}
           <svg class="shrink-0 text-ink-muted transition-transform duration-200 group-open:rotate-45" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         </summary>
-        <p class="mt-3 max-w-prose text-[0.95rem] leading-relaxed text-ink-soft">{i.a}</p>
+        {i.a.includes("](") ? (
+          <p class="mt-3 max-w-prose text-[0.95rem] leading-relaxed text-ink-soft" set:html={answerHtml(i.a)} />
+        ) : (
+          <p class="mt-3 max-w-prose text-[0.95rem] leading-relaxed text-ink-soft">{i.a}</p>
+        )}
       </details>
     ))}
   </div>
-  <script type="application/ld+json" set:html={JSON.stringify(ld)} />
+  {schema && <script type="application/ld+json" set:html={JSON.stringify(ld)} />}
 </section>
