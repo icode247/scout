@@ -1,0 +1,34 @@
+---
+interface Props { compact?: boolean; }
+const { compact = false } = Astro.props;
+---
+<article class:list={["customer-result overflow-hidden rounded-2xl border border-brand-950/10", compact && "compact"]}>
+  <div class="result-copy">
+    <p class="text-xs font-extrabold uppercase tracking-[0.14em] text-brand-800">Customer update · Human Assistant</p>
+    {!compact && <h2 class="mt-4 font-display text-3xl font-extrabold leading-tight sm:text-4xl">From applications to interview invitations.</h2>}
+    <figure class="mt-5">
+      <blockquote class:list={["font-display font-bold leading-snug text-ink", compact ? "text-xl" : "text-2xl sm:text-3xl"]}>“Hi both got a few interviews coming up so well done”</blockquote>
+      <figcaption class="mt-4 text-sm text-ink-soft">Scout Human Assistant customer · via WhatsApp</figcaption>
+    </figure>
+    {!compact && <p class="mt-6 text-sm text-ink-soft">Dedicated application support. Updates through WhatsApp.</p>}
+  </div>
+  {!compact && <div class="result-evidence">
+    <span class="inline-flex rounded-full bg-brand-300 px-3 py-1.5 text-xs font-extrabold text-brand-950">INTERVIEW INVITATION</span>
+    <figure class="mt-6 rounded-xl border border-white/15 bg-white/5 p-5 sm:p-6">
+      <blockquote class="font-display text-2xl font-bold leading-relaxed text-white">“you have been selected for interview.”</blockquote>
+      <figcaption class="mt-5 text-sm leading-relaxed text-white/70">Transcribed excerpt from the invitation shared by this customer. Identifying details omitted.</figcaption>
+    </figure>
+    <p class="mt-5 text-xs leading-relaxed text-white/65">One customer’s experience. Interview outcomes vary.</p>
+  </div>}
+</article>
+<style>
+  .customer-result { container-type: inline-size; background: #fff7eb; }
+  .result-copy { padding: 1.5rem; }
+  .result-evidence { padding: 1.5rem; background: #10210d; }
+  @container (min-width: 45rem) {
+    .result-copy, .result-evidence { padding: 2.5rem; }
+  }
+  @media (min-width: 768px) {
+    .customer-result:not(.compact) { display: grid; grid-template-columns: 1.15fr 1fr; }
+  }
+</style>

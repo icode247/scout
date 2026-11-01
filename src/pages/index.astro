@@ -1,4 +1,5 @@
 ---
+import CustomerResult from "../components/CustomerResult.astro";
 import Base from "../layouts/Base.astro";
 import Container from "../components/Container.astro";
 import Button from "../components/Button.astro";
@@ -81,8 +82,8 @@ const appLd = {
           Your next job search, <span class="text-brand-300">handled while you work.</span>
         </h1>
         <p class="mt-7 max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">A dedicated human assistant finds roles that match your preferences, tailors your resume using your real experience, and applies for you. Track the jobs, resumes, and application records in your dashboard.</p>
-        <div class="mt-7 flex flex-col gap-3 sm:flex-row"><Button href="/pricing#human" size="lg" class="rounded-full bg-brand-300 px-8 font-bold text-ink hover:bg-brand-200">Get my assistant</Button><Button href="/book-call" size="lg" variant="ghost" class="rounded-full bg-white/10 px-8 text-white hover:bg-white/15">Book a free call</Button></div>
-        <p class="mt-4 text-sm font-semibold text-white/70">{focused.name}: {focusedPrice} a month for {focused.applicationsQuota} applications. Cancel anytime. <a href="/pricing#human" class="underline underline-offset-2 hover:text-white">View plan details</a></p>
+        <div class="mt-7 flex flex-col gap-3 sm:flex-row"><Button href="/login?intent=human" size="lg" class="rounded-full bg-brand-300 px-8 font-bold text-ink hover:bg-brand-200">Get started</Button><Button href="/pricing" size="lg" variant="ghost" class="rounded-full bg-white/10 px-8 text-white hover:bg-white/15">View plans</Button></div>
+        <p class="mt-4 text-sm font-semibold text-white/70">{focused.name}: {focusedPrice} a month for {focused.applicationsQuota} applications. Cancel anytime. <a href="/login?intent=human" class="underline underline-offset-2 hover:text-white">View plan details</a></p>
         <div class="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/70"><span>✓ Dedicated human assistant</span><span>✓ Truthful resume tailoring</span><span>✓ Direct WhatsApp contact</span><span>✓ No percentage of your salary</span></div>
         <p class="mt-6 text-sm text-white/60">Prefer a lower-cost option? <a href="/ai-job-application-assistant" class="font-bold text-white/80 underline underline-offset-2 hover:text-white">Explore the AI Assistant</a></p>
       </div>
@@ -99,6 +100,8 @@ const appLd = {
       </div>
     </Container>
   </section>
+
+  <section class="bg-white py-10 sm:py-14"><Container><CustomerResult /></Container></section>
 
   <ServiceJourney />
 
@@ -226,7 +229,7 @@ const appLd = {
     <Container>
       <div class="mx-auto max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold leading-tight sm:text-6xl">Two services should not pretend to have the same price.</h2><p class="mx-auto mt-5 max-w-2xl text-lg text-ink-soft">Both are monthly plans. Human adds a dedicated person; AI costs less and starts immediately.</p></div>
       <div class="mt-12 grid gap-5 lg:grid-cols-2">
-        <article class="rounded-2xl bg-brand-950 p-7 text-white sm:p-9"><span class="rounded-full bg-human-500 px-3 py-1.5 text-xs font-bold">HUMAN ASSISTANT</span><h3 class="mt-7 font-display text-4xl font-extrabold text-white">{focused.name}: {focusedPrice} / month</h3><p class="mt-4 text-white/70">{focused.applicationsQuota} applications a month with a dedicated person, WhatsApp access, resume control, and evidence of important form answers. Larger plans are available.</p><div class="mt-7 flex flex-wrap items-center gap-4"><Button href="/pricing#human" class="rounded-full bg-brand-300 text-ink">Get my assistant</Button><a href="/book-call" class="text-sm font-bold text-white/75 underline underline-offset-2 hover:text-white">Prefer to talk first? Book a free call</a></div></article>
+        <article class="rounded-2xl bg-brand-950 p-7 text-white sm:p-9"><span class="rounded-full bg-human-500 px-3 py-1.5 text-xs font-bold">HUMAN ASSISTANT</span><h3 class="mt-7 font-display text-4xl font-extrabold text-white">{focused.name}: {focusedPrice} / month</h3><p class="mt-4 text-white/70">{focused.applicationsQuota} applications a month with a dedicated person, WhatsApp access, resume control, and evidence of important form answers. Larger plans are available.</p><div class="mt-7 flex flex-wrap items-center gap-4"><Button href="/login?intent=human" class="rounded-full bg-brand-300 text-ink">Get started</Button><a href="/pricing" class="text-sm font-bold text-white/75 underline underline-offset-2 hover:text-white">Compare plans</a></div></article>
         <article class="rounded-2xl bg-brand-200 p-7 sm:p-9"><span class="rounded-full bg-brand-950 px-3 py-1.5 text-xs font-bold text-white">AI ASSISTANT</span><h3 class="mt-7 font-display text-4xl font-extrabold">Monthly plans from $39</h3><p class="mt-4 text-ink-soft">Guided resume import, tailored materials, multiple profiles, and a record of each job and resume used.</p><Button href="/login?intent=ai" class="mt-7 rounded-full bg-ink text-white">Start with AI</Button></article>
       </div>
       <div class="mt-7 text-center"><a href="/pricing" class="font-extrabold text-brand-700">Compare every plan and application limit →</a></div>
@@ -267,7 +270,7 @@ const appLd = {
       <h2 class="mx-auto max-w-3xl font-display text-4xl font-extrabold leading-tight text-white sm:text-6xl">Let Scout handle tomorrow&apos;s applications.</h2>
       <p class="mx-auto mt-5 max-w-xl text-lg text-white/75">Choose a dedicated Human Assistant or start immediately with AI. Either way, stop doing the forms yourself.</p>
       <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <Button href="/pricing#human" size="lg" class="rounded-full bg-brand-300 px-8 text-ink hover:bg-brand-200">Get my assistant</Button><Button href="/book-call" size="lg" variant="ghost" class="rounded-full text-white hover:bg-white/10">Book a free call</Button>
+        <Button href="/login?intent=human" size="lg" class="rounded-full bg-brand-300 px-8 text-ink hover:bg-brand-200">Get started</Button><Button href="/pricing" size="lg" variant="ghost" class="rounded-full text-white hover:bg-white/10">View plans</Button>
         <Button href="/login?intent=ai" size="lg" variant="ghost" class="rounded-full text-white hover:bg-white/10">Start with AI</Button>
       </div>
     </section>

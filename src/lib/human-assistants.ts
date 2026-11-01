@@ -93,11 +93,11 @@ function stableIndex(value: string, size: number) {
 /**
  * Picks the assistant for a user, falling back to a stable hash when no name is
  * saved yet. The fallback makes this an ASSIGNMENT, not a lookup — call it only
- * where you intend to grant somebody an assistant (the payment webhook) or to
+ * where you intend to reserve or assign an assistant (onboarding or billing) or to
  * show operations a suggested pairing (the admin queue).
  *
  * For rendering a member's own assistant, use `savedHumanAssistant` instead:
- * this one would invent a name for someone who has never paid.
+ * this one would invent a name for someone without a saved assignment.
  */
 export function assignedHumanAssistant(userId: string, savedName?: string | null): HumanAssistant {
   const saved = savedName?.trim().toLowerCase();

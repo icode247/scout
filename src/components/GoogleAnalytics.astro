@@ -1,5 +1,11 @@
 ---
-const measurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID?.trim() || "G-V0WVY23KGK";
+interface Props {
+  // false on private pages (app, auth, checkout): no gtag load or page views there.
+  // window.scoutTrack is still defined so callers keep reaching PostHog.
+  enabled?: boolean;
+}
+const { enabled = true } = Astro.props;
+const measurementId = enabled ? import.meta.env.PUBLIC_GA_MEASUREMENT_ID?.trim() || "" : "";
 const bingVerification = import.meta.env.PUBLIC_BING_SITE_VERIFICATION?.trim() || "";
 ---
 {bingVerification && <meta name="msvalidate.01" content={bingVerification} />}

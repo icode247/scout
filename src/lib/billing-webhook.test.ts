@@ -2,13 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const settle = vi.fn();
 const push = vi.fn();
+const assign = vi.hoisted(() => vi.fn(() => null as any));
 let db: ReturnType<typeof fakeDb>;
 
 vi.mock("./dodo", () => ({ verifyWebhookSignature: () => true }));
 vi.mock("./server-env", () => ({ serverEnv: () => "whsec_test" }));
 vi.mock("./supabase", () => ({ createSupabaseServiceClient: () => db.client }));
 vi.mock("./email", () => ({ sendSubscriptionConfirmationEmail: vi.fn() }));
-vi.mock("./human-assistants", () => ({ refreshHumanAssistants: vi.fn(async () => {}), assignedHumanAssistant: () => null }));
+vi.mock("./human-assistants", () => ({ refreshHumanAssistants: vi.fn(async () => {}), assignedHumanAssistant: assign }));
 vi.mock("./posthog-server", () => ({ getPostHogServer: () => null }));
 vi.mock("./google-analytics", () => ({ sendGoogleAnalyticsEvent: vi.fn(async () => {}) }));
 vi.mock("./fastapply-limits", async () => {
@@ -54,11 +55,22 @@ function deliver(type: string, data: Record<string, any>) {
 const SETTLED = { remaining: null, push: { pushed: [], failed: [] }, paused: null };
 
 beforeEach(() => {
+  assign.mockReset().mockReturnValue(null);
   settle.mockReset().mockResolvedValue(SETTLED);
   push.mockReset().mockResolvedValue({ pushed: [], failed: [] });
 });
 
 describe("billing webhook", () => {
+  it("keeps the onboarding reservation when a human plan activates", async () => {
+    assign.mockReturnValue({ name: "Clinton" });
+    db = fakeDb((table, calls) => table === "profiles" && has(calls, "select", "assistant_name") ? { data: { assistant_name: "Clinton" } } : {});
+    const response = await deliver("payment.succeeded", { payment_id: "pay_human", metadata: { user_id: "u1", plan_code: "human_focused" } });
+    expect(response.status).toBe(200);
+    expect(assign).toHaveBeenCalledWith("u1", "Clinton");
+    const update = db.chains.find(chain => chain.table === "profiles" && chain.calls.some(([method]) => method === "update"));
+    expect(update?.calls.find(([method]) => method === "update")?.[1]).toMatchObject({ assistant_type: "human", assistant_name: "Clinton" });
+  });
+
   it("ends only the subscription the event names, then settles on what the customer still pays for", async () => {
     db = fakeDb((table, calls) => (table === "subscriptions" && calls.some(([m]) => m === "update") ? { data: [{ id: "row-a" }] } : {}));
     const response = await deliver("subscription.cancelled", { subscription_id: "sub_A" });
