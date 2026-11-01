@@ -24,6 +24,11 @@
       "source": "/swipe-apply",
       "destination": "/human-job-application-service",
       "permanent": true
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap-index.xml",
+      "permanent": true
     }
   ],
   "headers": [
