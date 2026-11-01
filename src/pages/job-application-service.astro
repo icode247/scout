@@ -12,7 +12,6 @@ import { approvedServiceLd } from "../config/offer-catalog";
 import { HUMAN_PLAN_FEATURES_ENABLED, OFFER_SCHEMA_ENABLED, SALARY_PERCENTAGE_CLAIM_ENABLED } from "../config/marketing-decisions";
 import { COUNTRY_PAGES } from "../data/countries";
 
-// TODO(CLINTON-DECISION): "How do I start?" withheld: "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin."
 const proofAnswer = HUMAN_PLAN_FEATURES_ENABLED
   ? "Ask what proof you will get before you pay. With Scout you see every job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
   : "Ask what proof you will get before you pay. With Scout you see every job, its status and the resume used. Pending Clinton's decision: the Human Assistant screenshot claim is withheld until the feature list is confirmed.";
@@ -30,7 +29,7 @@ const faqs = [
   { q: "What does a job application service cost?", a: "At Scout, AI Assistant plans are $39 a month for 75 applications and $79 for 200. Human Assistant plans are $299 a month for 250 applications, $499 for 500 and $999 for 1,000. All prices are in US dollars. Prepaying 90 days costs about 10% less. There is no placement fee. Our price guide shows what other providers publish, with the date we read each one." },
   { q: "How do I know a service actually submitted my applications?", a: proofAnswer },
   { q: "Do you take a percentage of my salary?", a: salaryAnswer },
-  { q: "How do I start?", a: "Pending Clinton's decision: this answer is withheld. It conflicts with “Start with a strategy call” on this page, and the dashboard button label has not been checked." },
+  { q: "How do I start?", a: "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin." },
 ];
 // TODO(CLINTON-DECISION): Offer schema stays off. approvedServiceLd() is the five-plan USD catalog.
 const serviceWithoutOffers = {
@@ -140,7 +139,7 @@ const breadcrumbLd = {
       <div class="mx-auto max-w-3xl text-lg leading-relaxed text-ink-soft">
         <p>Scout does not guarantee interviews or offers. Employers decide who they interview and hire.</p>
         <ClintonDecision id="how-to-start">
-          The “how to start” line is withheld until Clinton resolves “Start with a strategy call” against “no call is required,” and until the dashboard button label is checked.
+          The “how to start” line is withheld until Clinton resolves “Start with a strategy call” against “no call is required.”
         </ClintonDecision>
         <p>See <a href="/how-it-works" class="font-extrabold text-brand-700">how Scout works</a> and <a href="/safety" class="font-extrabold text-brand-700">application safety</a>, compare every feature on the <a href="/pricing" class="font-extrabold text-brand-700">pricing page</a>, or read <a href="/blog/job-application-service-cost" class="font-extrabold text-brand-700">how much a job application service costs</a>. The plans are also described on the <a href="/human-job-application-service" class="font-extrabold text-brand-700">Human Assistant</a> and <a href="/ai-job-application-assistant" class="font-extrabold text-brand-700">AI Assistant</a> pages.</p>
       </div>

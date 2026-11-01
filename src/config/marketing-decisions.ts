@@ -20,18 +20,11 @@ export const UNVERIFIED_SOCIAL_PROOF_ENABLED = false;
 /** Decision 7. Competitor prices. Re-check every figure on publish day before turning this on. */
 export const COMPETITOR_PRICES_ENABLED = false;
 
-/**
- * TODO(CLINTON-DECISION): Human plan feature lists (WhatsApp, profile limits,
- * screenshots, second assistant, weekly review). Copied from the live pricing
- * page on November 1, 2026. They are not in the US pricing file.
- */
-export const HUMAN_PLAN_FEATURES_ENABLED = false;
+/** Verified by Clinton on Nov 1, 2026. Human plan feature lists from the drafts. */
+export const HUMAN_PLAN_FEATURES_ENABLED = true;
 
 /** TODO(CLINTON-DECISION): approve the conflict-of-interest disclosure wording. */
 export const DISCLOSURE_ENABLED = false;
 
-/**
- * TODO(CLINTON-DECISION): "no percentage of your salary" / "no cut of your salary".
- * The US pricing file says there is no placement fee. It does not mention salary percentage.
- */
-export const SALARY_PERCENTAGE_CLAIM_ENABLED = false;
+/** Verified by Clinton on Nov 1, 2026. "No percentage of your salary" / "no cut of your salary". */
+export const SALARY_PERCENTAGE_CLAIM_ENABLED = true;

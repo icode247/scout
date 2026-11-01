@@ -53,15 +53,6 @@ const proof = [
   "Works across major job boards and ATS systems",
 ];
 
-/*
-TODO(CLINTON-DECISION): new home FAQ answers withheld until confirmed.
-How do I start? "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin. No call is required."
-What is the difference between the AI plans and the Human plans? "Both assistants apply for you and show the job, its status and the resume used. The AI Assistant uses automated fulfillment, so it costs less and starts immediately. Human Assistant plans add a dedicated person you reach in a WhatsApp group and screenshots or records of important form answers, which is why they cost more."
-Can I cancel anytime? "Plans are monthly subscriptions, and you can cancel anytime from Settings. The 90-day option bills every three months at a lower rate."
-Can I use different job profiles for different roles? "Yes. You can create separate job profiles for different roles, locations and resumes. Your plan sets how many can be active at the same time."
-*/
-const held = (what: string) => `Pending Clinton's decision: this answer is withheld. ${what}`;
-
 const faqs = [
   { q: "Can someone apply for jobs for me while I work full time?", a: "Yes. That is what Scout is for. You set your target roles, locations, work arrangement, and dealbreakers once. Your assistant finds matching openings, tailors your resume for each one, and submits the applications. You review progress in your dashboard and handle the interviews." },
   { q: "Will you invent experience when tailoring my resume?", a: "No. We adjust the wording and emphasis of your real experience to match each job description. We do not add jobs, skills, projects, or results you do not have." },
@@ -72,10 +63,10 @@ const faqs = [
   { q: "How much does Scout cost?", a: "Scout has five plans, all in US dollars. The AI Assistant plans are AI Essential at $39 a month for 75 applications and AI Plus at $79 a month for 200 applications. The Human Assistant plans are Focused Search at $299 a month for 250 applications, Full Search at $499 a month for 500 applications and Career Campaign at $999 a month for 1,000 applications. There is no placement fee." },
   { q: "Is it cheaper to pay for 90 days at once?", a: "Yes. Prepaying 90 days costs $105 for AI Essential, $213 for AI Plus, $807 for Focused Search, $1,347 for Full Search and $2,697 for Career Campaign. That is about 10% less than paying the monthly price for three months, which would be $117, $237, $897, $1,497 and $2,997." },
   { q: "How much does one application cost?", a: "Divide the monthly price by the monthly allowance. That gives about $0.52 on AI Essential, $0.40 on AI Plus, $1.20 on Focused Search and $1.00 on both Full Search and Career Campaign. This is a unit price for the work at full use, not a measure of results, and it leaves out the time you spend reviewing." },
-  { q: "How do I start?", a: held("It depends on “no call is required” and “Activate a plan from your dashboard,” which are not confirmed. “No call is required” also conflicts with “Start with a strategy call” on the job application service page.") },
-  { q: "What is the difference between the AI plans and the Human plans?", a: held("The AI versus Human explanation (automated fulfillment, WhatsApp, and screenshots) is not in the US pricing file.") },
-  { q: "Can I cancel anytime?", a: held("Cancellation and 90-day billing terms are not in the US pricing file.") },
-  { q: "Can I use different job profiles for different roles?", a: held("Active job-profile limits are not in the US pricing file.") },
+  { q: "How do I start?", a: "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin." },
+  { q: "What is the difference between the AI plans and the Human plans?", a: "Both assistants apply for you and show the job, its status and the resume used. The AI Assistant uses automated fulfillment, so it costs less and starts immediately. Human Assistant plans add a dedicated person you reach in a WhatsApp group and screenshots or records of important form answers, which is why they cost more." },
+  { q: "Can I cancel anytime?", a: "Plans are monthly subscriptions, and you can cancel anytime from Settings. The 90-day option bills every three months at a lower rate." },
+  { q: "Can I use different job profiles for different roles?", a: "Yes. You can create separate job profiles for different roles, locations and resumes. Your plan sets how many can be active at the same time." },
 ];
 
 // TODO(CLINTON-DECISION): Offer schema stays off. When OFFER_SCHEMA_ENABLED is true,

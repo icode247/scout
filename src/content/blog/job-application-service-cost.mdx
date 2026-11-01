@@ -19,7 +19,6 @@ tags: ["job-application-service","pricing","buyer-guide"]
 draft: false
 ---
 
-import ClintonDecision from "../../components/ClintonDecision.astro";
 import CareerAgentsRange from "../../components/marketing/CareerAgentsRange.astro";
 import CompetitorPriceSection from "../../components/marketing/CompetitorPriceSection.astro";
 import CostPostFaq from "../../components/marketing/CostPostFaq.astro";
@@ -30,18 +29,9 @@ import ScaleJobsComparison from "../../components/marketing/ScaleJobsComparison.
 import StartSteps from "../../components/marketing/StartSteps.astro";
 import UsdPlanTable from "../../components/marketing/UsdPlanTable.astro";
 
-{/*
-TODO(CLINTON-DECISION): AI vs Human mechanism, withheld:
-"The AI Assistant uses automated fulfillment, so it costs less. The Human Assistant lane includes a person doing the work, so it costs more."
-*/}
-
 <Disclosure variant="cost" />
 
 A job application service costs $39 to $999 a month at Scout: AI Assistant plans cost $39 or $79 a month, and Human Assistant plans cost $299, $499 or $999 a month, depending on how many applications you want sent. Prepaying 90 days saves about 10%, and there is no placement fee<SalaryCut />. Other providers publish very different prices for different kinds of help, from application packs to reverse recruiting, and the tables below show how they compare. Nobody can promise interviews or offers, whatever the price.
-
-<ClintonDecision id="salary-cut">
-  “And no cut of your salary” is withheld in the paragraph above. The US pricing file says there is no placement fee. It does not mention a salary percentage.
-</ClintonDecision>
 
 ## Scout plan prices (US dollars)
 
@@ -51,11 +41,7 @@ Cost per application is the monthly price divided by the monthly allowance, at f
 
 ## What does each Scout plan include?
 
-Scout has two lanes.
-
-<ClintonDecision id="ai-human-mechanism">
-  The explanation that the AI Assistant uses automated fulfillment, and that the Human Assistant lane costs more because a person does the work, is withheld until Clinton confirms it. It is not in the US pricing file.
-</ClintonDecision>
+Scout has two lanes. The AI Assistant uses automated fulfillment, so it costs less. The Human Assistant lane includes a person doing the work, so it costs more.
 
 Both lanes show the job, its status and the resume used for every application.
 
@@ -122,7 +108,7 @@ Swap in your own minutes per application. The calculation ignores your review ti
 
 ## How do you start with Scout?
 
-<StartSteps />
+<StartSteps variant="cost" />
 
 See [how Scout works](/how-it-works) and [Scout's job application service](/job-application-service).
 

@@ -2,16 +2,14 @@
 import ClintonDecision from "../ClintonDecision.astro";
 
 /**
- * TODO(CLINTON-DECISION): how to start.
- * Withheld, cost post: "No call is required to start."
- * Withheld step 2: "Check your job profile. Make sure your target roles, locations and dealbreakers say what you actually want."
- * Withheld step 3: "Activate a plan from your dashboard. Your dashboard opens with your profile saved."
- * Withheld step 4: "Start your first applications and follow each one in your tracker, with the resume used for each."
- * Pay post step 2 differs: "Check your job profile so your roles, locations and dealbreakers say what you want."
- * Pay post step 3 differs: "Activate a plan from your dashboard."
- * Steps 2 and 4 and the dashboard button wording could not be checked by signing in.
- * "No call is required" also conflicts with "Start with a strategy call" on /job-application-service.
+ * Steps 2–4 and “Activate a plan from your dashboard” are the draft wording,
+ * verified by Clinton on Nov 1, 2026.
+ * “No call is required to start” stays withheld (strategy-call decision).
  */
+interface Props {
+  variant: "cost" | "pay";
+}
+const { variant } = Astro.props;
 ---
 <ol>
   <li>
@@ -20,19 +18,15 @@ import ClintonDecision from "../ClintonDecision.astro";
       “No call is required to start” is withheld. It conflicts with “Start with a strategy call” on the job application service page, and Clinton has not chosen which is right.
     </ClintonDecision>
   </li>
-  <li>
-    <ClintonDecision id="start-step-2">
-      This step is withheld. The draft’s job-profile check could not be confirmed by signing in.
-    </ClintonDecision>
-  </li>
-  <li>
-    <ClintonDecision id="start-step-3">
-      “Activate a plan from your dashboard” is withheld. The button label has not been checked while signed in.
-    </ClintonDecision>
-  </li>
-  <li>
-    <ClintonDecision id="start-step-4">
-      This step is withheld. The draft’s “first applications” step could not be confirmed by signing in.
-    </ClintonDecision>
-  </li>
+  {variant === "cost" ? (
+    <li><strong>Check your job profile.</strong> Make sure your target roles, locations and dealbreakers say what you actually want.</li>
+  ) : (
+    <li><strong>Check your job profile</strong> so your roles, locations and dealbreakers say what you want.</li>
+  )}
+  {variant === "cost" ? (
+    <li><strong>Activate a plan from your dashboard.</strong> Your dashboard opens with your profile saved.</li>
+  ) : (
+    <li><strong>Activate a plan from your dashboard.</strong></li>
+  )}
+  <li><strong>Start your first applications</strong> and follow each one in your tracker, with the resume used for each.</li>
 </ol>
