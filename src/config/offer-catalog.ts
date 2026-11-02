@@ -2,7 +2,6 @@ import { SITE } from "./site";
 
 /**
  * Five-plan Offer catalog from the approved /job-application-service draft.
- * Rendered only when OFFER_SCHEMA_ENABLED is true.
  * Prices match us-pricing-2026-11-01: 39, 79, 299, 499, 999 monthly and
  * 105, 213, 807, 1347, 2697 for 90 days.
  */
@@ -39,7 +38,7 @@ export const fivePlanOffers = [
   offer("Career Campaign (Human Assistant), 90 days prepaid", "Career Campaign: prepay 90 days for $2,697.", "2697", "P3M", humanUrl),
 ];
 
-/** Service JSON-LD that replaces the old two-offer block after Clinton approves Offer schema. */
+/** Service JSON-LD with the five-plan offer catalog. */
 export function approvedServiceLd() {
   return {
     "@context": "https://schema.org",

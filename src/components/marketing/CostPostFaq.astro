@@ -1,15 +1,7 @@
 ---
 import FAQ from "../FAQ.astro";
-import { SALARY_PERCENTAGE_CLAIM_ENABLED } from "../../config/marketing-decisions";
 
-/**
- * TODO(CLINTON-DECISION): FAQPage JSON-LD stays off until Clinton names the author.
- * TODO(CLINTON-DECISION): salary answer when approved:
- * "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
- */
-const salaryAnswer = SALARY_PERCENTAGE_CLAIM_ENABLED
-  ? "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
-  : "No. The price of your plan is the only fee. There is no placement fee. Pending Clinton's decision: the salary-percentage claim is withheld because it is not in the US pricing file.";
+const salaryAnswer = "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary.";
 
 const items = [
   {
@@ -35,4 +27,4 @@ const items = [
   },
 ];
 ---
-<FAQ items={items} schema={false} class="not-prose" />
+<FAQ items={items} class="not-prose" />
