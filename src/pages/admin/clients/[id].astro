@@ -25,7 +25,7 @@ const briefs = await listBriefs(admin, userId);
 const email = String(client.email || "").toLowerCase();
 
 const [subscriptionResult, jobProfilesResult, filtersResult, resumesResult, applicationsResult, intakeResult] = await Promise.all([
-  admin.from("subscriptions").select("plan_code,status,applications_used,applications_quota,current_period_end").eq("user_id", userId).eq("lane", "human").eq("status", "active").maybeSingle(),
+  admin.from("subscriptions").select("plan_code,status,applications_used,applications_quota,current_period_end").eq("user_id", userId).eq("lane", "human").eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle(),
   // select("*") rather than naming photo and video: the page must keep working before the media migration runs.
   admin.from("job_profiles").select("*").eq("user_id", userId).order("created_at", { ascending: true }),
   admin.from("job_search_filters").select("id,name,is_active,job_profile_id,roles,locations,company_blacklist,employment_types,experience_levels,work_modes").eq("user_id", userId).order("is_active", { ascending: true }).order("updated_at", { ascending: true }),

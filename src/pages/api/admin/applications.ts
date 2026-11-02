@@ -30,7 +30,7 @@ export const POST: APIRoute = async (context) => {
       const current = await admin.from("applications").select("user_id,status").eq("id", id).single();
       if (current.error) throw current.error;
       if (["preparing", "needs_input"].includes(current.data.status)) {
-        const subscription = await admin.from("subscriptions").select("id,applications_used").eq("user_id", current.data.user_id).eq("status", "active").maybeSingle();
+        const subscription = await admin.from("subscriptions").select("id,applications_used").eq("user_id", current.data.user_id).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle();
         if (subscription.error) throw subscription.error;
         if (subscription.data && subscription.data.applications_used > 0) {
           await admin.from("subscriptions")

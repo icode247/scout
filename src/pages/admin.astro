@@ -14,7 +14,9 @@ const admin = createAdminClient();
 // lead, not a client, and must not get an assistant's time.
 const [profilesResult, subscriptionsResult] = await Promise.all([
   admin.from("profiles").select("user_id,full_name,email,assistant_name,whatsapp_phone,whatsapp_url,created_at").eq("assistant_type", "human"),
-  admin.from("subscriptions").select("user_id,plan_code,applications_used,applications_quota,created_at").eq("lane", "human").eq("status", "active"),
+  // Oldest first: the Map below keeps the last row per client, so a client with two active plans
+  // is shown their newest, the same plan loadEntitlement and the client page use.
+  admin.from("subscriptions").select("user_id,plan_code,applications_used,applications_quota,created_at").eq("lane", "human").eq("status", "active").order("created_at", { ascending: true }),
 ]);
 if (profilesResult.error || subscriptionsResult.error) throw profilesResult.error || subscriptionsResult.error;
 const subscriptions = new Map((subscriptionsResult.data || []).map((row) => [row.user_id, row]));

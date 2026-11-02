@@ -69,7 +69,7 @@ export const POST: APIRoute = async (context) => {
       if (!validJobUrl(jobUrl)) return json({ error: "Paste the job link you applied to" }, { status: 400 });
       if (!title || !company) return json({ error: "Job title and company are required" }, { status: 400 });
 
-      const subscription = await admin.from("subscriptions").select("id,applications_used,applications_quota").eq("user_id", userId).eq("lane", "human").eq("status", "active").maybeSingle();
+      const subscription = await admin.from("subscriptions").select("id,applications_used,applications_quota").eq("user_id", userId).eq("lane", "human").eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (subscription.error) throw subscription.error;
       if (!subscription.data) return json({ error: "This client has no active Human plan" }, { status: 400 });
       if (subscription.data.applications_used >= subscription.data.applications_quota) return json({ error: "This client has used every application in their plan. Tell them in WhatsApp before applying to more." }, { status: 400 });

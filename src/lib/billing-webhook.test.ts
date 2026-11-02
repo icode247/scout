@@ -28,7 +28,7 @@ function fakeDb(answer: (table: string, calls: Call[]) => { data?: any; error?: 
       const entry = { table, calls: [] as Call[] };
       chains.push(entry);
       const chain: any = {};
-      for (const method of ["select", "insert", "update", "delete", "eq", "in", "order", "limit"]) {
+      for (const method of ["select", "insert", "update", "delete", "eq", "in", "lt", "is", "order", "limit"]) {
         chain[method] = (...args: any[]) => { entry.calls.push([method, ...args]); return chain; };
       }
       const settleWith = () => { const result = answer(table, entry.calls); return { data: result.data ?? null, error: result.error ?? null }; };
@@ -95,6 +95,35 @@ describe("billing webhook", () => {
     const updates = db.chains.filter((chain) => chain.table === "subscriptions" && chain.calls.some(([m]) => m === "update"));
     expect(updates).toHaveLength(2);
     expect(has(updates[1].calls, "eq", "plan_code", "ai_plus")).toBe(true);
+    // Only rows from before Scout kept the id: a row naming another subscription is another purchase.
+    expect(has(updates[1].calls, "is", "dodo_subscription_id", null)).toBe(true);
+  });
+
+  it("keeps the plan-wide match for an event that names no subscription", async () => {
+    db = fakeDb((table, calls) => (table === "subscriptions" && calls.some(([m]) => m === "update") ? { data: [{ id: "row-a" }] } : {}));
+    await deliver("subscription.cancelled", {});
+    const update = db.chains.find((chain) => chain.table === "subscriptions" && chain.calls.some(([m]) => m === "update"));
+    expect(has(update!.calls, "eq", "plan_code", "ai_plus")).toBe(true);
+    expect(update!.calls.some(([m]) => m === "is")).toBe(false);
+  });
+
+  it("retires a plan whose period ended when the customer buys again, leaving the new plan alone", async () => {
+    db = fakeDb(() => ({}));
+    const response = await deliver("subscription.active", { subscription_id: "sub_new", next_billing_date: "2099-01-01T00:00:00Z" });
+    expect(response.status).toBe(200);
+    const updates = db.chains.filter((chain) => chain.table === "subscriptions" && chain.calls.some(([m]) => m === "update"));
+    expect(updates).toHaveLength(1);
+    expect(updates[0].calls.find(([m]) => m === "update")?.[1]).toMatchObject({ status: "expired" });
+    expect(has(updates[0].calls, "eq", "user_id", "u1")).toBe(true);
+    expect(has(updates[0].calls, "eq", "status", "active")).toBe(true);
+    expect(updates[0].calls.some(([m, column]) => m === "lt" && column === "current_period_end")).toBe(true);
+  });
+
+  it("releases the event when a lapsed plan cannot be retired, so the retry finishes the job", async () => {
+    db = fakeDb((table, calls) => (table === "subscriptions" && calls.some(([m]) => m === "lt") ? { error: { message: "write failed" } } : {}));
+    const response = await deliver("subscription.active", { subscription_id: "sub_new" });
+    expect(response.status).toBe(500);
+    expect(db.chains.some((chain) => chain.table === "webhook_events" && chain.calls.some(([m]) => m === "delete"))).toBe(true);
   });
 
   it("puts only the renewing subscription past due on a failed payment, and never pauses", async () => {

@@ -37,8 +37,9 @@ type ServiceClient = ReturnType<typeof createSupabaseServiceClient>;
 
 /**
  * Moves ONE plan's rows to `status`: the subscription the event names, or (for events without
- * one, and rows stored before Scout kept the id) that plan's rows. Another plan the customer
- * still pays for is never touched. Returns how many rows changed.
+ * one) that plan's rows, or for an event naming a subscription no row carries, that plan's rows
+ * stored before Scout kept the id. Another plan the customer still pays for is never touched.
+ * Returns how many rows changed.
  */
 async function setPlanStatus(
   supabase: ServiceClient,
@@ -54,7 +55,12 @@ async function setPlanStatus(
     if (bySubscription.error) return { error: bySubscription.error.message, changed: 0 };
     if (bySubscription.data?.length) return { error: null, changed: bySubscription.data.length };
   }
-  const byPlan = await update().eq("plan_code", target.planCode).select("id");
+  // The plan-wide fallback only covers rows stored before Scout kept the id. A row naming another
+  // subscription is another purchase: a late event for the subscription a customer replaced must
+  // not end the same plan they bought again.
+  const byPlan = target.subscriptionId
+    ? await update().eq("plan_code", target.planCode).is("dodo_subscription_id", null).select("id")
+    : await update().eq("plan_code", target.planCode).select("id");
   if (byPlan.error) return { error: byPlan.error.message, changed: 0 };
   return { error: null, changed: byPlan.data?.length ?? 0 };
 }
@@ -159,6 +165,14 @@ export const POST: APIRoute = async (context) => {
       ? await supabase.from("subscriptions").update(row).eq("id", (existing.data as any).id)
       : await supabase.from("subscriptions").insert(row);
     if (written.error) return failed(written.error.message);
+
+    // Nothing else retires a plan whose period ran out: Dodo may send no event for it, so without
+    // this a customer who buys again keeps the used-up plan beside the new one, both "active".
+    // A row Dodo renews late comes back, because its renewal writes `status` above.
+    const lapsed = await supabase.from("subscriptions")
+      .update({ status: "expired", updated_at: new Date().toISOString() })
+      .eq("user_id", userId).eq("status", "active").lt("current_period_end", new Date().toISOString());
+    if (lapsed.error) return failed(lapsed.error.message);
 
     // Keep the assistant reserved during onboarding (or assigned by operations).
     if (plan.lane === "human") await refreshHumanAssistants(supabase).catch((error) => console.error("[webhook] roster refresh failed", error));
