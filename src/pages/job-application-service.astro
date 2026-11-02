@@ -3,21 +3,15 @@ import Base from "../layouts/Base.astro";
 import Container from "../components/Container.astro";
 import Button from "../components/Button.astro";
 import FAQ from "../components/FAQ.astro";
-import ClintonDecision from "../components/ClintonDecision.astro";
 import ProductScreenshot from "../components/ProductScreenshot.astro";
 import HumanPlanFeatures from "../components/marketing/HumanPlanFeatures.astro";
 import UsdPlanTable from "../components/marketing/UsdPlanTable.astro";
 import { SITE } from "../config/site";
 import { approvedServiceLd } from "../config/offer-catalog";
-import { HUMAN_PLAN_FEATURES_ENABLED, OFFER_SCHEMA_ENABLED, SALARY_PERCENTAGE_CLAIM_ENABLED } from "../config/marketing-decisions";
 import { COUNTRY_PAGES } from "../data/countries";
 
-const proofAnswer = HUMAN_PLAN_FEATURES_ENABLED
-  ? "Ask what proof you will get before you pay. With Scout you see every job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
-  : "Ask what proof you will get before you pay. With Scout you see every job, its status and the resume used. Pending Clinton's decision: the Human Assistant screenshot claim is withheld until the feature list is confirmed.";
-const salaryAnswer = SALARY_PERCENTAGE_CLAIM_ENABLED
-  ? "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
-  : "No. The price of your plan is the only fee. There is no placement fee. Pending Clinton's decision: the salary-percentage claim is withheld because it is not in the US pricing file.";
+const proofAnswer = "Ask what proof you will get before you pay. With Scout you see every job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers.";
+const salaryAnswer = "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary.";
 
 const faqs = [
   { q: "Can I pay someone to apply to jobs for me?", a: "Yes. Scout assigns a Human Assistant who applies on your behalf, or you can choose a lower-cost AI Assistant. You set the roles, locations, salary preferences, exclusions, and resume rules before applications begin." },
@@ -31,17 +25,7 @@ const faqs = [
   { q: "Do you take a percentage of my salary?", a: salaryAnswer },
   { q: "How do I start?", a: "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin." },
 ];
-// TODO(CLINTON-DECISION): Offer schema stays off. approvedServiceLd() is the five-plan USD catalog.
-const serviceWithoutOffers = {
-  "@context": "https://schema.org",
-  "@type": "Service",
-  name: "Scout job application service",
-  serviceType: "Done-for-you job application service",
-  provider: { "@id": new URL("/#organization", SITE.url).href },
-  areaServed: "Worldwide",
-  description: "Human and AI assistants find suitable jobs, prepare tailored application materials, submit applications on a job seeker's behalf, and record the completed work.",
-};
-const serviceLd = OFFER_SCHEMA_ENABLED ? approvedServiceLd() : serviceWithoutOffers;
+const serviceLd = approvedServiceLd();
 const breadcrumbLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -107,9 +91,6 @@ const breadcrumbLd = {
         <article class="rounded-xl bg-brand-950 p-7 text-white sm:p-9">
           <p class="font-bold text-human-500">Human job application service</p>
           <h2 class="mt-3 font-display text-4xl font-extrabold text-white">Hire a person to apply on your behalf.</h2>
-          <ClintonDecision id="strategy-call" class="mt-5">
-            “Start with a strategy call” is withheld. It conflicts with the pricing FAQ line “no call is required,” and Clinton has not chosen which is right.
-          </ClintonDecision>
           <p class="mt-5 leading-relaxed text-white/72">Scout learns your targets, assigns an assistant, and opens a dedicated WhatsApp group. Your assistant handles nuance and saves detailed evidence.</p>
           <ul class="mt-6 space-y-3 text-sm font-semibold text-white/75"><li>✓ Dedicated Human Assistant</li><li>✓ WhatsApp communication</li><li>✓ Multiple job profiles</li><li>✓ Resume and answer evidence</li></ul>
           <p class="mt-6 text-sm font-extrabold text-white">Human plans: $299, $499 or $999 a month.</p>
@@ -138,9 +119,7 @@ const breadcrumbLd = {
       <HumanPlanFeatures variant="service-table" />
       <div class="mx-auto max-w-3xl text-lg leading-relaxed text-ink-soft">
         <p>Scout does not guarantee interviews or offers. Employers decide who they interview and hire.</p>
-        <ClintonDecision id="how-to-start">
-          The “how to start” line is withheld until Clinton resolves “Start with a strategy call” against “no call is required.”
-        </ClintonDecision>
+        <p>To start, create your account, import your resume and activate a plan from your dashboard. No call is required.</p>
         <p>See <a href="/how-it-works" class="font-extrabold text-brand-700">how Scout works</a> and <a href="/safety" class="font-extrabold text-brand-700">application safety</a>, compare every feature on the <a href="/pricing" class="font-extrabold text-brand-700">pricing page</a>, or read <a href="/blog/job-application-service-cost" class="font-extrabold text-brand-700">how much a job application service costs</a>. The plans are also described on the <a href="/human-job-application-service" class="font-extrabold text-brand-700">Human Assistant</a> and <a href="/ai-job-application-assistant" class="font-extrabold text-brand-700">AI Assistant</a> pages.</p>
       </div>
     </Container>

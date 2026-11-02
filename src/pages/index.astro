@@ -1,6 +1,5 @@
 ---
 import CustomerResult from "../components/CustomerResult.astro";
-import ClintonDecision from "../components/ClintonDecision.astro";
 import Base from "../layouts/Base.astro";
 import Container from "../components/Container.astro";
 import Button from "../components/Button.astro";
@@ -13,7 +12,6 @@ import UsdPlanTable from "../components/marketing/UsdPlanTable.astro";
 import { SITE } from "../config/site";
 import { planByCode, regionalPriceLabel } from "../config/plans";
 import { fivePlanOffers } from "../config/offer-catalog";
-import { OFFER_SCHEMA_ENABLED, UNVERIFIED_SOCIAL_PROOF_ENABLED } from "../config/marketing-decisions";
 import { visitorRegion } from "../lib/region";
 import { getCollection } from "astro:content";
 
@@ -68,9 +66,6 @@ const faqs = [
   { q: "Can I cancel anytime?", a: "Plans are monthly subscriptions, and you can cancel anytime from Settings. The 90-day option bills every three months at a lower rate." },
   { q: "Can I use different job profiles for different roles?", a: "Yes. You can create separate job profiles for different roles, locations and resumes. Your plan sets how many can be active at the same time." },
 ];
-
-// TODO(CLINTON-DECISION): Offer schema stays off. When OFFER_SCHEMA_ENABLED is true,
-// the five-plan USD catalog replaces the old two-offer block visitors could not see.
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -78,7 +73,7 @@ const appLd = {
   operatingSystem: "Web",
   applicationCategory: "BusinessApplication",
   description: SITE.description,
-  ...(OFFER_SCHEMA_ENABLED ? { offers: fivePlanOffers } : {}),
+  offers: fivePlanOffers,
 };
 ---
 <Base title="Job Application Service From $39/mo | Human and AI" description="AI plans from $39 a month, Human plans from $299. Scout finds matching jobs, tailors your resume from your real experience and applies for you.">
@@ -101,8 +96,7 @@ const appLd = {
     </Container>
   </section>
 
-  {UNVERIFIED_SOCIAL_PROOF_ENABLED ? (
-    <section class="border-b border-ink/10 bg-white py-7">
+      <section class="border-b border-ink/10 bg-white py-7">
       <Container>
         <div class="flex flex-col items-center justify-between gap-5 lg:flex-row">
           <p class="text-sm font-extrabold uppercase tracking-[0.12em] text-ink-muted">Trusted by job seekers from</p>
@@ -112,27 +106,8 @@ const appLd = {
         </div>
       </Container>
     </section>
-  ) : (
-    <section class="border-b border-ink/10 bg-white py-7">
-      <Container>
-        <ClintonDecision id="logo-strip">
-          The “Trusted by job seekers from” logo strip is withheld. The company names cannot be verified from the marketing files.
-        </ClintonDecision>
-      </Container>
-    </section>
-  )}
 
-  {UNVERIFIED_SOCIAL_PROOF_ENABLED ? (
-    <section class="bg-white py-10 sm:py-14"><Container><CustomerResult /></Container></section>
-  ) : (
-    <section class="bg-white py-10 sm:py-14">
-      <Container>
-        <ClintonDecision id="interview-quotes">
-          The interview-invitation quote is withheld. It cannot be verified from the marketing files.
-        </ClintonDecision>
-      </Container>
-    </section>
-  )}
+      <section class="bg-white py-10 sm:py-14"><Container><CustomerResult /></Container></section>
 
   <ServiceJourney />
 
@@ -210,8 +185,7 @@ const appLd = {
     </Container>
   </section>
 
-  {UNVERIFIED_SOCIAL_PROOF_ENABLED ? (
-    <section class="overflow-hidden bg-brand-950 py-20 text-white sm:py-28">
+      <section class="overflow-hidden bg-brand-950 py-20 text-white sm:py-28">
       <Container>
         <div class="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
           <div><p class="text-sm font-extrabold uppercase tracking-[0.12em] text-brand-300">Wall of progress</p><h2 class="mt-4 max-w-3xl font-display text-4xl font-extrabold leading-tight text-white sm:text-6xl">What job seekers say after Scout takes the forms off their plate.</h2></div>
@@ -229,15 +203,6 @@ const appLd = {
         </div>
       </Container>
     </section>
-  ) : (
-    <section class="bg-brand-950 py-20 text-white sm:py-28">
-      <Container>
-        <ClintonDecision id="testimonials">
-          The four named testimonials are withheld. They cannot be verified from the marketing files.
-        </ClintonDecision>
-      </Container>
-    </section>
-  )}
 
   <section class="bg-white py-20 sm:py-28">
     <Container>

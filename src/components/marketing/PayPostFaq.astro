@@ -1,21 +1,9 @@
 ---
 import FAQ from "../FAQ.astro";
-import { HUMAN_PLAN_FEATURES_ENABLED, SALARY_PERCENTAGE_CLAIM_ENABLED } from "../../config/marketing-decisions";
 
-/**
- * TODO(CLINTON-DECISION): FAQPage JSON-LD stays off until Clinton names the author.
- * TODO(CLINTON-DECISION): proof answer when the feature list is approved:
- * "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
- * TODO(CLINTON-DECISION): salary answer when approved:
- * "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
- */
-const proofAnswer = HUMAN_PLAN_FEATURES_ENABLED
-  ? "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
-  : "At minimum, the employer, role, link, date, status and resume version for every application. Pending Clinton's decision: the Scout record and Human-plan screenshot claims in this answer are withheld. They are not in the US pricing file.";
+const proofAnswer = "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers.";
 
-const salaryAnswer = SALARY_PERCENTAGE_CLAIM_ENABLED
-  ? "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
-  : "No. The price of your plan is the only fee. There is no placement fee. Pending Clinton's decision: the salary-percentage claim is withheld because it is not in the US pricing file.";
+const salaryAnswer = "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary.";
 
 const items = [
   {
@@ -46,4 +34,4 @@ const items = [
   { q: "Is there a placement fee or a cut of my salary?", a: salaryAnswer },
 ];
 ---
-<FAQ items={items} schema={false} class="not-prose" />
+<FAQ items={items} class="not-prose" />

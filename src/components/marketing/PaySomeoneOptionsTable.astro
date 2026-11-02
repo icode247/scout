@@ -1,5 +1,4 @@
 ---
-import { COMPETITOR_PRICES_ENABLED } from "../../config/marketing-decisions";
 import HumanPlanFeatures from "./HumanPlanFeatures.astro";
 
 const careerAgentsPrice = "Roughly $1,500 to $4,500 a month; executive packages up to $15,000, as Career Agents states on its own page (post dated August 3, 2026, fetched November 1, 2026)";
@@ -19,14 +18,14 @@ const careerAgentsPrice = "Roughly $1,500 to $4,500 a month; executive packages 
       <tr class="border-b border-ink/10 align-top">
         <td class="p-3 font-bold">Freelancer or virtual assistant</td>
         <td class="p-3">One person applies from your list; you manage the work. See <a href="/blog/virtual-assistant-for-job-applications" class="font-semibold text-brand-700 underline">virtual assistant for job applications</a></td>
-        <td class="p-3">No figure quoted here. Pending Clinton's decision: no dated first-party price is in the pricing file, so none is shown.</td>
+        <td class="p-3">No figure quoted here.</td>
         <td class="p-3">Small, well-defined searches where you can supervise</td>
         <td class="p-3">You supply the process, the tracking and the quality checks</td>
       </tr>
       <tr class="border-b border-ink/10 align-top">
         <td class="p-3 font-bold">Auto-apply software</td>
         <td class="p-3">A tool fills forms by keyword and filter. See <a href="/blog/app-that-applies-to-jobs-for-you" class="font-semibold text-brand-700 underline">apps that apply to jobs for you</a></td>
-        <td class="p-3">No figure quoted here. Pending Clinton's decision: no dated first-party price is in the pricing file, so none is shown.</td>
+        <td class="p-3">No figure quoted here.</td>
         <td class="p-3">People happy to set rules and check results</td>
         <td class="p-3">Fit and accuracy depend on your setup; check each platform's rules</td>
       </tr>
@@ -47,7 +46,7 @@ const careerAgentsPrice = "Roughly $1,500 to $4,500 a month; executive packages 
       <tr class="border-b border-ink/10 align-top">
         <td class="p-3 font-bold">Reverse recruiter</td>
         <td class="p-3">A wider campaign: positioning, outreach, networking, coaching and applications. See <a href="/blog/reverse-recruiter-cost" class="font-semibold text-brand-700 underline">reverse recruiter cost</a></td>
-        <td class="p-3">{COMPETITOR_PRICES_ENABLED ? careerAgentsPrice : "Pending Clinton's decision: this competitor price is withheld until it is re-checked on publish day."}</td>
+        <td class="p-3">{careerAgentsPrice}</td>
         <td class="p-3">Senior or relationship-led searches</td>
         <td class="p-3">Costs more; some providers add a percentage of first-year salary, so ask</td>
       </tr>
