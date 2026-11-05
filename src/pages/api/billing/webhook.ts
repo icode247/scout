@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { planByCode } from "../../../config/plans";
+import { attributeEvent, type Attribution } from "../../../lib/billing-attribution";
 import { verifyWebhookSignature } from "../../../lib/dodo";
 import { sendSubscriptionConfirmationEmail } from "../../../lib/email";
 import { assignedHumanAssistant, refreshHumanAssistants } from "../../../lib/human-assistants";
@@ -119,13 +119,29 @@ export const POST: APIRoute = async (context) => {
 
   const data = event.data || {};
   const metadata = data.metadata || {};
-  const userId = String(metadata.user_id || "");
-  const plan = planByCode(String(metadata.plan_code || ""));
   const gaClientId = String(metadata.ga_client_id || "") || null;
 
-  // Events we did not originate (or cannot attribute) are acknowledged so Dodo
-  // stops retrying, but change nothing.
-  if (!userId || !plan) return reply({ ok: true, ignored: true });
+  // A payment made outside Scout's checkout has no metadata; it is matched to the customer
+  // and plan from the product and the Dodo customer (lib/billing-attribution.ts).
+  let attributed: Attribution;
+  try {
+    attributed = await attributeEvent(supabase, data);
+  } catch (error) {
+    return failed(error instanceof Error ? error.message : String(error));
+  }
+  if (attributed.error) return failed(attributed.error);
+
+  // Events that are not Scout's (FastApply shares the Dodo account) or that match no customer
+  // are acknowledged so Dodo stops retrying, but change nothing. A Scout plan nobody could be
+  // matched to is logged: someone paid and needs their plan applied by hand.
+  if (!attributed.userId) {
+    if (attributed.plan) {
+      console.error(`[webhook] ${type} ${id}: ${attributed.plan.code} paid by Dodo customer ${data.customer?.customer_id || "?"} matched no Scout account`);
+    }
+    return reply({ ok: true, ignored: true });
+  }
+  const { userId, plan } = attributed;
+  if (attributed.via !== "metadata") console.warn(`[webhook] ${type} ${id}: no metadata, matched to user ${userId} by ${attributed.via}`);
 
   try {
 
@@ -158,13 +174,37 @@ export const POST: APIRoute = async (context) => {
     // purchase inserts one. Both key on the Dodo identifier.
     const existing = subscriptionId
       ? await supabase.from("subscriptions").select("id").eq("dodo_subscription_id", subscriptionId).maybeSingle()
-      : { data: null };
+      : row.dodo_payment_id
+        ? await supabase.from("subscriptions").select("id,user_id,plan_code,applications_used,current_period_start,current_period_end").eq("dodo_payment_id", row.dodo_payment_id).maybeSingle()
+        : { data: null };
+
 
     if (existing.error) return failed(existing.error.message);
+    // A retry after a partial write must finish the same payment, preserving any
+    // applications already used rather than attempting a duplicate insert.
+    if (!subscriptionId && existing.data) {
+      const previous = existing.data as any;
+      if (previous.user_id !== userId || previous.plan_code !== plan.code) return failed("Payment already belongs to a different customer or plan");
+      row.applications_used = previous.applications_used;
+      row.current_period_start = previous.current_period_start;
+      row.current_period_end = previous.current_period_end;
+    }
     const written = existing.data
       ? await supabase.from("subscriptions").update(row).eq("id", (existing.data as any).id)
-      : await supabase.from("subscriptions").insert(row);
+      : await supabase.from("subscriptions").insert(row).select("id");
     if (written.error) return failed(written.error.message);
+
+    // A payment that names no subscription is the customer paying again for the same plan: the
+    // new row replaces their earlier row of that plan, which would otherwise stay active beside it
+    // with last period's usage (it has no period end, so the lapsed sweep below never reaches it).
+    const insertedId = existing.data?.id ?? (written.data as { id: string }[] | null)?.[0]?.id;
+    if (!subscriptionId && insertedId) {
+      const replaced = await supabase.from("subscriptions")
+        .update({ status: "expired", updated_at: new Date().toISOString() })
+        .eq("user_id", userId).eq("plan_code", plan.code).eq("status", "active")
+        .is("dodo_subscription_id", null).neq("id", insertedId);
+      if (replaced.error) return failed(replaced.error.message);
+    }
 
     // Nothing else retires a plan whose period ran out: Dodo may send no event for it, so without
     // this a customer who buys again keeps the used-up plan beside the new one, both "active".
