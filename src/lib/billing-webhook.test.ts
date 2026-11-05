@@ -6,7 +6,9 @@ const assign = vi.hoisted(() => vi.fn(() => null as any));
 let db: ReturnType<typeof fakeDb>;
 
 vi.mock("./dodo", () => ({ verifyWebhookSignature: () => true }));
-vi.mock("./server-env", () => ({ serverEnv: () => "whsec_test" }));
+vi.mock("./server-env", () => ({
+  serverEnv: (key: string) => key === "DODO_PRODUCT_HUMAN_FOCUSED" ? "pdt_focused" : key.startsWith("DODO_PRODUCT_") ? undefined : "whsec_test",
+}));
 vi.mock("./supabase", () => ({ createSupabaseServiceClient: () => db.client }));
 vi.mock("./email", () => ({ sendSubscriptionConfirmationEmail: vi.fn() }));
 vi.mock("./human-assistants", () => ({ refreshHumanAssistants: vi.fn(async () => {}), assignedHumanAssistant: assign }));
@@ -28,7 +30,7 @@ function fakeDb(answer: (table: string, calls: Call[]) => { data?: any; error?: 
       const entry = { table, calls: [] as Call[] };
       chains.push(entry);
       const chain: any = {};
-      for (const method of ["select", "insert", "update", "delete", "eq", "in", "lt", "is", "order", "limit"]) {
+      for (const method of ["select", "insert", "update", "delete", "eq", "neq", "in", "lt", "is", "ilike", "order", "limit"]) {
         chain[method] = (...args: any[]) => { entry.calls.push([method, ...args]); return chain; };
       }
       const settleWith = () => { const result = answer(table, entry.calls); return { data: result.data ?? null, error: result.error ?? null }; };
@@ -155,5 +157,96 @@ describe("billing webhook", () => {
     const response = await deliver("subscription.cancelled", { subscription_id: "sub_A" });
     expect(await response.json()).toEqual({ ok: true, duplicate: true });
     expect(db.chains.some((chain) => chain.table === "subscriptions")).toBe(false);
+  });
+
+  describe("a payment made outside Scout's checkout (no metadata)", () => {
+    const unlabelled = { payment_id: "pay_2", metadata: {}, product_cart: [{ product_id: "pdt_focused", quantity: 1 }], customer: { customer_id: "cus_T", email: "Tahnee@example.com" } };
+    const writes = (table = "subscriptions") => db.chains.filter((chain) => chain.table === table && chain.calls.some(([m]) => m === "insert" || m === "update"));
+
+    it("is matched to the customer by their Dodo customer id and starts a fresh period that replaces the used-up row", async () => {
+      db = fakeDb((table, calls) => {
+        if (table === "subscriptions" && has(calls, "eq", "dodo_customer_id", "cus_T") && !calls.some(([m]) => m === "update")) return { data: [{ user_id: "u9" }, { user_id: "u9" }] };
+        if (table === "subscriptions" && calls.some(([m]) => m === "insert")) return { data: [{ id: "row-new" }] };
+        return {};
+      });
+      const response = await deliver("payment.succeeded", unlabelled);
+      expect(response.status).toBe(200);
+      const insert = writes().find((chain) => chain.calls.some(([m]) => m === "insert"))!;
+      expect(insert.calls.find(([m]) => m === "insert")?.[1]).toMatchObject({ user_id: "u9", plan_code: "human_focused", applications_used: 0, applications_quota: 250 });
+      const replaced = writes().find((chain) => has(chain.calls, "neq", "id", "row-new"))!;
+      expect(replaced.calls.find(([m]) => m === "update")?.[1]).toMatchObject({ status: "expired" });
+      expect(has(replaced.calls, "eq", "user_id", "u9")).toBe(true);
+      expect(has(replaced.calls, "eq", "plan_code", "human_focused")).toBe(true);
+      expect(has(replaced.calls, "is", "dodo_subscription_id", null)).toBe(true);
+    });
+
+    it("does not fall back to email when the Dodo customer maps to multiple accounts", async () => {
+      db = fakeDb((table, calls) => {
+        if (table === "subscriptions" && has(calls, "eq", "dodo_customer_id", "cus_T")) return { data: [{ user_id: "u7" }, { user_id: "u8" }] };
+        if (table === "profiles") return { data: [{ user_id: "u7" }] };
+        return {};
+      });
+      expect(await (await deliver("payment.succeeded", unlabelled)).json()).toEqual({ ok: true, ignored: true });
+      expect(writes()).toHaveLength(0);
+      expect(db.chains.some(chain => chain.table === "profiles")).toBe(false);
+    });
+
+    it("does not fall back to customer when a subscription maps to multiple accounts", async () => {
+      db = fakeDb((table, calls) => table === "subscriptions" && has(calls, "eq", "dodo_subscription_id", "sub_ambiguous")
+        ? { data: [{ user_id: "u7" }, { user_id: "u8" }] } : { data: [{ user_id: "u7" }] });
+      expect(await (await deliver("subscription.active", { ...unlabelled, subscription_id: "sub_ambiguous" })).json()).toEqual({ ok: true, ignored: true });
+      expect(writes()).toHaveLength(0);
+      expect(db.chains.some(chain => has(chain.calls, "eq", "dodo_customer_id", "cus_T"))).toBe(false);
+    });
+
+    it("finishes a partially written payment without inserting again or resetting its usage", async () => {
+      db = fakeDb((table, calls) => {
+        if (table === "subscriptions" && has(calls, "eq", "dodo_customer_id", "cus_T")) return { data: [{ user_id: "u9" }] };
+        if (table === "subscriptions" && has(calls, "eq", "dodo_payment_id", "pay_2")) return { data: { id: "row-new", user_id: "u9", plan_code: "human_focused", applications_used: 12, current_period_start: "2026-11-01T00:00:00Z", current_period_end: null } };
+        return {};
+      });
+      expect((await deliver("payment.succeeded", unlabelled)).status).toBe(200);
+      expect(writes().some(chain => chain.calls.some(([m]) => m === "insert"))).toBe(false);
+      const update = writes().find(chain => has(chain.calls, "eq", "id", "row-new"));
+      expect(update?.calls.find(([m]) => m === "update")?.[1]).toMatchObject({ applications_used: 12, current_period_start: "2026-11-01T00:00:00Z" });
+      expect(writes().some(chain => has(chain.calls, "neq", "id", "row-new"))).toBe(true);
+    });
+
+    it("falls back to the one profile with the payer's email", async () => {
+      db = fakeDb((table, calls) => {
+        if (table === "profiles" && calls.some(([m]) => m === "ilike")) return { data: [{ user_id: "u7" }] };
+        if (table === "subscriptions" && calls.some(([m]) => m === "insert")) return { data: [{ id: "row-new" }] };
+        return {};
+      });
+      expect((await deliver("payment.succeeded", unlabelled)).status).toBe(200);
+      const insert = writes().find((chain) => chain.calls.some(([m]) => m === "insert"))!;
+      expect(insert.calls.find(([m]) => m === "insert")?.[1]).toMatchObject({ user_id: "u7", plan_code: "human_focused" });
+    });
+
+    it("changes nothing when two profiles share the payer's email", async () => {
+      db = fakeDb((table, calls) => (table === "profiles" && calls.some(([m]) => m === "ilike") ? { data: [{ user_id: "u7" }, { user_id: "u8" }] } : {}));
+      const response = await deliver("payment.succeeded", unlabelled);
+      expect(await response.json()).toEqual({ ok: true, ignored: true });
+      expect(writes()).toHaveLength(0);
+    });
+
+    it("ignores a product that is not a Scout plan (FastApply shares the Dodo account) without looking anyone up", async () => {
+      db = fakeDb(() => ({ data: [{ user_id: "u9" }] }));
+      const response = await deliver("payment.succeeded", { ...unlabelled, product_cart: [{ product_id: "pdt_fastapply", quantity: 1 }] });
+      expect(await response.json()).toEqual({ ok: true, ignored: true });
+      expect(db.chains.some((chain) => chain.table === "subscriptions" || chain.table === "profiles")).toBe(false);
+    });
+
+    it("releases the event when the customer lookup fails, so Dodo's retry runs it again", async () => {
+      db = fakeDb((table, calls) => (table === "subscriptions" && has(calls, "eq", "dodo_customer_id", "cus_T") ? { error: { message: "timeout" } } : {}));
+      expect((await deliver("payment.succeeded", unlabelled)).status).toBe(500);
+      expect(db.chains.some((chain) => chain.table === "webhook_events" && chain.calls.some(([m]) => m === "delete"))).toBe(true);
+    });
+  });
+
+  it("leaves the customer's other rows alone when a payment names its subscription", async () => {
+    db = fakeDb((table, calls) => (table === "subscriptions" && calls.some(([m]) => m === "insert") ? { data: [{ id: "row-new" }] } : {}));
+    await deliver("subscription.active", { subscription_id: "sub_new" });
+    expect(db.chains.some((chain) => chain.calls.some(([m]) => m === "neq"))).toBe(false);
   });
 });
