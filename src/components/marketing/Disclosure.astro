@@ -7,7 +7,7 @@ const { variant } = Astro.props;
 const cost =
   "We make ApplyScout. We have a conflict of interest, and here is how we handled it: every Scout price below comes from our own pricing page, every other provider's price is quoted from that provider's own page with the date we read it, and we say where another option is cheaper.";
 const pay =
-  "We make ApplyScout. We have a conflict of interest, and here is how we handled it: Scout prices come from our own pricing page, the one outside price comes from that provider's own page with the date we fetched it, and we say where another option fits better.";
+  "We make ApplyScout. We have a conflict of interest, and here is how we handled it: Scout prices come from our own pricing page, outside prices come from each provider's own page with the date we fetched it, and we say where another option fits better.";
 const text = variant === "cost" ? cost : pay;
 ---
 <p><em>{text}</em></p>

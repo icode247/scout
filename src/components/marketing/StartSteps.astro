@@ -1,12 +1,17 @@
 ---
+import { PAY_POST_NO_SALES_CALL_ENABLED, PAY_POST_RESUME_TRACKER_ENABLED } from "../../config/pay-post-holds";
+
 interface Props {
   variant: "cost" | "pay";
 }
 const { variant } = Astro.props;
+// TODO(CLINTON): on the pay post, "No call is required to start" and the resume-per-job tracker stay off.
+const noSalesCall = variant === "cost" || PAY_POST_NO_SALES_CALL_ENABLED;
+const resumeTracker = variant === "cost" || PAY_POST_RESUME_TRACKER_ENABLED;
 ---
 <ol>
   <li>
-    <strong>Create your account and import your resume.</strong> Choose Human or AI. No call is required to start.
+    <strong>Create your account and import your resume.</strong> Choose Human or AI.{noSalesCall ? " No call is required to start." : ""}
   </li>
   {variant === "cost" ? (
     <li><strong>Check your job profile.</strong> Make sure your target roles, locations and dealbreakers say what you actually want.</li>
@@ -18,5 +23,12 @@ const { variant } = Astro.props;
   ) : (
     <li><strong>Activate a plan from your dashboard.</strong></li>
   )}
-  <li><strong>Start your first applications</strong> and follow each one in your tracker, with the resume used for each.</li>
+  {variant === "cost" ? (
+    <li><strong>Start your first applications</strong> and follow each one in your tracker, with the resume used for each.</li>
+  ) : (
+    <li>
+      <strong>Start your first applications.</strong>
+      {resumeTracker ? " Follow each one in your tracker, with the resume used for each." : ""}
+    </li>
+  )}
 </ol>

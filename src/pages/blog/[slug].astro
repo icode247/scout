@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import Container from "../../components/Container.astro";
 import { SITE } from "../../config/site";
+import { PAY_POST_AUTHOR_BYLINE_ENABLED, PAY_POST_RESUME_TRACKER_ENABLED, PAY_POST_WHATSAPP_GROUP_ENABLED } from "../../config/pay-post-holds";
 
 export const prerender = true;
 
@@ -25,9 +26,13 @@ const { post, related } = Astro.props;
 const { Content } = await render(post);
 const d = post.data;
 const fmt = (date: Date) => date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+const payPost = post.id === "pay-someone-to-apply-for-jobs-for-you";
+// TODO(CLINTON): author byline stays off on the pay-someone post until Clinton names the author.
+const showAuthor = !payPost || PAY_POST_AUTHOR_BYLINE_ENABLED;
+const published = `Published ${fmt(d.pubDate)}${d.updatedDate ? ` · Updated ${fmt(d.updatedDate)}` : ""}`;
 const byline = d.bylineNote
-  ? `By ${d.author} · ${d.bylineNote}`
-  : `By ${d.author} · Published ${fmt(d.pubDate)}${d.updatedDate ? ` · Updated ${fmt(d.updatedDate)}` : ""}`;
+  ? (showAuthor ? `By ${d.author} · ${d.bylineNote}` : d.bylineNote)
+  : (showAuthor ? `By ${d.author} · ${published}` : published);
 
 const articleLd = {
   "@context": "https://schema.org",
@@ -36,7 +41,7 @@ const articleLd = {
   description: d.description,
   datePublished: d.pubDate.toISOString(),
   dateModified: (d.updatedDate ?? d.pubDate).toISOString(),
-  author: { "@type": "Organization", name: d.author },
+  ...(showAuthor ? { author: { "@type": "Organization", name: d.author } } : {}),
   publisher: { "@type": "Organization", name: SITE.name },
   image: new URL(d.coverImage, SITE.url).href,
   mainEntityOfPage: new URL(`/blog/${post.id}`, SITE.url).href,
@@ -74,7 +79,16 @@ const breadcrumbLd = {
       <!-- In-content conversion -->
       <aside class="mt-14 rounded-3xl bg-brand-950 p-8 text-white">
         <h2 class="font-display text-2xl font-bold text-white">Choose how Scout applies for you.</h2>
-        <p class="mt-2 max-w-2xl text-brand-100/80">Use a lower-cost AI Assistant or work with a dedicated Human Assistant in WhatsApp. Both services keep a record of the jobs, statuses, and resumes used; Human plans add detailed application evidence.</p>
+        <p class="mt-2 max-w-2xl text-brand-100/80">
+          {payPost ? (
+            <>
+              Use a lower-cost AI Assistant or {PAY_POST_WHATSAPP_GROUP_ENABLED ? "work with a dedicated Human Assistant in WhatsApp." : "a dedicated Human Assistant."}
+              {PAY_POST_RESUME_TRACKER_ENABLED ? " Both services keep a record of the jobs, statuses, and resumes used; Human plans add detailed application evidence." : ""}
+            </>
+          ) : (
+            <>Use a lower-cost AI Assistant or work with a dedicated Human Assistant in WhatsApp. Both services keep a record of the jobs, statuses, and resumes used; Human plans add detailed application evidence.</>
+          )}
+        </p>
         <div class="mt-6 flex flex-wrap gap-3">
           <a href="/pricing" class="rounded-full bg-brand-300 px-5 py-3 text-sm font-extrabold text-ink">Compare plans</a>
           <a href="/how-it-works" class="rounded-full bg-white/10 px-5 py-3 text-sm font-extrabold text-white hover:bg-white/15">See how it works</a>

@@ -1,7 +1,12 @@
 ---
 import FAQ from "../FAQ.astro";
+import { PAY_POST_FAQPAGE_JSONLD_ENABLED, PAY_POST_RESUME_TRACKER_ENABLED } from "../../config/pay-post-holds";
 
-const proofAnswer = "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers.";
+// TODO(CLINTON): resume-per-job tracker stays off. Do not append the held sentence.
+const resumeTrackerSentence = " With Scout, both lanes show the job, its status and the resume used,";
+const proofAnswer = PAY_POST_RESUME_TRACKER_ENABLED
+  ? `At minimum, the employer, role, link, date, status and resume version for every application.${resumeTrackerSentence} and Human Assistant plans also include screenshots or records of important form answers.`
+  : "At minimum, the employer, role, link, date, status and resume version for every application. Human Assistant plans also include screenshots or records of important form answers.";
 
 const salaryAnswer = "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary.";
 
@@ -32,6 +37,31 @@ const items = [
   },
   { q: "What proof should I receive?", a: proofAnswer },
   { q: "Is there a placement fee or a cut of my salary?", a: salaryAnswer },
+  {
+    q: "AI or human assistant?",
+    a: "Choose by who does the work. Scout's AI Assistant is software: $39 a month for 75 applications, or $79 for 200. A Human Assistant is a dedicated person: $299 a month for 250 applications, $499 for 500, or $999 for 1,000. Software costs less. A person costs more because the work includes judgment and exceptions. Compare the two in [human vs AI job application service](/blog/human-vs-ai-job-application-service).",
+  },
 ];
+
+const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+function visibleAnswer(answer: string) {
+  return answer.replace(LINK, "$1");
+}
+
+/**
+ * FAQPage JSON-LD matches the visible FAQ text. Markdown links are reduced to
+ * their anchor words, the same way the page renders them.
+ * TODO(CLINTON): leave this off until Clinton names the author.
+ */
+const faqPageLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: items.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: visibleAnswer(item.a) },
+  })),
+};
 ---
-<FAQ items={items} class="not-prose" />
+<FAQ items={items} schema={false} class="not-prose" />
+{PAY_POST_FAQPAGE_JSONLD_ENABLED && <script type="application/ld+json" set:html={JSON.stringify(faqPageLd)} />}
