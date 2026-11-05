@@ -117,7 +117,7 @@ The [AI Assistant](/ai-job-application-assistant) is the lower-cost lane for def
 
 The [Human Assistant](/human-job-application-service) adds a dedicated person, a private WhatsApp group, and detailed evidence for important form answers. It fits searches where questions and matching decisions need more context.
 
-Current allowances and prices are kept on the live [pricing page](/pricing). Neither lane guarantees interviews or a job; both should be judged by qualified applications, accuracy, evidence, and time saved.
+Current allowances and prices are kept on [Scout pricing and plans](/pricing). Neither lane guarantees interviews or a job; both should be judged by qualified applications, accuracy, evidence, and time saved.
 
 ## Frequently asked questions
 

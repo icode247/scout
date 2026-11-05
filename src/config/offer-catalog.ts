@@ -45,7 +45,9 @@ export function approvedServiceLd() {
     "@type": "Service",
     name: "Scout job application service",
     serviceType: "Done-for-you job application service",
+    description: "Human and AI assistants find suitable jobs, prepare tailored application materials, submit applications on a job seeker's behalf, and record the completed work.",
     provider: { "@id": new URL("/#organization", SITE.url).href },
+    areaServed: "Worldwide",
     hasOfferCatalog: {
       "@type": "OfferCatalog",
       name: "Job application assistant plans (US dollars)",

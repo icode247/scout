@@ -15,14 +15,6 @@ export const SITE = {
   twitter: "@getscout",
 } as const;
 
-export const STORE = {
-  // TODO(founder): drop in the live store URLs once IDs are confirmed.
-  appStore: "https://apps.apple.com/app/scout-ai-job-apply/id000000000",
-  playStore: "https://play.google.com/store/apps/details?id=com.fastapply.app",
-  // Single smart link that routes by device (used by QR + /download).
-  smartLink: "https://applyscout.app/download",
-} as const;
-
 export type NavItem = { label: string; href: string };
 
 export const NAV: NavItem[] = [
@@ -41,7 +33,6 @@ export const FOOTER: { heading: string; links: NavItem[] }[] = [
       { label: "AI assistant", href: "/ai-job-application-assistant" },
       { label: "Human assistant", href: "/human-job-application-service" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Download", href: "/download" },
     ],
   },
   {
@@ -136,7 +127,7 @@ export const TIERS: Tier[] = [
     priceMonthly: 99,
     priceAnnual: 89,
     blurb: "Human assistant QA for higher-stakes searches.",
-    cta: "Book a strategy call",
+    cta: "Book a free call",
     features: [
       "Everything in AI Assistant",
       "Dedicated human applies for you",

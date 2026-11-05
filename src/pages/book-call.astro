@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 
 const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://calendly.com/hello-applyscout/scout-strategy-call";
 ---
-<Base title="Book your free Scout strategy call" description="Tell Scout what you are targeting, choose a time, and meet the team before selecting a Human Assistant plan.">
+<Base title="Book your free Scout call" description="Tell Scout what you are targeting, choose a time, and meet the team before selecting a Human Assistant plan.">
   <section class="min-h-[calc(100dvh-5rem)] bg-brand-950 py-10 text-white sm:py-16">
     <div class="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
       <a href="/" class="inline-flex min-h-11 items-center text-sm font-bold text-brand-300 hover:text-brand-200">← Back to Scout</a>
@@ -38,7 +38,7 @@ const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://cale
             <button id="booking-submit" class="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand-600 px-6 py-3.5 font-extrabold text-white transition hover:bg-brand-700 disabled:cursor-wait disabled:opacity-65">
               <span data-submit-label>Continue to available times</span><span data-submit-loading class="hidden">Saving your details…</span>
             </button>
-            <p class="mt-4 text-center text-xs leading-relaxed text-ink-muted">By continuing, you agree that Scout may contact you about this strategy call. Prefer to start immediately? <a href="/login?intent=ai" class="font-bold text-brand-700">Start with AI</a>.</p>
+            <p class="mt-4 text-center text-xs leading-relaxed text-ink-muted">By continuing, you agree that Scout may contact you about this call. Prefer to start immediately? <a href="/login?intent=ai" class="font-bold text-brand-700">Start with AI</a>.</p>
           </form>
 
           <section id="booking-calendar" class="hidden" aria-labelledby="calendar-heading">
@@ -46,7 +46,7 @@ const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://cale
               <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-sm font-bold text-brand-700">Step 2 of 2</p><h2 id="calendar-heading" class="mt-1 text-2xl font-extrabold">Choose an available time</h2></div><button id="edit-booking-details" type="button" class="min-h-11 rounded-full bg-surface px-4 text-sm font-bold text-ink-soft hover:text-ink">Edit details</button></div>
               <p id="calendar-person" class="mt-2 text-sm text-ink-soft"></p>
             </div>
-            <iframe id="calendly-frame" title="Schedule your Scout strategy call" class="h-[740px] w-full rounded-b-2xl bg-white" loading="eager" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            <iframe id="calendly-frame" title="Schedule your free Scout call" class="h-[740px] w-full rounded-b-2xl bg-white" loading="eager" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
           </section>
 
           <section id="booking-confirmation" class="hidden p-7 text-center sm:p-12" aria-labelledby="confirmation-heading">

@@ -9,6 +9,7 @@ import { COUNTRY_PAGES } from "../data/countries";
 import TermSwitcher from "../components/TermSwitcher.astro";
 import { REGIONS, formatRegionalAmount, plansForLane, regionalPriceLabel, savings, type Plan, type Term } from "../config/plans";
 import { visitorRegion } from "../lib/region";
+import { approvedServiceLd } from "../config/offer-catalog";
 
 // Prices, quotas, and features come from the shared catalog so this page, the
 // in-app pricing modal, and the Dodo products can never drift apart.
@@ -29,8 +30,12 @@ const price = (plan: Plan) => (region ? regionalPriceLabel(plan, region) : plan.
 const standardOf = (plan: Plan) => plansForLane(plan.lane, "standard").find((p) => p.family === plan.family)!;
 const monthlyTotal = (plan: Plan) => {
   const sibling = standardOf(plan);
-  return region ? formatRegionalAmount(region, sibling.regional[region] * 3) : `$${Math.round(sibling.priceCents * 3 / 100)}`;
+  return region ? formatRegionalAmount(region, sibling.regional[region] * 3) : `$${Math.round(sibling.priceCents * 3 / 100).toLocaleString("en-US")}`;
 };
+// Derived from the catalog so the title, description and OG tags cannot drift from the plans.
+const lowestPrice = (lane: "ai" | "human") => plansForLane(lane, "standard")[0].priceLabel;
+const pricingTitle = `Job Application Service Pricing: Plans From ${lowestPrice("ai")}/mo`;
+const pricingDescription = `Job application service pricing: AI Assistant from ${lowestPrice("ai")}/mo, Human Assistant from ${lowestPrice("human")}/mo. Prepay 90 days to save about 10%. No cut of your salary.`;
 const checkoutState = Astro.url.searchParams.get("checkout");
 const regionNote = region ? `Prices for ${REGIONS[region].country} · billed in ${REGIONS[region].currency} at checkout` : null;
 
@@ -46,7 +51,7 @@ const faqs=[
  {q:"Can I use different profiles for different roles?",a:"Yes. Plan limits determine how many job profiles can be active at the same time."},
 ];
 ---
-<Base title="Scout pricing: AI and Human job application assistants" description="Compare lower-cost monthly AI Assistant plans with dedicated Human Assistant monthly plans.">
+<Base title={pricingTitle} description={pricingDescription}>
   <style>
     /* Both terms are rendered server-side so prices are real without JS.
        The document-level data-term attribute decides which set is visible. */
@@ -179,6 +184,22 @@ const faqs=[
   </section>
 
   <section class="bg-white py-20 sm:py-28"><Container><div class="mx-auto max-w-3xl"><FAQ items={faqs} /></div></Container></section>
+
+  <section class="bg-surface py-16 sm:py-20">
+    <Container>
+      <div class="mx-auto max-w-3xl">
+        <h2 class="font-display text-3xl font-extrabold sm:text-4xl">Before you choose a plan</h2>
+        <p class="mt-4 text-lg leading-relaxed text-ink-soft">Not sure which lane fits your search? These guides explain the trade-offs without a sales pitch:</p>
+        <ul class="mt-6 space-y-4 leading-relaxed text-ink-soft">
+          <li><a href="/blog/job-application-service-cost" class="font-extrabold text-brand-700">How much does a job application service cost?</a>: what subscriptions, bundles, virtual assistants and reverse recruiters actually cost per application.</li>
+          <li><a href="/blog/human-vs-ai-job-application-service" class="font-extrabold text-brand-700">Human vs AI job application service</a>: which kinds of search suit each assistant.</li>
+          <li><a href="/blog/do-recruitment-agencies-take-a-percentage-of-your-salary" class="font-extrabold text-brand-700">Do recruitment agencies take a percentage of your salary?</a>: how Scout's flat monthly pricing differs from fee-on-hire models.</li>
+          <li><a href="/compare" class="font-extrabold text-brand-700">Compare Scout with other services</a> or <a href="/how-it-works" class="font-extrabold text-brand-700">see how Scout works</a>.</li>
+          <li>Prefer to talk first? <a href="/book-call" class="font-extrabold text-brand-700">Book a free 15-minute call</a>.</li>
+        </ul>
+      </div>
+    </Container>
+  </section>
   <section class="bg-brand-50 py-20 sm:py-24">
     <Container>
       <div class="max-w-3xl"><p class="font-bold text-brand-700">Country guides</p><h2 class="mt-3 font-display text-4xl font-extrabold sm:text-5xl">The same plans, wherever you are applying.</h2><p class="mt-4 text-lg text-ink-soft">Plans work the same in every market; the guides below cover local application conventions. <a href="/job-application-service" class="font-bold text-brand-700">How the job application service works →</a></p></div>
@@ -219,4 +240,6 @@ const faqs=[
       });
     });
   </script>
+  {/* The catalog is in USD, so it is only emitted on the view that shows USD prices. */}
+  {!region && <script type="application/ld+json" set:html={JSON.stringify(approvedServiceLd())} />}
 </Base>

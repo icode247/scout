@@ -20,8 +20,8 @@ const { variant } = Astro.props;
         </tr>
       </thead>
       <tbody>
-        <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI Essential</td><td class="p-3">The AI Assistant, 75 applications a month</td></tr>
-        <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI Plus</td><td class="p-3">The AI Assistant, 200 applications a month</td></tr>
+        <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI Essential</td><td class="p-3">The AI Assistant, 75 applications a month, 1 active job profile; tailored resume per job, job and status tracking, resume-used record. No form-answer screenshots</td></tr>
+        <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI Plus</td><td class="p-3">The AI Assistant, 200 applications a month, up to 3 active job profiles; tailored resumes and cover notes, priority AI queue, job and status tracking, resume-used record. No form-answer screenshots</td></tr>
         <tr class="border-b border-ink/10"><td class="p-3 font-bold">Focused Search</td><td class="p-3">A dedicated Human Assistant, one active job profile, a dedicated WhatsApp group, dashboard tracking, the resume used for every job, and screenshots of important form answers</td></tr>
         <tr class="border-b border-ink/10"><td class="p-3 font-bold">Full Search</td><td class="p-3">A dedicated Human Assistant, up to two active job profiles, a dedicated WhatsApp group, a tailored resume for each job, detailed answer screenshots, and jobs added from the dashboard or Chrome</td></tr>
         <tr class="border-b border-ink/10"><td class="p-3 font-bold">Career Campaign</td><td class="p-3">Two Human Assistants, up to four active job profiles, priority WhatsApp support, tailored resumes and cover notes, detailed answer screenshots and a weekly campaign review</td></tr>
@@ -31,7 +31,7 @@ const { variant } = Astro.props;
 ) : variant === "screenshot-clause" ? (
   <span> and screenshots or records of important form answers.</span>
 ) : variant === "pay-watchout" ? (
-  <span>It is software, not a person; the Human plans are the ones that add screenshots of important form answers</span>
+  <span>It is software, not a person; AI plans do not include form-answer screenshots (human plans do)</span>
 ) : variant === "proof-clause" ? (
   <span>With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers.</span>
 ) : (

@@ -21,7 +21,7 @@ Both lanes use the same profile system, dashboard, job delegation workflow, tail
 
 ### Human Assistant
 
-The primary call to action is **Book a free strategy call**.
+The primary call to action is **Get my assistant**, and a free call is optional (**Book a free call**).
 
 1. The member books a call.
 2. Scout learns their target roles, locations, preferences, dealbreakers, and resume strategy.

@@ -1,14 +1,15 @@
 ---
 title: "How Scout Works: The Engine Behind Your Applications"
-description: "Scout applies for jobs for you — with an AI agent or a dedicated human agent — powered by FastApply, the engine behind 2M+ applications."
+description: "Scout applies for jobs for you with an AI agent or a dedicated human agent. See how job profiles, resumes and application records work."
 coverImage: "/assets/blog/how-scout-works-cover.webp"
 coverAlt: "How Scout handles job applications with a human or AI assistant"
 pubDate: 2026-08-14
+updatedDate: 2026-11-05
 author: "Scout Editorial Team"
 pillar: "How Scout Works"
 targetKeyword: "how Scout works"
 funnelStage: BOFU
-tags: ["done-for-you-job-applications", "AI-job-application-agent", "FastApply"]
+tags: ["done-for-you-job-applications", "AI-job-application-agent"]
 draft: false
 ---
 
@@ -50,15 +51,15 @@ Scout gets applications into employer pipelines. You remain responsible for inte
 
 ![Four-step diagram of how Scout works, from profile setup to interviews](/assets/blog/how-scout-works-infographic-1.webp)
 
-## The engine under the hood: FastApply
+## The engine under the hood
 
-Scout is the service layer you use to define a search, choose an assistant, delegate jobs, and review application records. Underneath it is [FastApply](https://fastapply.co), the established auto-apply platform and application infrastructure used for job discovery, matching, resume handling, application submission, and application-history syncing.
+Scout is the service layer you use to define a search, choose an assistant, delegate jobs, and review application records. Underneath it is Scout's own application automation engine, which handles job discovery, matching, resume handling, application submission, and application-history syncing.
 
-FastApply-powered products have submitted more than **2 million job applications**. Its current platform serves **10,000+ job seekers**, indexes **860,000+ jobs**, and supports **20+ job platforms and applicant tracking systems**. Those figures matter because application automation is not one clean form repeated thousands of times. Employers use Workday, Greenhouse, Lever, Ashby, SmartRecruiters, and many other systems, each with different fields and submission flows.
+The engine indexes **860,000+ jobs** and supports **20+ job platforms and applicant tracking systems**. That range matters because application automation is not one clean form repeated thousands of times. Employers use Workday, Greenhouse, Lever, Ashby, SmartRecruiters, and many other systems, each with different fields and submission flows.
 
-Scout uses that existing infrastructure rather than starting with a new form-filling script. The Scout product adds the operating layer around it: job profiles, separate Human and AI lanes, plan controls, delegated-job workflows, tailored-document records, and a dashboard built for visibility.
+The Scout product adds the operating layer around the engine: job profiles, separate Human and AI lanes, plan controls, delegated-job workflows, tailored-document records, and a dashboard built for visibility.
 
-![Architecture diagram showing Scout built on the FastApply auto-apply engine](/assets/blog/how-scout-works-infographic-2.webp)
+![Architecture diagram showing the Scout service layer running on Scout's own automation engine](/assets/blog/how-scout-works-infographic-2.webp)
 
 ## AI Assistant or Human Assistant: how to choose
 
@@ -92,6 +93,6 @@ Yes. Add the job from your dashboard or the Scout browser extension, then choose
 
 ## Put your search into motion
 
-The best lane depends on how repeatable your search is and how much judgment you want in the loop. Compare the exact allowances, evidence, and billing terms on the [Scout pricing page](/pricing), then start with AI or book a strategy call for a Human Assistant.
+The best lane depends on how repeatable your search is and how much judgment you want in the loop. Compare the exact allowances, evidence, and billing terms on the [Scout pricing page](/pricing), then start with AI or Human from your dashboard, or book a free call first.
 
-Scout is built by the team behind FastApply, the application engine that handles the infrastructure beneath your search.
+Scout runs on its own automation engine, so the infrastructure beneath your search is ours to build and maintain.
