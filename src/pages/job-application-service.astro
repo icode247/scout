@@ -8,10 +8,15 @@ import HumanPlanFeatures from "../components/marketing/HumanPlanFeatures.astro";
 import UsdPlanTable from "../components/marketing/UsdPlanTable.astro";
 import { SITE } from "../config/site";
 import { approvedServiceLd } from "../config/offer-catalog";
+import { HUMAN_PLAN_FEATURES_ENABLED, NO_CALL_REQUIRED_CLAIM_ENABLED, OFFER_SCHEMA_ENABLED, SALARY_PERCENTAGE_CLAIM_ENABLED } from "../config/marketing-decisions";
 import { COUNTRY_PAGES } from "../data/countries";
 
-const proofAnswer = "Ask what proof you will get before you pay. With Scout you see every job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers.";
-const salaryAnswer = "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary.";
+const proofAnswer = HUMAN_PLAN_FEATURES_ENABLED
+  ? "Ask what proof you will get before you pay. With Scout you see every job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
+  : "Ask what proof you will get before you pay. With Scout you see every job, its status and the resume used.";
+const salaryAnswer = SALARY_PERCENTAGE_CLAIM_ENABLED
+  ? "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+  : "No. The price of your plan is the only fee. There is no placement fee.";
 
 const faqs = [
   { q: "Can I pay someone to apply to jobs for me?", a: "Yes. Scout assigns a Human Assistant who applies on your behalf, or you can choose a lower-cost AI Assistant. You set the roles, locations, salary preferences, exclusions, and resume rules before applications begin." },
@@ -25,7 +30,18 @@ const faqs = [
   { q: "Do you take a percentage of my salary?", a: salaryAnswer },
   { q: "How do I start?", a: "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin." },
 ];
-const serviceLd = approvedServiceLd();
+// TODO(CLINTON-DECISION): Offer schema stays off. approvedServiceLd() is the five-plan USD catalog.
+// Visible plan prices on this page do not change.
+const serviceWithoutOffers = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Scout job application service",
+  serviceType: "Done-for-you job application service",
+  provider: { "@id": new URL("/#organization", SITE.url).href },
+  areaServed: "Worldwide",
+  description: "Human and AI assistants find suitable jobs, prepare tailored application materials, submit applications on a job seeker's behalf, and record the completed work.",
+};
+const serviceLd = OFFER_SCHEMA_ENABLED ? approvedServiceLd() : serviceWithoutOffers;
 const breadcrumbLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -119,7 +135,7 @@ const breadcrumbLd = {
       <HumanPlanFeatures variant="service-table" />
       <div class="mx-auto max-w-3xl text-lg leading-relaxed text-ink-soft">
         <p>Scout does not guarantee interviews or offers. Employers decide who they interview and hire.</p>
-        <p>To start, create your account, import your resume and activate a plan from your dashboard. No call is required.</p>
+        <p>To start, create your account, import your resume and activate a plan from your dashboard.{NO_CALL_REQUIRED_CLAIM_ENABLED ? " No call is required." : ""}</p>
         <p>See <a href="/how-it-works" class="font-extrabold text-brand-700">how Scout works</a> and <a href="/safety" class="font-extrabold text-brand-700">application safety</a>, compare every feature on the <a href="/pricing" class="font-extrabold text-brand-700">pricing page</a>, or read <a href="/blog/job-application-service-cost" class="font-extrabold text-brand-700">how much a job application service costs</a>. The plans are also described on the <a href="/human-job-application-service" class="font-extrabold text-brand-700">Human Assistant</a> and <a href="/ai-job-application-assistant" class="font-extrabold text-brand-700">AI Assistant</a> pages.</p>
       </div>
     </Container>

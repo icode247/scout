@@ -1,9 +1,20 @@
 ---
 import FAQ from "../FAQ.astro";
+import { HUMAN_PLAN_FEATURES_ENABLED, SALARY_PERCENTAGE_CLAIM_ENABLED } from "../../config/marketing-decisions";
 
-const proofAnswer = "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers.";
+/**
+ * TODO(CLINTON-DECISION): proof answer when the feature list is approved:
+ * "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
+ * TODO(CLINTON-DECISION): salary answer when approved:
+ * "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+ */
+const proofAnswer = HUMAN_PLAN_FEATURES_ENABLED
+  ? "At minimum, the employer, role, link, date, status and resume version for every application. With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers."
+  : "At minimum, the employer, role, link, date, status and resume version for every application.";
 
-const salaryAnswer = "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary.";
+const salaryAnswer = SALARY_PERCENTAGE_CLAIM_ENABLED
+  ? "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+  : "No. The price of your plan is the only fee. There is no placement fee.";
 
 const items = [
   {

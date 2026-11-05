@@ -1,1 +1,6 @@
-<p>Yes. You can pay someone to apply for jobs for you, and the cost depends on who does the work: ApplyScout (Scout) charges $39 to $999 a month, with AI Assistant plans at $39 or $79 and Human Assistant plans at $299, $499 or $999, and Career Agents publishes roughly $1,500 to $4,500 a month for reverse recruiters (post dated August 3, 2026, fetched November 1, 2026). You are paying for application work: finding suitable openings, preparing your materials, completing the forms and recording what was sent. Employers still decide who gets interviewed and hired, so no honest provider can promise either.</p>
+---
+import { COMPETITOR_PRICES_ENABLED } from "../../config/marketing-decisions";
+
+// TODO(CLINTON-DECISION): "and Career Agents publishes roughly $1,500 to $4,500 a month for reverse recruiters (post dated August 3, 2026, fetched November 1, 2026)."
+---
+<p>Yes. You can pay someone to apply for jobs for you, and the cost depends on who does the work: ApplyScout (Scout) charges $39 to $999 a month, with AI Assistant plans at $39 or $79 and Human Assistant plans at $299, $499 or $999{COMPETITOR_PRICES_ENABLED ? ", and Career Agents publishes roughly $1,500 to $4,500 a month for reverse recruiters (post dated August 3, 2026, fetched November 1, 2026)" : ""}. You are paying for application work: finding suitable openings, preparing your materials, completing the forms and recording what was sent. Employers still decide who gets interviewed and hired, so no honest provider can promise either.</p>

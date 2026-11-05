@@ -1,13 +1,16 @@
 ---
+import { DISCLOSURE_ENABLED } from "../../config/marketing-decisions";
+
 interface Props {
   variant: "cost" | "pay";
 }
 const { variant } = Astro.props;
 
+// TODO(CLINTON-DECISION): disclosure wording. Rendered only when DISCLOSURE_ENABLED is true.
 const cost =
   "We make ApplyScout. We have a conflict of interest, and here is how we handled it: every Scout price below comes from our own pricing page, every other provider's price is quoted from that provider's own page with the date we read it, and we say where another option is cheaper.";
 const pay =
   "We make ApplyScout. We have a conflict of interest, and here is how we handled it: Scout prices come from our own pricing page, the one outside price comes from that provider's own page with the date we fetched it, and we say where another option fits better.";
 const text = variant === "cost" ? cost : pay;
 ---
-<p><em>{text}</em></p>
+{DISCLOSURE_ENABLED && <p><em>{text}</em></p>}

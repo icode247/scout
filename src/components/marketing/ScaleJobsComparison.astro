@@ -1,5 +1,15 @@
+---
+import { SCALE_JOBS_COMPARISON_ENABLED } from "../../config/marketing-decisions";
+
+/**
+ * TODO(CLINTON-DECISION): approve, change, or delete this Scale.jobs comparison.
+ * Rendered only when SCALE_JOBS_COMPARISON_ENABLED is true.
+ */
+---
+{SCALE_JOBS_COMPARISON_ENABLED && (
 <section>
   <h2>How does Scout's Human route compare with Scale.jobs on price?</h2>
   <p>On the published figures alone, Scale.jobs is cheaper per application than Scout's Human Assistant plans. Its $199 monthly plan lists 500 applications, about $0.40 each by our arithmetic (monthly price divided by applications), and its $149 plan lists 250 applications, about $0.60 each. Scout's Focused Search is $299 for 250 applications, about $1.20 each, and Full Search is $499 for 500, about $1.00 each. If the lowest published price per application for human-completed work is your main criterion, Scale.jobs' published numbers favor it.</p>
   <p>What you get for Scout's higher price is the Human route as Scout describes it on its pricing page: a dedicated Human Assistant, a dedicated WhatsApp group, dashboard tracking, the resume used for every job, and screenshots of important form answers, with a second assistant and a weekly campaign review on Career Campaign. Scale.jobs' pages also list human assistants and team chat, and screenshots of every application on its monthly plans, so the two services overlap more than they differ. We have not tested Scale.jobs, and neither page tells you how good the work is, so this comparison covers published prices and listed features only. Compare what is included, what proof you get and how each team communicates before you decide. For a longer side-by-side, see <a href="/compare/scale-jobs-alternative">Scout compared with Scale.jobs</a>.</p>
 </section>
+)}

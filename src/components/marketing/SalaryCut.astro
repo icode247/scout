@@ -1,1 +1,4 @@
- and no cut of your salary
+---
+import { SALARY_PERCENTAGE_CLAIM_ENABLED } from "../../config/marketing-decisions";
+---
+{SALARY_PERCENTAGE_CLAIM_ENABLED ? <> and no cut of your salary</> : null}

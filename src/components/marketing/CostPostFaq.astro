@@ -1,7 +1,15 @@
 ---
 import FAQ from "../FAQ.astro";
+import { SALARY_PERCENTAGE_CLAIM_ENABLED } from "../../config/marketing-decisions";
 
-const salaryAnswer = "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary.";
+/**
+ * TODO(CLINTON-DECISION): salary answer when the flag is off omits the percentage sentence.
+ * Approved wording:
+ * "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+ */
+const salaryAnswer = SALARY_PERCENTAGE_CLAIM_ENABLED
+  ? "No. The price of your plan is the only fee. There is no placement fee and no percentage of your salary."
+  : "No. The price of your plan is the only fee. There is no placement fee.";
 
 const items = [
   {

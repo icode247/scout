@@ -1,4 +1,11 @@
 ---
+import { NO_CALL_REQUIRED_CLAIM_ENABLED } from "../../config/marketing-decisions";
+
+/**
+ * Steps 2–4 and “Activate a plan from your dashboard” are the draft wording,
+ * verified by Clinton on Nov 1, 2026.
+ * TODO(CLINTON-DECISION): “No call is required to start” stays off (strategy-call decision).
+ */
 interface Props {
   variant: "cost" | "pay";
 }
@@ -6,7 +13,7 @@ const { variant } = Astro.props;
 ---
 <ol>
   <li>
-    <strong>Create your account and import your resume.</strong> Choose Human or AI. No call is required to start.
+    <strong>Create your account and import your resume.</strong> Choose Human or AI.{NO_CALL_REQUIRED_CLAIM_ENABLED ? " No call is required to start." : ""}
   </li>
   {variant === "cost" ? (
     <li><strong>Check your job profile.</strong> Make sure your target roles, locations and dealbreakers say what you actually want.</li>

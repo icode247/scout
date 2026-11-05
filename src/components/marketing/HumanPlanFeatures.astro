@@ -1,10 +1,12 @@
 ---
+import { HUMAN_PLAN_FEATURES_ENABLED } from "../../config/marketing-decisions";
+
 interface Props {
   variant: "cost-list" | "service-table" | "screenshot-clause" | "pay-watchout" | "proof-clause" | "price-driver";
 }
 const { variant } = Astro.props;
 ---
-{variant === "cost-list" ? (
+{HUMAN_PLAN_FEATURES_ENABLED ? (variant === "cost-list" ? (
   <ul>
     <li><strong>Focused Search ($299 a month, 250 applications):</strong> one Human Assistant, one active job profile, a dedicated WhatsApp group, dashboard tracking, the resume used for every job, and screenshots of important form answers.</li>
     <li><strong>Full Search ($499 a month, 500 applications):</strong> one dedicated Human Assistant, up to two active job profiles, a tailored resume for each job and detailed answer screenshots.</li>
@@ -36,4 +38,4 @@ const { variant } = Astro.props;
   <span>With Scout, both lanes show the job, its status and the resume used, and Human Assistant plans also include screenshots or records of important form answers.</span>
 ) : (
   <span>Human Assistant plans add screenshots of important form answers.</span>
-)}
+)) : null}
