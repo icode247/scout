@@ -12,6 +12,11 @@ export type Competitor = {
   sourceLabel: string;
   researchChecked?: string;
   buyingQuestions?: Array<{ question: string; answer: string }>;
+  /** Long-form comparisons: an answer-first opener, a conflict-of-interest line, body sections and an FAQ. */
+  opener?: string;
+  disclosure?: string;
+  sections?: { title: string; paragraphs: string[] }[];
+  faqs?: { q: string; a: string }[];
   /** Overrides the default "Scout vs X" title when people search for something specific, like X's cost. */
   seoTitle?: string;
   seoDescription?: string;
@@ -20,33 +25,131 @@ export type Competitor = {
 export const competitors: Competitor[] = [
   {
     slug: "scale-jobs-alternative",
-    name: "scale.jobs",
+    name: "Scale.jobs",
     category: "Human application service",
     summary:
-      "scale.jobs and Scout both offer human help with job applications. The main difference is choice: Scout keeps a Human Assistant and a lower-cost AI Assistant on the same profile and tracking system.",
+      "Scale.jobs and Scout both have people apply to jobs for you. On published figures, Scale.jobs costs less per application. Scout adds a lower-cost AI Assistant that applies for you on the same profiles and dashboard.",
+    opener:
+      "If the lowest published price for human-completed applications is your main test, Scale.jobs wins: its one-time plans work out to about $0.60 to $0.80 per application (scale.jobs/pricing/one-time, read November 5, 2026), against about $1.00 to $1.20 on Scout's Human Assistant plans. Choose Scout if you want a Human or a lower-cost AI Assistant in one account, with job finding in every plan price.",
+    disclosure:
+      "We make ApplyScout, so we have a conflict of interest. Scout prices come from our own pricing page, every Scale.jobs figure comes from Scale.jobs' own pages with the date we read it, and we say where Scale.jobs is cheaper. We have not tested Scale.jobs.",
     bestFor:
-      "Choose scale.jobs when you specifically want a one-time package of human-completed applications and its current package structure fits your campaign.",
+      "Choose Scale.jobs when the lowest published price for human-completed applications is your main test, or when you would rather pay once for a large package than pay monthly. It lists one-time plans and, on a separate page, monthly plans (both read November 5, 2026).",
     scoutBestFor:
-      "Choose Scout when you want to select either human or AI fulfillment, manage multiple job profiles, delegate jobs from the web, and keep the workflow in one dashboard.",
+      "Choose Scout when you want to pick between a Human Assistant and a lower-cost AI Assistant in one account, want job finding inside one flat plan price, and want to start without a call.",
     competitorStrengths: [
-      "Human assistants fill and submit job applications.",
-      "Current plans are sold as one-time application packages rather than recurring subscriptions.",
-      "Its official pricing page lists job sourcing, custom cover letters, team chat, and optional AI-tailored resumes.",
+      "Lower published price. One-time plans list $399 for 500 applications, $599 for 1,000 and $999 for 1,500, with job finding, AI custom resumes and custom cover letters included (scale.jobs/pricing/one-time, read November 5, 2026).",
+      "A monthly option too: $99 for 100 applications, $149 for 250, $199 for 500 and $499 for 750 (scale.jobs/pricing/subscription, read November 5, 2026).",
+      "A proof screenshot for every application, as its pricing page describes it (scale.jobs/pricing, read November 5, 2026).",
+      "A published refund formula: plan price, minus the cost of applications sent, minus a one-time $100 fee (scale.jobs/cancellation-policy, read November 5, 2026).",
+      "People do the applying, with a team chat and an outcome manager on chat or video call (scale.jobs/pricing, read November 5, 2026).",
     ],
     scoutDifferences: [
-      "Two distinct fulfillment lanes: Human Assistant or AI Assistant.",
-      "Dedicated WhatsApp communication and detailed form evidence on Human plans.",
-      "Shared profiles, resume choices, delegated jobs, and application records across both lanes.",
+      "An AI Assistant that applies for you at a lower price: AI Essential is $39 a month for 75 applications and AI Plus is $79 for 200. There are only two AI plans.",
+      "Finding suitable openings is part of every plan price, with no job-finding add-on to buy.",
+      "Human plans include a dedicated WhatsApp group and screenshots of important form answers. AI plans do not include form-answer screenshots.",
+      "Up to 4 active job profiles on Career Campaign, and the same dashboard for both lanes.",
+      "No call is required to start: create an account, import your resume, then Activate a plan from your dashboard.",
+      "No placement fee and no percentage of salary. No interview or offer guarantee.",
     ],
     rows: [
-      ["Core service", "Human assistants apply for jobs", "Human or AI assistant applies for jobs"],
-      ["Buying model", "One-time application packages", "Choose the Scout plan and fulfillment lane"],
-      ["Human communication", "Team chat", "Dedicated WhatsApp group"],
-      ["Lower-cost AI-only lane", "AI tools are listed separately", "Available within the Scout service"],
-      ["Application visibility", "Tracking and assistant updates", "Job, status, resume used; detailed evidence on Human"],
+      ["Facts read on", "November 5, 2026: scale.jobs/pricing, /pricing/one-time, /pricing/subscription, /cancellation-policy, /faq, /ai-assistant", "November 5, 2026: Scout pricing page"],
+      ["Who does the work", "Human assistants: 1 on the lowest plan of each price list, 2 on the others", "Your choice: a Human Assistant (2 on Career Campaign) or the AI Assistant"],
+      ["Pay once", "$399 for 500 applications, $599 for 1,000, $999 for 1,500", "No one-time package. 90 days prepaid saves about 10%: $105, $213, $807, $1,347 or $2,697"],
+      ["Pay monthly", "$99 for 100 applications, $149 for 250, $199 for 500, $499 for 750", "AI: $39 for 75, $79 for 200. Human: $299 for 250, $499 for 500, $999 for 1,000"],
+      ["Price per application (our arithmetic)", "One-time: about $0.80, $0.60, $0.67. Monthly, before add-ons: $0.99, about $0.60, $0.40, $0.67", "AI: about $0.52, $0.40. Human: about $1.20, $1.00, $1.00"],
+      ["Job finding", "Included on one-time plans and the $499 monthly plan. Optional add-on on the lower monthly plans: $49, $79 or $99", "Included in every plan"],
+      ["Tailored resumes", "AI custom resumes included on one-time plans and the $499 monthly plan. Optional add-on on the lower monthly plans: $49, $79 or $99", "Preparing your materials is part of every plan. The pricing page lists what each plan includes"],
+      ["Proof of work", "A proof screenshot for every application", "Human: screenshots of important form answers. AI: no form-answer screenshots. Both: job, status and resume used"],
+      ["Communication", "Team chat and an outcome manager; its FAQ also names WhatsApp and a private Mattermost channel", "Human plans: a dedicated WhatsApp group"],
+      ["Getting started", "Its FAQ lists an onboarding call as step 1 and does not say whether you can skip it", "No call required. A free call is optional"],
+      ["AI product", "AI Assistant is a self-service toolkit: free tier, or Pro at $9 a month. The page does not say it submits applications for you", "The AI Assistant applies for you: $39 or $79 a month"],
+      ["Refunds and cancellation", "Plan price minus applications sent minus a one-time $100 fee. Monthly plans: cancel anytime", "Plans renew until cancelled. Cancel from Settings"],
+      ["Guarantee", "None listed on the pricing pages we read", "No interview or offer guarantee"],
+    ],
+    sections: [
+      {
+        title: "What Scale.jobs sells: one-time plans and monthly plans",
+        paragraphs: [
+          "Scale.jobs sells both, and its own pages disagree about it. Its one-time page (scale.jobs/pricing/one-time, read November 5, 2026) says \"We don't do subscriptions\", and its FAQ (scale.jobs/faq, read the same day) says there are no monthly subscriptions. Its monthly page (scale.jobs/pricing/subscription, read the same day) sells four monthly plans with the line \"Cancel your plan anytime, no questions asked.\" We found no link to that monthly page on the main pricing page, so a buyer could easily miss it.",
+          "We show both because both can be bought from the site today. They are different bundles, so read them separately. A one-time plan is a total number of applications. A monthly plan, like a Scout plan, is an allowance each month.",
+        ],
+      },
+      {
+        title: "Price: where Scale.jobs is cheaper, and by how much",
+        paragraphs: [
+          "All per-application figures here are our arithmetic: the price divided by the published allowance at full use. They measure price, not results. Scale.jobs figures were read on November 5, 2026, on the pages named in the table above.",
+          "At 500 applications, Scale.jobs' one-time Standard plan is $399, about $0.80 each, with job finding, AI custom resumes and cover letters included. Its $199 monthly plan is about $0.40 each, but job finding is a $99 add-on on that plan, which makes it $298, about $0.60 each. With AI custom resumes as well, it is $397, about $0.79 each. Scout's Full Search is $499, about $1.00 each. Scale.jobs is cheaper on all of these.",
+          "At 250 applications the gap depends on what you add. Scale.jobs' $149 monthly plan is about $0.60 each on its own, $228 with job finding (about $0.91 each), and $307 with job finding and AI custom resumes (about $1.23 each). Scout's Focused Search is $299, about $1.20 each. The monthly page does not say whether these add-ons bill once or every month, so the real total could be lower after the first month. Ask before you compare.",
+          "At 1,000 applications, Scale.jobs' Accelerator is $599 one time, about $0.60 each. Scout's Career Campaign is $999 for 1,000 a month, about $1.00 each, with 2 Human Assistants, up to 4 job profiles and a weekly campaign review.",
+          "One note on Scale.jobs' own numbers: its main pricing page prints $0.40 each next to the $999 plan. Dividing $999 by 1,500 gives about $0.67. The $0.40 figure matches only if you take off the $398 of add-ons that plan includes, so we use $0.67.",
+        ],
+      },
+      {
+        title: "What each service includes in the price",
+        paragraphs: [
+          "Scout's plans cover finding suitable openings, preparing your materials, completing the applications, and a record of each job, its status and the resume used. There is no add-on for job finding on any plan.",
+          "Scale.jobs' one-time plans list job finding, AI custom resumes and custom cover letters on every tier. On the monthly plans, AI custom cover letters and screenshots are listed on every tier, and job finding and AI custom resumes are included only on the $499 Ultimate Bundle. Its FAQ also says \"You choose which jobs to apply for\" and mentions job alerts, so ask how much of the job selection you are expected to do on the plan you pick.",
+          "Expert resume writing and a LinkedIn makeover are add-ons at $199 each on Scale.jobs' one-time Standard and Accelerator plans and are included on the $999 Ultimate plan. If you want a professional resume rewrite from the same provider, Scale.jobs publishes a price for one.",
+        ],
+      },
+      {
+        title: "Proof and communication",
+        paragraphs: [
+          "On proof, Scale.jobs' published promise is wider. Its pricing page describes a proof screenshot for every application, and its FAQ adds weekly PDF reports. Scout's Human plans include screenshots of important form answers, and Scout's AI plans do not include form-answer screenshots. Both Scout lanes show the job, its status and the resume used. If a screenshot of every single application is what you want, Scale.jobs' published offer is the closer match.",
+          "On communication, the two overlap more than they differ. Scale.jobs describes a team chat and an outcome manager on chat or video call, and its FAQ names WhatsApp updates and a private Mattermost channel. Scout's Human plans include a dedicated WhatsApp group. Ask each provider how quickly a person answers.",
+        ],
+      },
+      {
+        title: "The AI lane is the biggest structural difference",
+        paragraphs: [
+          "Scout's AI Assistant applies on your behalf from your saved job profiles, for $39 or $79 a month. It records the job, status and resume used, and it costs less because it is software, not a person.",
+          "Scale.jobs' AI Assistant (scale.jobs/ai-assistant, read November 5, 2026) is listed as a toolkit: a job board, a tracker, and AI resumes and cover letters, with a free tier and a Pro plan at $9 a month, shown down from $19. The page does not say it submits applications for you, so treat it as tools you use yourself unless Scale.jobs tells you otherwise. If you want tools rather than a service, $9 is far less than any Scout plan. If you want something else to do the applying at a lower price than human labor, that is what Scout's AI plans are for.",
+        ],
+      },
+      {
+        title: "Refunds and getting started",
+        paragraphs: [
+          "Scale.jobs publishes a refund formula (scale.jobs/cancellation-policy, read November 5, 2026): plan price, minus the cost of applications sent, minus a one-time $100 fee. Its example is a $599 Accelerator plan stopped after 100 applications, which returns $439. Expert resume writing and the LinkedIn makeover are not refundable once delivered. The policy's example is a one-time plan and it does not say how this works on monthly plans, so ask.",
+          "Scout plans are subscriptions that renew until you cancel, and you cancel from Settings. No call is required to start: create an account, import your resume, then Activate a plan from your dashboard. A free call is optional at /book-call. Scale.jobs' FAQ lists an onboarding call as step 1 and does not say whether it is required, though its pricing page also offers a short call if you are unsure which plan to buy.",
+        ],
+      },
+      {
+        title: "What this comparison does not tell you",
+        paragraphs: [
+          "We have not tested Scale.jobs, and its pages cannot tell you how good the work is. The same is true of Scout's pages. An application only counts if it fits your rules, so before you buy from either, ask for a sample record, set your dealbreakers in writing, and review the first batch line by line. Employers decide who they interview and hire, whatever you pay.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        q: "Is Scale.jobs cheaper than Scout?",
+        a: "On published figures, yes, for most comparisons. [Scale.jobs' one-time plans](https://scale.jobs/pricing/one-time) (read November 5, 2026) work out to about $0.60 to $0.80 per application with job finding included. Scout's Human Assistant plans are about $1.00 to $1.20. Scout's AI plans are about $0.40 to $0.52, but that is software rather than a person. These figures are our arithmetic and say nothing about results.",
+      },
+      {
+        q: "Does Scale.jobs sell subscriptions or one-time packages?",
+        a: "Both. Its [one-time page](https://scale.jobs/pricing/one-time) says it does not do subscriptions, and its [monthly page](https://scale.jobs/pricing/subscription) sells plans from $99 to $499 a month (both read November 5, 2026). On the monthly plans below $499, job finding and AI custom resumes are paid add-ons.",
+      },
+      {
+        q: "Is Scale.jobs a human service or an AI tool?",
+        a: "Its application service uses human assistants. It also has a separate [AI Assistant](https://scale.jobs/ai-assistant) toolkit with a free tier and a $9 a month Pro plan (read November 5, 2026), and that page does not say it submits applications for you. Scout offers a Human Assistant and an AI Assistant that both apply for you.",
+      },
+      {
+        q: "Does either service guarantee interviews?",
+        a: "Scout does not guarantee interviews or offers, because employers decide who they interview and hire. We found no interview guarantee on the [Scale.jobs pricing pages](https://scale.jobs/pricing) we read on November 5, 2026. Read [what to do when a service produces no interviews](/blog/job-application-service-no-interviews).",
+      },
+      {
+        q: "Do I need a call to start with Scout?",
+        a: "No. No call is required to start. Create an account, import your resume, then Activate a plan from your dashboard. If you want to talk first, a free call is optional: [Book a free call](/book-call).",
+      },
+      {
+        q: "What else should I compare besides Scale.jobs and Scout?",
+        a: "Read the [best job application services list](/blog/best-job-application-services-2026), which covers 10 services alphabetically with dated prices, and [how much a job application service costs](/blog/job-application-service-cost). Plan details for Scout are on the [pricing page](/pricing).",
+      },
     ],
     sourceUrl: "https://scale.jobs/pricing",
-    sourceLabel: "scale.jobs official pricing",
+    sourceLabel: "Scale.jobs official pricing",
+    researchChecked: "November 5, 2026",
   },
   {
     slug: "lazyapply-alternative",

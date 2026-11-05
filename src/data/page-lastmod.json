@@ -1,0 +1,43 @@
+{
+  "pages": {
+    "/admin": "2026-11-02",
+    "/agent": "2026-10-10",
+    "/ai-job-application-assistant": "2026-11-05",
+    "/ai-jobs": "2026-07-17",
+    "/applications": "2026-10-01",
+    "/auto-apply": "2026-08-21",
+    "/blog": "2026-07-17",
+    "/book-call": "2026-11-05",
+    "/checkout/success": "2026-08-05",
+    "/compare": "2026-07-24",
+    "/dashboard": "2026-11-01",
+    "/delete-account": "2026-08-14",
+    "/download": "2026-11-05",
+    "/email/unsubscribe": "2026-08-21",
+    "/how-it-works": "2026-11-05",
+    "/human-job-application-service": "2026-11-01",
+    "/": "2026-11-05",
+    "/intake": "2026-10-10",
+    "/job-application-service": "2026-11-05",
+    "/jobs": "2026-10-05",
+    "/login": "2026-10-02",
+    "/logo-lab": "2026-07-16",
+    "/onboarding": "2026-11-01",
+    "/pricing": "2026-11-05",
+    "/privacy": "2026-10-10",
+    "/privacy/extension": "2026-08-14",
+    "/profiles": "2026-10-10",
+    "/safety": "2026-07-16",
+    "/settings": "2026-10-01",
+    "/support": "2026-11-05",
+    "/terms": "2026-10-01",
+    "/variants/a-restraint": "2026-08-14",
+    "/variants/b-dark": "2026-08-14",
+    "/variants/c-mono": "2026-08-14"
+  },
+  "prefixes": {
+    "/compare": "2026-11-05",
+    "/auto-apply": "2026-11-05",
+    "/job-application-service": "2026-11-05"
+  }
+}

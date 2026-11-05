@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import Container from "../../components/Container.astro";
 import MarketingCTA from "../../components/MarketingCTA.astro";
+import FAQ from "../../components/FAQ.astro";
 import { competitors } from "../../data/competitors";
 
 export const prerender = true;
@@ -46,9 +47,14 @@ const breadcrumbLd = {
         </h1>
         <p class="mt-6 max-w-3xl text-lg leading-relaxed text-white/75 sm:text-xl">{competitor.summary}</p>
         <p class="mt-6 text-sm text-white/55">Research checked {researchChecked}. Features and pricing can change.</p>
+        {competitor.disclosure && <p class="mt-3 max-w-3xl text-sm italic text-white/70">{competitor.disclosure}</p>}
       </div>
     </Container>
   </section>
+
+  {competitor.opener && (
+    <section class="bg-white py-12 sm:py-16"><Container><p class="mx-auto max-w-3xl text-xl leading-relaxed text-ink">{competitor.opener}</p></Container></section>
+  )}
 
   {buyingQuestions.length > 0 && (
     <section class="bg-brand-50 py-16 sm:py-24">
@@ -159,6 +165,22 @@ const breadcrumbLd = {
       </div>
     </Container>
   </section>
+
+  {(competitor.sections?.length || competitor.faqs?.length) && (
+    <section class="bg-brand-50 py-16 sm:py-24">
+      <Container>
+        <div class="mx-auto max-w-3xl">
+          {competitor.sections?.map((section) => (
+            <div class="mb-12">
+              <h2 class="font-display text-3xl font-extrabold sm:text-4xl">{section.title}</h2>
+              {section.paragraphs.map((paragraph) => <p class="mt-5 text-lg leading-relaxed text-ink-soft">{paragraph}</p>)}
+            </div>
+          ))}
+          {competitor.faqs?.length && <FAQ items={competitor.faqs} heading={`Scout vs ${competitor.name}: questions`} />}
+        </div>
+      </Container>
+    </section>
+  )}
 
   <section class="bg-surface py-16 sm:py-20">
     <Container>

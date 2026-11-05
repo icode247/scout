@@ -31,6 +31,11 @@ const blogLastModified = new Map(
     .filter((entry) => entry[1]),
 );
 const latestBlogUpdate = [...blogLastModified.values()].sort().at(-1);
+// Real edit dates for everything that is not a blog post (`npm run seo:dates` writes this).
+// Dynamic routes share their template's date, keyed by the route's prefix.
+const pageDates = JSON.parse(readFileSync(new URL("./src/data/page-lastmod.json", import.meta.url), "utf8"));
+const pageLastModified = (pathname) =>
+  pageDates.pages[pathname] ?? pageDates.prefixes[pathname.split("/").slice(0, -1).join("/")];
 
 // https://astro.build/config
 export default defineConfig({
@@ -87,7 +92,7 @@ export default defineConfig({
       },
       serialize(item) {
         const pathname = new URL(item.url).pathname;
-        const lastmod = pathname === "/blog" ? latestBlogUpdate : blogLastModified.get(pathname);
+        const lastmod = pathname === "/blog" ? latestBlogUpdate : blogLastModified.get(pathname) ?? pageLastModified(pathname);
         if (lastmod) item.lastmod = new Date(lastmod).toISOString();
         return item;
       },

@@ -193,10 +193,10 @@ const posts = [
       { title: "Applications go out", body: "Scout matches, prepares, submits, and records the work." },
       { title: "You interview", body: "Handle assessments, conversations, and final decisions.", tone: "amber" },
     ]},
-    info2: { type: "cards", kicker: "Proven infrastructure", title: "Scout is built on the FastApply engine", subtitle: "The service layer you control sits on established application infrastructure.", columns: 3, items: [
+    info2: { type: "cards", kicker: "Our own infrastructure", title: "Scout runs on its own automation engine", subtitle: "The service layer you control sits on Scout's own application engine.", columns: 3, items: [
       { title: "You + assistant", body: "AI or human execution guided by your decisions.", tone: "lime" },
       { title: "Scout layer", body: "Profiles, targeting, delegation, plans, and tracking." },
-      { title: "FastApply engine", body: "Discovery, matching, tailoring, and ATS submission. 2M+ applications.", tone: "amber" },
+      { title: "Scout engine", body: "Discovery, matching, tailoring, and ATS submission.", tone: "amber" },
     ]},
   },
   {
@@ -548,6 +548,18 @@ const posts = [
     info1: {"type": "cards", "kicker": "Pick two roles, not all five", "title": "Ways a partner can genuinely help", "subtitle": "Ask which ones they want, then do only those", "columns": 2, "items": [{"title": "Admin support", "body": "Set up a tracker, organize documents, research companies", "tone": "lime"}, {"title": "Accountability partner", "body": "Hold a weekly check-in where they set their own targets"}, {"title": "Mock interviewer", "body": "Practice questions, then give one strength and one fix"}, {"title": "Connector", "body": "Ask contacts to talk with your partner, then step aside", "tone": "amber"}]},
     info2: {"type": "split", "kicker": "Weekly check-in", "title": "20 minutes, once a week, then stop", "subtitle": "Your partner leads. You mostly ask.", "rightTone": "amber", "sides": [{"title": "Ask", "items": ["What went well this week?", "What felt hardest?", "What is next week's plan?", "What do you want from me?"]}, {"title": "Avoid", "items": ["Daily 'did you apply?' questions", "Applying without consent", "Logging in to their accounts", "Comparing them to others"]}]},
   },
+  {
+    slug: "are-job-application-services-legit",
+    cover: { kicker: "Buyer guide", title: "Are job application services legit?", subtitle: "Ten checks that separate real help from a bad deal", cards: ["Clear price", "Proof of work", "No guarantees"] },
+  },
+  {
+    slug: "what-is-a-job-application-service",
+    cover: { kicker: "Buyer guide", title: "What is a job application service?", subtitle: "What it does, the four main types, and how it works", cards: ["Find jobs", "Prepare materials", "Apply and track"] },
+  },
+  {
+    slug: "is-a-job-application-service-worth-it",
+    cover: { kicker: "Buyer guide", title: "Is a job application service worth it?", subtitle: "Five measures and a worked example", cards: ["Your time", "Cost per application", "When to skip it"] },
+  },
 ];
 
 const requestedSlug = process.argv[2];
@@ -557,8 +569,9 @@ if (requestedSlug && selectedPosts.length === 0) throw new Error(`Unknown blog s
 for (const post of selectedPosts) {
   const assets = [
     [`${post.slug}-cover.webp`, cover(post.cover), 1200, 628],
-    [`${post.slug}-infographic-1.webp`, post.info1.type === "split" ? splitGraphic(post.info1) : cardsGraphic(post.info1), 1200, 800],
-    [`${post.slug}-infographic-2.webp`, post.info2.type === "split" ? splitGraphic(post.info2) : cardsGraphic(post.info2), 1200, 800],
+    ...[post.info1, post.info2].flatMap((info, index) => info
+      ? [[`${post.slug}-infographic-${index + 1}.webp`, info.type === "split" ? splitGraphic(info) : cardsGraphic(info), 1200, 800]]
+      : []),
   ];
   for (const [name, svg, width, height] of assets) {
     await sharp(Buffer.from(svg))
@@ -568,4 +581,4 @@ for (const post of selectedPosts) {
   }
 }
 
-console.log(`Generated ${selectedPosts.length * 3} Scout blog visuals in ${OUT}`);
+console.log(`Generated visuals for ${selectedPosts.length} Scout blog post(s) in ${OUT}`);

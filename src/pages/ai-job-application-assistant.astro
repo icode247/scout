@@ -4,11 +4,63 @@ import Container from "../components/Container.astro";
 import Button from "../components/Button.astro";
 import ProductScreenshot from "../components/ProductScreenshot.astro";
 import MarketingCTA from "../components/MarketingCTA.astro";
+import FAQ from "../components/FAQ.astro";
+
+const faqs = [
+  { q: "How much does the ApplyScout AI Assistant cost?", a: "AI Essential is $39 a month for 75 applications, and AI Plus is $79 a month for 200 applications. Prepaying for 90 days saves about 10%. There is no placement fee and no percentage of your salary." },
+  { q: "Does the AI Assistant send the same resume to every job?", a: "No. It tailors resume language, cover notes and repeated application answers to each role, and your original resume stays as it is. You can also choose which job profile and resume it should use for a job you add yourself." },
+  { q: "Can I choose which jobs it applies to?", a: "Yes. You set roles, locations, salary floor and exclusions in a job profile, and Scout matches jobs against it. AI Essential includes 1 active job profile and AI Plus includes up to 3." },
+  { q: "Can I see what the AI Assistant applied to?", a: "Yes. Your tracker shows every job, its status, the submission time and the resume used. Screenshots of form answers are included with Human Assistant plans, not with the AI Assistant." },
+  { q: "Does an AI application assistant guarantee interviews or offers?", a: "No. You pay for the application work: finding suitable openings, preparing your materials and completing the applications. Employers decide who they interview and hire." },
+  { q: "Do I need to book a call to start?", a: "No. You create an account, import your resume, review the data Scout extracted and activate a plan. No strategy call is required for the AI Assistant." },
+  { q: "When should I choose a Human Assistant instead?", a: "Choose a person when your search needs judgment, such as a career pivot, a senior role or unusual form questions. Human Assistant plans start at $299 a month for 250 applications." },
+];
+const prose = "prose prose-slate mx-auto max-w-3xl prose-headings:font-display prose-headings:tracking-tight prose-a:text-brand-700";
 ---
 <Base title="AI Application Assistant That Applies to Jobs for You" description="Scout's AI application assistant finds matching roles, tailors your resume for each job, submits the application, and tracks every one. From $39 a month.">
   <section class="bg-brand-100 py-20 sm:py-28"><Container><div class="grid items-center gap-12 lg:grid-cols-[0.82fr_1.18fr]"><div><span class="rounded-full bg-brand-950 px-3 py-1.5 text-sm font-bold text-white">AI application assistant · from $39/mo</span><h1 class="mt-6 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.035em] sm:text-7xl">An AI job application assistant that applies for you.</h1><p class="mt-6 max-w-xl text-lg leading-relaxed text-ink-soft">For busy job seekers who do not have time to apply: Scout finds relevant openings, tailors each application, submits it, and records the work.</p><Button href="/login?intent=ai" size="lg" class="mt-8 rounded-full bg-brand-950 text-white">Create my AI Assistant account</Button><p class="mt-3 text-sm font-semibold text-ink-muted">No call required · Guided resume import</p></div><ProductScreenshot variant="queue" /></div></Container></section>
+  <section class="bg-white py-16 sm:py-20"><Container><div class={prose}>
+    <h2>What is an AI job application assistant?</h2>
+    <p>An AI job application assistant finds openings that match your search, tailors your materials to each one, submits the application and keeps a record of what was sent. ApplyScout (Scout, at applyscout.app) runs an AI Assistant that does this from your saved job profiles. It cannot promise interviews or offers, because employers make those decisions.</p>
+    <h2>How does an AI application assistant work?</h2>
+    <p>Scout's AI Assistant does the repeatable part of a job search in four steps:</p>
+    <ol>
+      <li><strong>Find and rank.</strong> It matches roles against your experience, preferences, salary floor and exclusions.</li>
+      <li><strong>Prepare.</strong> It tailors resume language, cover notes and repeated answers to the role. Your original resume stays untouched.</li>
+      <li><strong>Submit and log.</strong> It applies at a safe pace and saves a record of the materials used.</li>
+      <li><strong>Show its work.</strong> Your tracker lists every job, its status, the submission time and the resume used.</li>
+    </ol>
+    <p>You can also add a job you found yourself, from your dashboard or with the <a href="/download">Scout for Chrome extension</a>, and pick the profile it should follow. Scout supports auto-apply on <a href="/auto-apply">Workday, Greenhouse, Lever, LinkedIn and Indeed, among others</a>.</p>
+    <h2>How do I get started with the AI Assistant?</h2>
+    <p>You do not need a call. Create an account, import your resume, review the data Scout extracted and let it prepare your first job profile. Then activate a plan from your dashboard to begin. The full path is on the <a href="/how-it-works">How Scout works</a> page.</p>
+  </div></Container></section>
   <section class="bg-white py-20 sm:py-28"><Container><div class="mx-auto max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold sm:text-6xl">What the AI assistant handles.</h2><p class="mt-5 text-lg text-ink-soft">Repeatable application work, completed with a consistent process instead of copied generic answers.</p></div><div class="mt-14 grid gap-5 lg:grid-cols-3"><article class="rounded-2xl bg-brand-200 p-7"><h3 class="text-2xl font-extrabold">Find and rank</h3><p class="mt-3 leading-relaxed text-ink-soft">Match roles against your experience, preferences, salary floor, and exclusions.</p></article><article class="rounded-2xl bg-surface p-7"><h3 class="text-2xl font-extrabold">Prepare the packet</h3><p class="mt-3 leading-relaxed text-ink-soft">Tailor resume language, cover notes, and repeated ATS answers to the role.</p></article><article class="rounded-2xl bg-brand-950 p-7 text-white"><h3 class="text-2xl font-extrabold text-white">Submit and log</h3><p class="mt-3 leading-relaxed text-white/70">Apply at safe pacing and save a record of the materials and confirmation.</p></article></div></Container></section>
   <section class="bg-surface py-20 sm:py-28"><Container><div class="grid items-center gap-10 lg:grid-cols-2"><div><p class="text-lg font-bold text-brand-700">Tailored for the actual posting</p><h2 class="mt-3 font-display text-4xl font-extrabold sm:text-6xl">The same profile. A different packet for each role.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">Scout reads the requirements, selects relevant experience, and prepares job-specific materials before anything moves.</p></div><ProductScreenshot variant="documents" /></div></Container></section>
   <section class="bg-white py-20 sm:py-28"><Container><div class="grid items-center gap-10 lg:grid-cols-2"><ProductScreenshot variant="tracker" /><div><p class="text-lg font-bold text-signal-700">Visible from start to finish</p><h2 class="mt-3 font-display text-4xl font-extrabold sm:text-6xl">You never have to wonder what the agent did.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">Your tracker shows every job, document packet, submission time, and resume used. Detailed screenshots of form answers are available on Human Assistant plans.</p><a href="/safety" class="mt-6 inline-flex font-bold text-brand-700">See Scout's safety controls →</a></div></div></Container></section>
+  <section class="bg-surface py-16 sm:py-20"><Container><div class={prose}>
+    <h2>How much does an AI application assistant cost?</h2>
+    <p>ApplyScout has two AI plans. Prepay for 90 days on either and save about 10%. There is no placement fee and no percentage of your salary.</p>
+    <div class="not-prose my-8 overflow-x-auto">
+      <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+        <thead><tr class="border-b border-ink/10"><th class="p-3 font-extrabold">Plan</th><th class="p-3 font-extrabold">Price</th><th class="p-3 font-extrabold">Applications</th><th class="p-3 font-extrabold">Active job profiles</th><th class="p-3 font-extrabold">What is included</th></tr></thead>
+        <tbody>
+          <tr class="border-b border-ink/10 align-top"><td class="p-3 font-bold">AI Essential</td><td class="p-3">$39/month</td><td class="p-3">75 per month</td><td class="p-3">1</td><td class="p-3">Tailored resume per job, job and status tracking, resume-used record, add jobs from Chrome</td></tr>
+          <tr class="align-top"><td class="p-3 font-bold">AI Plus</td><td class="p-3">$79/month</td><td class="p-3">200 per month</td><td class="p-3">Up to 3</td><td class="p-3">Tailored resumes and cover notes, priority AI queue, job and status tracking, resume-used record</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Both plans exclude form-answer screenshots, which come with Human Assistant plans. See every plan on the <a href="/pricing">pricing page</a>.</p>
+    <h2>What should an AI application assistant prove it did?</h2>
+    <p>An application count alone is not proof. Look for a record of each job: the employer and role, the status, the submission time and the exact resume used. Scout's AI Assistant records the job, status and resume used for every application. For a fuller checklist, read <a href="/blog/what-proof-should-job-application-assistant-provide">what proof a job application assistant should provide</a>.</p>
+    <h2>Is it safe to let an AI apply for you?</h2>
+    <p>You set the limits. Scout uses preference guardrails, application pacing and per-role materials, and you can choose automatic approval for routine matches or require approval for every role. If the AI is uncertain, the application can pause and return to you. Read <a href="/safety">how Scout keeps auto-apply safe</a>.</p>
+    <h2>AI Assistant or Human Assistant: which fits?</h2>
+    <p>Choose the AI Assistant when your search can be written as clear rules: target titles, locations, seniority and exclusions. Choose a <a href="/human-job-application-service">Human Assistant</a> when context changes the answer, such as a career pivot or a senior role. Human plans start at $299 a month for 250 applications. For the trade-offs, see <a href="/blog/human-vs-ai-job-application-service">human vs AI job application service</a>, or <a href="/compare">compare Scout with other services</a>.</p>
+  </div></Container></section>
+  <section class="bg-white py-16 sm:py-20"><Container><div class="mx-auto max-w-3xl">
+    <FAQ items={faqs} />
+    <h2 class="mt-14 text-3xl font-bold sm:text-4xl">Ready to try it?</h2>
+    <p class="mt-4 text-lg leading-relaxed text-ink-soft">Create an AI Assistant account (no call required), or <a href="/pricing" class="font-extrabold text-brand-700">compare plans</a> first.</p>
+  </div></Container></section>
   <MarketingCTA title="Give the routine applications to Scout AI." body="Create an account, review the data extracted from your resume, and open a prepared dashboard without booking a call." />
 </Base>

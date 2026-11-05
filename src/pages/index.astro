@@ -17,10 +17,15 @@ import { getCollection } from "astro:content";
 
 // The hero quotes the entry Human plan in the visitor's own currency, matching
 // what the pricing page and checkout show them. Renders per request.
-const latestPosts = (await getCollection("blog"))
+// Two pinned guides that need the internal links, then the newest post.
+const PINNED_GUIDES = ["best-job-application-services-2026", "how-scout-works"];
+const publishedPosts = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
-  .slice(0, 3);
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+const latestPosts = [
+  ...PINNED_GUIDES.flatMap((id) => publishedPosts.filter((post) => post.id === id)),
+  ...publishedPosts.filter((post) => !PINNED_GUIDES.includes(post.id)),
+].slice(0, 3);
 
 const focused = planByCode("human_focused")!;
 const region = visitorRegion(Astro.request);
@@ -64,7 +69,7 @@ const faqs = [
   { q: "How do I start?", a: "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin." },
   { q: "What is the difference between the AI plans and the Human plans?", a: "Both assistants apply for you and show the job, its status and the resume used. The AI Assistant uses automated fulfillment, so it costs less and starts immediately. Human Assistant plans add a dedicated person you reach in a WhatsApp group and screenshots or records of important form answers, which is why they cost more." },
   { q: "Can I cancel anytime?", a: "Plans are monthly subscriptions, and you can cancel anytime from Settings. The 90-day option bills every three months at a lower rate." },
-  { q: "Can I use different job profiles for different roles?", a: "Yes. You can create separate job profiles for different roles, locations and resumes. Your plan sets how many can be active at the same time." },
+  { q: "Can I use different job profiles for different roles?", a: "Yes. You can create separate job profiles for different roles, locations and resumes. AI Essential includes 1 active job profile and AI Plus includes up to 3. Human Assistant plans: Focused Search 1, Full Search up to 2, Career Campaign up to 4." },
 ];
 const appLd = {
   "@context": "https://schema.org",

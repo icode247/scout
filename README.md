@@ -17,7 +17,7 @@ npm run preview    # preview the build
 
 - `src/config/site.ts` — **single source of truth**: domain, store links, nav, footer, pricing tiers, stats. Change these, the whole site updates.
 - `src/layouts/` — `Base.astro` (head + header + footer), `Legal.astro` (prose pages).
-- `src/components/` — static Astro components (Header, Footer, Button, AppStoreBadges, DownloadQR, FAQ, Section, Container, Logo, BaseHead).
+- `src/components/` — static Astro components (Header, Footer, Button, FAQ, Section, Container, Logo, BaseHead).
 - `src/components/islands/SwipeHero.tsx` — the only React island (drag-to-apply hero deck). Everything else ships ~zero JS.
 - `src/content/blog/` — SEO articles (Markdown, content-collection schema in `src/content/config.ts`).
 - `src/data/ats.ts` — data for programmatic `/auto-apply/[ats]` pages.

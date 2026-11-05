@@ -6,6 +6,7 @@ import Footer from "../components/Footer.astro";
 
 interface Props {
   title?: string;
+  fullTitle?: string;
   description?: string;
   image?: string;
   type?: "website" | "article";
@@ -15,12 +16,12 @@ interface Props {
   alternates?: { locale: string; href: string }[];
   xDefault?: string;
 }
-const { title, description, image, type, noindex, canonical, lang = "en", alternates, xDefault } = Astro.props;
+const { title, fullTitle, description, image, type, noindex, canonical, lang = "en", alternates, xDefault } = Astro.props;
 ---
 <!doctype html>
 <html lang={lang}>
   <head>
-    <BaseHead title={title} description={description} image={image} type={type} noindex={noindex} canonical={canonical} locale={lang} alternates={alternates} xDefault={xDefault} />
+    <BaseHead title={title} fullTitle={fullTitle} description={description} image={image} type={type} noindex={noindex} canonical={canonical} locale={lang} alternates={alternates} xDefault={xDefault} />
     <script is:inline>document.documentElement.classList.add("js");</script>
   </head>
   <body class="min-h-screen">

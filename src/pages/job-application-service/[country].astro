@@ -4,6 +4,7 @@ import Base from "../../layouts/Base.astro";
 import Container from "../../components/Container.astro";
 import Button from "../../components/Button.astro";
 import FAQ from "../../components/FAQ.astro";
+import UsdPlanTable from "../../components/marketing/UsdPlanTable.astro";
 import { SITE } from "../../config/site";
 
 export const prerender = true;
@@ -42,6 +43,11 @@ const breadcrumbLd = {
         <h1 class="mt-4 font-display text-5xl font-extrabold leading-[.98] tracking-[-.035em] text-white sm:text-7xl">{page.heading}</h1>
         <p class="mt-6 max-w-3xl text-lg leading-relaxed text-white/75">{page.hero}</p>
         <div class="mt-8 flex flex-col gap-3 sm:flex-row"><Button href="/pricing#human" size="lg" class="rounded-full bg-brand-300 text-ink">Get my assistant</Button><Button href="/book-call" size="lg" variant="ghost" class="rounded-full text-white hover:bg-white/10">Book a free call</Button><Button href="/login?intent=ai" size="lg" variant="ghost" class="rounded-full text-white/70 hover:bg-white/10">Start with AI</Button></div>
+        <div class="mt-10 max-w-4xl rounded-2xl bg-white p-5 text-ink sm:p-6">
+          <p class="font-extrabold">Scout plans in US dollars</p>
+          <UsdPlanTable />
+          <p class="text-sm text-ink-muted">Prepay 90 days to save about 10%. No placement fee and no percentage of your salary. <a href="/pricing" class="font-bold text-brand-700">See every plan</a>.</p>
+        </div>
       </div>
     </Container>
   </section>
@@ -56,6 +62,21 @@ const breadcrumbLd = {
       </div>
     </Container>
   </section>
+
+  {page.guide?.length && (
+    <section class="bg-brand-50 py-20 sm:py-24">
+      <Container>
+        <div class="mx-auto max-w-3xl">
+          {page.guide.map((section, index) => (
+            <div class={index ? "mt-12" : ""}>
+              <h2 class="font-display text-3xl font-extrabold sm:text-4xl">{section.title}</h2>
+              <p class="mt-4 text-lg leading-relaxed text-ink-soft">{section.body}</p>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </section>
+  )}
 
   <section class="bg-surface py-20 sm:py-28">
     <Container>
@@ -92,7 +113,7 @@ const breadcrumbLd = {
 
   <section class="bg-surface py-20 sm:py-28"><Container><div class="mx-auto max-w-3xl"><FAQ items={page.faqs} heading={`Job application help in ${page.name}: questions`} /></div></Container></section>
 
-  <section class="bg-brand-950 py-16 text-white"><Container><div class="mx-auto max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold text-white">Stop carrying every application yourself.</h2><p class="mt-4 text-lg text-white/72">Compare current Human and AI plans, allowances, evidence, and billing terms in {page.currency === "USD" ? "US dollars" : "USD"}.</p><div class="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><Button href="/pricing" class="bg-brand-300 text-ink">Compare plans</Button><Button href="/book-call" variant="ghost" class="text-white hover:bg-white/10">Book a strategy call</Button></div></div></Container></section>
+  <section class="bg-brand-950 py-16 text-white"><Container><div class="mx-auto max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold text-white">Stop carrying every application yourself.</h2><p class="mt-4 text-lg text-white/72">Compare current Human and AI plans, allowances, evidence, and billing terms in {page.currency === "USD" ? "US dollars" : "USD"}.</p><div class="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><Button href="/pricing" class="bg-brand-300 text-ink">Compare plans</Button><Button href="/book-call" variant="ghost" class="text-white hover:bg-white/10">Book a free call</Button></div></div></Container></section>
 
   <script type="application/ld+json" set:html={JSON.stringify(serviceLd)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />

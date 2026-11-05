@@ -1,7 +1,9 @@
 ---
 import HumanPlanFeatures from "./HumanPlanFeatures.astro";
 
-const careerAgentsPrice = "Roughly $1,500 to $4,500 a month; executive packages up to $15,000, as Career Agents states on its own page (post dated August 3, 2026, fetched November 1, 2026)";
+const careerAgentsPrice = "Roughly $1,500 to $4,500 a month; executive packages up to $15,000, as Career Agents states on its own page (post dated August 3, 2026, fetched November 5, 2026). My Personal Recruiter states $2,000 to $5,000 a month for reverse recruiters (page updated October 27, 2026, fetched November 5, 2026)";
+const applicationOnlyPrice = "Career Agents states $150 to $700 a month for application-only services (post dated August 3, 2026, fetched November 5, 2026). My Personal Recruiter states $50 to $300 a month for application services (page updated October 27, 2026, fetched November 5, 2026)";
+const coachResumePrice = "Career Agents states coaches at $75 to $550 an hour and resume writers at $200 to $700 (same page, post dated August 3, 2026, fetched November 5, 2026)";
 ---
 <div class="not-prose my-8 overflow-x-auto">
   <table class="w-full min-w-[860px] border-collapse text-left text-sm">
@@ -30,8 +32,22 @@ const careerAgentsPrice = "Roughly $1,500 to $4,500 a month; executive packages 
         <td class="p-3">Fit and accuracy depend on your setup; check each platform's rules</td>
       </tr>
       <tr class="border-b border-ink/10 align-top">
+        <td class="p-3 font-bold">Application service (market range)</td>
+        <td class="p-3">Volume submission of applications. The prices in this row are published market ranges, not Scout plans.</td>
+        <td class="p-3">{applicationOnlyPrice}</td>
+        <td class="p-3">High-volume searches where you still set the rules</td>
+        <td class="p-3">Ask what an application includes, and ask about daily limits and unused volume</td>
+      </tr>
+      <tr class="border-b border-ink/10 align-top">
+        <td class="p-3 font-bold">Coach/resume writer</td>
+        <td class="p-3">A coach advises on direction. A resume writer rewrites your materials. See <a href="/blog/reverse-recruiter-vs-career-coach-vs-job-application-service" class="font-semibold text-brand-700 underline">reverse recruiters, coaches and application services compared</a></td>
+        <td class="p-3">{coachResumePrice}</td>
+        <td class="p-3">An unclear target role, or a resume that is not working</td>
+        <td class="p-3">Advice and a rewrite do not submit applications for you</td>
+      </tr>
+      <tr class="border-b border-ink/10 align-top">
         <td class="p-3 font-bold">AI assistant (Scout AI Assistant)</td>
-        <td class="p-3">Automated fulfillment that applies from your saved job profiles</td>
+        <td class="p-3">Automated fulfillment that applies from your saved job profiles (AI Essential: 1 active profile; AI Plus: up to 3)</td>
         <td class="p-3">$39 a month (AI Essential, 75 applications) or $79 (AI Plus, 200)</td>
         <td class="p-3">Clear, repeatable searches on a lower budget</td>
         <td class="p-3"><HumanPlanFeatures variant="pay-watchout" /></td>
