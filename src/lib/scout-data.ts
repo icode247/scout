@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { getDemoState, type AssistantType, type DemoState, type JobStatus } from "./demo-store";
+import { selectPages } from "./supabase-pages";
 
 export interface ScoutProfile {
   user_id: string;
@@ -16,7 +17,8 @@ export type ScoutData = DemoState;
 
 // Per-user safety bounds. Real accounts sit far below these; the caps exist only to keep
 // a pathological account from streaming an unbounded result set into SSR memory. Rows are
-// ordered newest-first, so a capped read keeps the most relevant records.
+// ordered newest-first, so a capped read keeps the most relevant records. Supabase serves
+// at most 1000 rows per request, so any cap above that is read in pages.
 const MAX_JOBS = 2000;
 const MAX_APPLICATIONS = 2000;
 const MAX_RESUMES = 500;
@@ -106,10 +108,11 @@ export async function loadScoutData(user: User, supabase?: SupabaseClient, demoM
     profilePromise,
     supabase.from("resumes").select("*").order("created_at", { ascending: false }).limit(MAX_RESUMES),
     supabase.from("job_profiles").select("*").order("created_at", { ascending: true }).limit(MAX_JOB_PROFILES),
-    supabase.from("jobs").select("*").order("created_at", { ascending: false }).limit(MAX_JOBS),
-    supabase.from("applications").select("*").order("created_at", { ascending: false }).limit(MAX_APPLICATIONS),
-    supabase.from("job_profile_resumes").select("job_profile_id,resume_id,is_primary").limit(MAX_PROFILE_RESUMES),
-    supabase.from("application_evidence").select("id,application_id,label,mime_type,created_at").order("created_at", { ascending: true }).limit(MAX_EVIDENCE),
+    selectPages((from, to) => supabase.from("jobs").select("*").order("created_at", { ascending: false }).order("id").range(from, to), MAX_JOBS),
+    selectPages((from, to) => supabase.from("applications").select("*").order("created_at", { ascending: false }).order("id").range(from, to), MAX_APPLICATIONS),
+    selectPages((from, to) => supabase.from("job_profile_resumes").select("job_profile_id,resume_id,is_primary").order("job_profile_id").order("resume_id").range(from, to), MAX_PROFILE_RESUMES),
+    // Oldest-first for display order; paged so a busy client's newest evidence is not cut off.
+    selectPages((from, to) => supabase.from("application_evidence").select("id,application_id,label,mime_type,created_at").order("created_at", { ascending: true }).order("id").range(from, to), MAX_EVIDENCE),
   ]);
   const error = profileResult.error || resumesResult.error || jobProfilesResult.error || jobsResult.error || applicationsResult.error || profileResumesResult.error || evidenceResult.error;
   if (error) throw new Error(`Unable to load Scout data: ${error.message}`);
