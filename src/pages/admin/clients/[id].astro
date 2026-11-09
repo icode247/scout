@@ -5,6 +5,7 @@ import { activeHumanAssistants, assignedHumanAssistant, savedHumanAssistant } fr
 import { BRIEF_ACCEPT, listBriefs } from "../../../lib/client-briefs";
 import { INTAKE_KEYS, INTAKE_LABELS, formatIntakeAnswer } from "../../../lib/applicant-intake";
 import { TAILORED_RESUME_LABEL } from "../../../lib/application-evidence";
+import { selectPages } from "../../../lib/supabase-pages";
 import { profileMediaView } from "../../../lib/profile-media";
 export const prerender = false;
 const staff = staffMember(Astro.locals.user);
@@ -51,7 +52,8 @@ const applicationIds = applications.map((item) => item.id);
 const resumePaths = [...resumes.map((resume) => resume.storage_path), intake?.resume_path].filter((path): path is string => Boolean(path));
 const [jobsResult, evidenceResult, signedResult] = await Promise.all([
   jobIds.length ? admin.from("jobs").select("id,title,company,location,external_url,source").in("id", jobIds) : Promise.resolve({ data: [], error: null }),
-  applicationIds.length ? admin.from("application_evidence").select("id,application_id,label").in("application_id", applicationIds).order("created_at", { ascending: true }) : Promise.resolve({ data: [], error: null }),
+  // Paged: a busy client passes Supabase's 1000-row response cap, which would hide the newest screenshots.
+  applicationIds.length ? selectPages((from, to) => admin.from("application_evidence").select("id,application_id,label").in("application_id", applicationIds).order("created_at", { ascending: true }).order("id").range(from, to), 20000) : Promise.resolve({ data: [], error: null }),
   resumePaths.length ? admin.storage.from("resumes").createSignedUrls(resumePaths, 60 * 60) : Promise.resolve({ data: [], error: null }),
 ]);
 if (jobsResult.error || evidenceResult.error || signedResult.error) throw jobsResult.error || evidenceResult.error || signedResult.error;
