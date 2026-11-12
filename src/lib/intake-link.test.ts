@@ -26,7 +26,7 @@ describe("intake link tokens", () => {
 function fakeSupabase(rows: Record<string, any>) {
   return {
     from(table: string) {
-      const query: any = { select: () => query, eq: () => query, order: () => query, limit: () => query, maybeSingle: async () => ({ data: rows[table] ?? null, error: null }) };
+      const query: any = { select: () => query, eq: () => query, neq: () => query, order: () => query, limit: () => query, maybeSingle: async () => ({ data: rows[table] ?? null, error: null }) };
       return query;
     },
   } as any;
@@ -36,9 +36,18 @@ describe("loadIntakePrefill", () => {
   it("uses the latest intake and falls back to the account's WhatsApp number", async () => {
     const saved = await loadIntakePrefill(fakeSupabase({
       profiles: { email: "Client@Example.com", full_name: "client", whatsapp_phone: "+447700900123" },
-      assistant_intakes: { full_name: "Alex Rivera", answers: { currentCity: "Leeds", desiredSalary: "90000" } },
+      assistant_intakes: { full_name: "Alex Rivera", answers: { currentCity: "Leeds", desiredSalary: "90000" }, resume_path: null, created_at: "2026-11-12T04:00:00Z" },
     }), userId);
-    expect(saved).toEqual({ email: "client@example.com", name: "Alex Rivera", answers: { currentCity: "Leeds", whatsappPhone: "+447700900123" } });
+    expect(saved).toEqual({ email: "client@example.com", name: "Alex Rivera", answers: { currentCity: "Leeds", whatsappPhone: "+447700900123" }, resume: null });
+  });
+
+  it("offers the newest resume on file, from the account or an earlier intake", async () => {
+    const account = { name: "account.pdf", storage_path: "user/account.pdf", created_at: "2026-11-12T02:00:00+00:00" };
+    const intake = (at: string) => ({ full_name: "Alex Rivera", answers: {}, resume_path: "intake/sent.pdf", resume_name: "sent.pdf", created_at: at });
+    const load = (rows: Record<string, any>) => loadIntakePrefill(fakeSupabase({ profiles: { email: "a@b.co" }, ...rows }), userId);
+    expect((await load({ resumes: account }))?.resume).toEqual({ name: "account.pdf", path: "user/account.pdf" });
+    expect((await load({ resumes: account, assistant_intakes: intake("2026-11-12T05:00:00Z") }))?.resume).toEqual({ name: "sent.pdf", path: "intake/sent.pdf" });
+    expect((await load({ resumes: account, assistant_intakes: intake("2026-11-11T05:00:00Z") }))?.resume).toEqual({ name: "account.pdf", path: "user/account.pdf" });
   });
 
   it("returns nothing for an account without an email", async () => {
