@@ -6,11 +6,31 @@ import {
   SENSITIVE_CONSENT_CHOICES, VETERAN_STATUSES, WORK_ARRANGEMENTS, WORK_AUTHORIZATIONS, YES_NO,
 } from "../lib/applicant-options";
 import { SELF_ID_CONSENT_BODY, SELF_ID_CONSENT_HEADING } from "../lib/privacy";
+import type { IntakePrefill } from "../lib/applicant-intake";
+import { loadIntakePrefill, readIntakeToken } from "../lib/intake-link";
+import { serverEnv } from "../lib/server-env";
+import { createSupabaseServiceClient } from "../lib/supabase";
 export const prerender = false;
 
 // Operations can send a personal link (/intake?email=…&name=…) so the client only confirms who they are.
-const email = Astro.url.searchParams.get("email")?.trim().slice(0, 254) || "";
-const name = Astro.url.searchParams.get("name")?.trim().slice(0, 160) || "";
+let email = Astro.url.searchParams.get("email")?.trim().slice(0, 254) || "";
+let name = Astro.url.searchParams.get("name")?.trim().slice(0, 160) || "";
+// Or a signed one (/intake?t=…, lib/intake-link.ts) that also shows the details already on file.
+// A bad or unknown token just shows the blank form.
+let prefill: IntakePrefill = {};
+const token = Astro.url.searchParams.get("t")?.trim().slice(0, 100);
+if (token) {
+  Astro.response.headers.set("Cache-Control", "private, no-store");
+  Astro.response.headers.set("Referrer-Policy", "no-referrer");
+  const secret = serverEnv("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const userId = readIntakeToken(token, secret);
+  const saved = userId ? await loadIntakePrefill(createSupabaseServiceClient(), userId).catch(() => null) : null;
+  if (saved) {
+    email = saved.email;
+    name = saved.name || name;
+    prefill = saved.answers;
+  }
+}
 // Friendlier wording on screen; the stored values stay the ones FastApply matches against.
 const noticePeriods = NOTICE_PERIODS.map((choice) => choice.value === "Immediate" ? { ...choice, label: "Right away" } : choice);
 const workAuthLabels: Record<string, string> = {
@@ -33,7 +53,7 @@ const workAuthLabels: Record<string, string> = {
       <p class="mt-4 max-w-2xl text-pretty text-lg leading-relaxed text-white/80">Upload your resume and we'll take your experience, education and skills from it. Below are the details employers ask for that a resume often leaves out. About 4 minutes.</p>
 
       <div class="mt-8 rounded-2xl bg-white text-ink shadow-card">
-        <form id="intake-form" class="p-5 sm:p-8">
+        <form id="intake-form" class="p-5 sm:p-8" data-prefill={JSON.stringify(prefill)}>
           <p class="text-sm text-ink-soft"><span class="intake-required">*</span> Required. Everything else is optional.</p>
 
           <!-- 1. Who you are + resume -->
@@ -394,6 +414,18 @@ const workAuthLabels: Record<string, string> = {
     countrySearch.addEventListener("input", () => { if (knownCountries.includes(countrySearch.value)) addCountry(); });
     countrySearch.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); addCountry(); } });
     form.querySelector("[data-add-country]")!.addEventListener("click", addCountry);
+
+    // Details already on file, from a signed personal link (the server reads them); the client can change any of them.
+    let prefill: Record<string, string | string[]> = {};
+    try { prefill = JSON.parse(form.dataset.prefill || "{}"); } catch {}
+    for (const [key, value] of Object.entries(prefill)) {
+      if (Array.isArray(value)) { chosenCountries.push(...value.filter((country) => !chosenCountries.includes(country))); continue; }
+      form.querySelectorAll<HTMLInputElement | HTMLSelectElement>(`[name="${key}"]`).forEach((field) => {
+        if (field instanceof HTMLInputElement && field.type === "radio") field.checked = field.value === value;
+        else if (field instanceof HTMLSelectElement) { if ([...field.options].some((option) => option.value === value)) field.value = value; }
+        else field.value = value;
+      });
+    }
     renderCountries();
 
     fetch("/data/countries.json").then((response) => response.json()).then((countries: string[]) => {

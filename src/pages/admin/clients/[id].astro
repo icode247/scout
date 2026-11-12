@@ -4,6 +4,8 @@ import { canWorkClient, createAdminClient, staffMember } from "../../../lib/admi
 import { activeHumanAssistants, assignedHumanAssistant, savedHumanAssistant } from "../../../lib/human-assistants";
 import { BRIEF_ACCEPT, listBriefs } from "../../../lib/client-briefs";
 import { INTAKE_KEYS, INTAKE_LABELS, formatIntakeAnswer } from "../../../lib/applicant-intake";
+import { createIntakeToken } from "../../../lib/intake-link";
+import { serverEnv } from "../../../lib/server-env";
 import { TAILORED_RESUME_LABEL } from "../../../lib/application-evidence";
 import { selectPages } from "../../../lib/supabase-pages";
 import { profileMediaView } from "../../../lib/profile-media";
@@ -46,6 +48,9 @@ const filtersByProfile = new Map((filtersResult.data || []).map((row: any) => [r
 const resumes = (resumesResult.data || []).filter((resume) => resume.kind !== "tailored");
 const applications = applicationsResult.data || [];
 const intake = intakeResult.data as { answers: Record<string, unknown>; resume_path: string | null; resume_name: string | null; created_at: string } | null;
+// The client's own questionnaire link: it opens with their details on file filled in (lib/intake-link.ts).
+const signingKey = serverEnv("SUPABASE_SERVICE_ROLE_KEY");
+const intakeLink = signingKey ? new URL(`/intake?t=${createIntakeToken(userId, signingKey)}`, Astro.url).toString() : null;
 
 const jobIds = [...new Set(applications.map((item) => item.job_id))];
 const applicationIds = applications.map((item) => item.id);
@@ -227,6 +232,7 @@ const sourceLabel: Record<string, string> = { assistant: "Found by assistant", e
           </div>); }) : <p class="mt-3 rounded-xl bg-human-50 p-3 text-sm text-human-700">No job profile in Scout yet. Use the intake answers below and confirm targets in WhatsApp.</p>}
         <div class="mt-4"><p class="text-xs font-extrabold text-ink-muted">RESUMES</p><div class="mt-2 flex flex-wrap gap-2">{resumes.map((resume) => resume.storage_path && signedUrls.get(resume.storage_path) ? <a href={signedUrls.get(resume.storage_path)} target="_blank" rel="noopener noreferrer" class="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-900">{resume.name} ↓</a> : <span class="rounded-full bg-surface px-3 py-1.5 text-xs font-bold">{resume.name}</span>)}{intake?.resume_path && signedUrls.get(intake.resume_path) && <a href={signedUrls.get(intake.resume_path)} target="_blank" rel="noopener noreferrer" class="rounded-full bg-human-50 px-3 py-1.5 text-xs font-bold text-human-700">Intake resume · {intake.resume_name} ↓</a>}{!resumes.length && !intake?.resume_path && <span class="text-sm text-ink-muted">No resume uploaded yet.</span>}</div></div>
         {intake && <details class="mt-4"><summary class="cursor-pointer text-sm font-extrabold">Intake answers · {new Date(intake.created_at).toLocaleDateString()}</summary><dl class="mt-3 space-y-2 text-sm">{INTAKE_KEYS.filter((key) => intake.answers?.[key] !== undefined).map((key) => <div><dt class="text-xs font-bold text-ink-muted">{INTAKE_LABELS[key]}</dt><dd class="whitespace-pre-wrap break-words">{formatIntakeAnswer(intake.answers[key])}</dd></div>)}</dl></details>}
+        {intakeLink && <div class="mt-4"><label for="client-intake-link" class="text-xs font-extrabold text-ink-muted">INTAKE LINK FOR THIS CLIENT</label><p class="mt-1 text-xs text-ink-soft">Opens the questionnaire with the details above already filled in. Only send it to this client.</p><input id="client-intake-link" readonly value={intakeLink} onfocus="this.select()" class="mt-2 w-full rounded-lg border border-ink/15 bg-surface px-3 py-2 font-mono text-xs" /></div>}
       </section>
     </aside>
   </div>
