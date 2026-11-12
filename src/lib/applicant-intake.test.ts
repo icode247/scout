@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { INTAKE_KEYS, INTAKE_LABELS, cleanIntakeAnswers, formatIntakeAnswer, validWhatsappPhone } from "./applicant-intake";
+import { INTAKE_KEYS, INTAKE_LABELS, INTAKE_PREFILL_KEYS, cleanIntakeAnswers, formatIntakeAnswer, pickIntakePrefill, validWhatsappPhone } from "./applicant-intake";
 import { isApplicantKey } from "./applicant-profile";
 import { SELF_ID_DECLINE_VALUE, SENSITIVE_SELF_ID_FIELDS } from "./privacy";
 
@@ -114,6 +114,29 @@ describe("shared answer options", () => {
     for (const list of [options.GENDERS, options.ETHNICITIES, options.RACES, options.VETERAN_STATUSES, options.DISABILITY_STATUSES,
       options.MARITAL_STATUSES, options.PRONOUNS, options.CRIMINAL_RECORDS, options.SEXUAL_ORIENTATIONS, options.GENDER_SAME_AS_BIRTH_SEX, options.RELIGIONS]) {
       expect(list.some((choice) => choice.value === SELF_ID_DECLINE_VALUE)).toBe(true);
+    }
+  });
+});
+
+describe("pickIntakePrefill", () => {
+  it("shows back only the pre-fillable answers, never salary, birth date or self-identification", () => {
+    const answers = cleanIntakeAnswers({
+      currentCity: " Leeds ", state: "West Yorkshire", workAuthorizationCountries: "United States\nCanada",
+      desiredSalary: "90000", dateOfBirth: "1990-01-01", sensitiveDataConsent: "granted", gender: "Female", coverLetter: "Hi",
+    });
+    expect(pickIntakePrefill(answers)).toEqual({ currentCity: "Leeds", state: "West Yorkshire", workAuthorizationCountries: ["United States", "Canada"] });
+  });
+
+  it("drops values of the wrong shape", () => {
+    expect(pickIntakePrefill({ currentCity: 42, workAuthorizationCountries: "United States", state: "  " })).toEqual({});
+  });
+
+  it("only pre-fills stored, non-sensitive answers that have a field on the page", () => {
+    const markup = readFileSync(new URL("../pages/intake.astro", import.meta.url), "utf8");
+    for (const key of INTAKE_PREFILL_KEYS) {
+      expect(INTAKE_KEYS).toContain(key);
+      expect(SENSITIVE_SELF_ID_FIELDS as readonly string[]).not.toContain(key);
+      expect(markup).toMatch(new RegExp(`name(=\\{?"|=)${key}"|IntakeChoices name="${key}"`));
     }
   });
 });

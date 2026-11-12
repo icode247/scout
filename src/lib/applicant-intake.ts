@@ -37,6 +37,34 @@ export const INTAKE_LABELS: Record<(typeof INTAKE_KEYS)[number], string> = {
   veteranStatus: "Veteran status", disabilityStatus: "Disability status",
 };
 
+/**
+ * Saved answers a personal intake link (lib/intake-link.ts) shows again, so the client only
+ * checks what operations already recorded. Salary, date of birth and self-identification are
+ * never shown back: the client gives those in their own words each time.
+ */
+export const INTAKE_PREFILL_KEYS = [
+  "whatsappPhone", "phoneCountryCode", "phoneNumber",
+  "streetAddress", "addressLine2", "currentCity", "state", "zipcode", "country",
+  "middleName", "nationality",
+  "workAuthorizationCountries", "workAuthorization", "requiresSponsorship", "securityClearance",
+  "noticePeriod", "remotePreference", "willingToRelocate",
+] as const;
+
+export type IntakePrefill = Partial<Record<Exclude<(typeof INTAKE_PREFILL_KEYS)[number], "workAuthorizationCountries">, string>> & { workAuthorizationCountries?: string[] };
+
+/** The pre-fillable part of stored intake answers; anything else, or of the wrong shape, is dropped. */
+export function pickIntakePrefill(answers: Record<string, unknown>): IntakePrefill {
+  const prefill: IntakePrefill = {};
+  for (const key of INTAKE_PREFILL_KEYS) {
+    const value = answers?.[key];
+    if (key === "workAuthorizationCountries") {
+      const countries = Array.isArray(value) ? value.filter((country): country is string => typeof country === "string" && Boolean(country.trim())) : [];
+      if (countries.length) prefill[key] = countries;
+    } else if (typeof value === "string" && value.trim()) prefill[key] = value.trim();
+  }
+  return prefill;
+}
+
 /** Below Vercel's 4.5 MB request cap, which the resume shares with the answers. */
 export const INTAKE_MAX_RESUME_BYTES = 4 * 1024 * 1024;
 
