@@ -4,6 +4,7 @@ description: "Compare reverse recruiters, career coaches, and job application se
 coverImage: "/assets/blog/reverse-recruiter-vs-career-coach-vs-job-application-service-cover.webp"
 coverAlt: "Scout comparison of a reverse recruiter, career coach, and job application service"
 pubDate: 2026-08-17
+updatedDate: 2026-11-12
 author: "Scout Editorial Team"
 pillar: "Reverse Recruiting"
 targetKeyword: "reverse recruiter vs career coach vs job application service"
@@ -11,6 +12,8 @@ funnelStage: MOFU
 tags: ["reverse-recruiter","career-coach","job-application-service","comparison"]
 draft: false
 ---
+
+_Disclosure: Scout publishes this guide and sells a done-for-you job application service. We describe what each option actually does, show where a coach or reverse recruiter is the better purchase, and use only our own list prices._
 
 **A career coach helps you make better career decisions. A job application service executes repetitive application work. A reverse recruiter manages a broader candidate-side search that may combine strategy, positioning, applications, outreach, coaching, and negotiation.** Choose the service that matches your bottleneck, and compare written deliverables because provider labels frequently overlap.
 
@@ -77,6 +80,36 @@ This model can fit senior candidates, confidential searches, career pivots, or a
 Ask which team member performs each task. “Dedicated recruiter” might describe the relationship owner while other staff handle sourcing, documents, outreach, or applications. That structure can work well, but it should be visible.
 
 ![How career coaches, application services, and reverse recruiters differ](/assets/blog/reverse-recruiter-vs-career-coach-vs-job-application-service-infographic-1.webp)
+
+<h2 id="career-coach-vs-done-for-you">Career coach vs done-for-you application service: which do you need first?</h2>
+
+**A done-for-you job search (application) service executes the repetitive application work for you; a career coach advises you so you can run the search yourself.** If your target roles are clear and time is the bottleneck, Scout’s Human Assistant plans start at $299 a month for 250 applications, and the AI Assistant starts at $39 a month for 75. If your direction, story or interview performance is the problem, a coach is usually the better first purchase. Nobody can promise interviews or offers, because employers make those decisions.
+
+### When a coach is the better call
+
+- You cannot describe the role you want.
+- Your resume or LinkedIn is the real blocker.
+- You need mock interviews or offer negotiation help.
+- You want accountability and a thinking partner more than delegated forms.
+
+### When done-for-you is the better call
+
+- You work full time and the search keeps slipping into evenings.
+- Your target titles, locations and dealbreakers are already written down.
+- You can spend a few minutes reviewing what was sent.
+- The fee fits your budget as money spent on labor, not as a bet on a guaranteed outcome.
+
+### Scout plans for done-for-you application work
+
+| Plan | Who does the work | Price per month | Applications per month | 90 days prepaid |
+|---|---|---|---|---|
+| AI Essential | AI Assistant | $39 | 75 | $105 |
+| AI Plus | AI Assistant | $79 | 200 | $213 |
+| Focused Search | Human Assistant | $299 | 250 | $807 |
+| Full Search | Human Assistant | $499 | 500 | $1,347 |
+| Career Campaign | Human Assistant | $999 | 1,000 | $2,697 |
+
+All prices are in US dollars. Prepay for 90 days and save about 10%. There is no placement fee and no percentage of your salary. You can cancel anytime. Scout does not guarantee interviews or offers. Screenshots of important form answers come with Human Assistant plans, not AI Assistant plans. Full details: [pricing](/pricing). To judge whether the fee is worth it, see [is a job application service worth it?](/blog/is-a-job-application-service-worth-it) and [application volume vs interview rate](/blog/application-volume-vs-interview-rate).
 
 ## Diagnose your bottleneck first
 
@@ -178,6 +211,22 @@ Yes. Give both providers the same approved target profile and source materials, 
 ### Which option costs least?
 
 Narrow application execution usually costs less than a broad reverse-recruiting campaign. Coaching cost depends on the specialist and engagement. Compare current written proposals and the work included.
+
+### What is the difference between a done-for-you job search service and a career coach?
+
+A done-for-you application service submits applications for you inside rules you set. A career coach advises you on direction, positioning, interviews and negotiation, and you usually still run the search yourself.
+
+### Is Scout a career coach?
+
+No. Scout is a job application service. Human and AI assistants find suitable openings, prepare materials, submit applications and record the work. Scout does not sell coaching sessions.
+
+### How much does Scout cost?
+
+AI Assistant plans are $39 a month (75 applications) and $79 (200). Human Assistant plans are $299 (250), $499 (500) and $999 (1,000). Prepaying 90 days costs about 10% less. See [pricing](/pricing).
+
+### Do you take a percentage of my salary?
+
+No. The price of your plan is the only fee.
 
 ## Buy the missing capability
 
