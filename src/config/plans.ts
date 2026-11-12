@@ -223,3 +223,18 @@ export function savings(plan: Plan): { cents: number; percent: number; label: st
     label: `Save $${Math.round(cents / 100)}`,
   };
 }
+
+/**
+ * The "Save …" badge in the currency the visitor sees prices in. With no
+ * region it is the USD label from `savings`. With a region it is three
+ * regional monthly charges minus the regional 90-day price, so the badge
+ * matches the "billed monthly" and 90-day amounts printed beside it.
+ */
+export function savingsLabel(plan: Plan, region: RegionCode | null): string | null {
+  const usd = savings(plan);
+  if (!usd || !region) return usd?.label ?? null;
+  const sibling = standardSibling(plan)!;
+  const comparable = sibling.billing === "recurring" ? sibling.regional[region] * 3 : sibling.regional[region];
+  const amount = comparable - plan.regional[region];
+  return amount > 0 ? `Save ${formatRegionalAmount(region, amount)}` : null;
+}
