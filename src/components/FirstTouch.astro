@@ -1,0 +1,28 @@
+---
+// Stores where this visitor first came from (src/lib/attribution.ts) so signup can record it.
+// Runs on every page, private ones too: someone can land on /login straight from an answer engine.
+---
+<script>
+  import { FIRST_TOUCH_KEY, FIRST_TOUCH_MAX_AGE_SECONDS, captureFirstTouch } from "../lib/attribution";
+
+  try {
+    let storage: Storage | null = null;
+    try { storage = window.localStorage; } catch { storage = null; }
+    captureFirstTouch({
+      url: window.location.href,
+      referrer: document.referrer,
+      storage,
+      readCookie: () => {
+        const prefix = `${FIRST_TOUCH_KEY}=`;
+        const found = document.cookie.split("; ").find((part) => part.startsWith(prefix));
+        return found ? found.slice(prefix.length) : null;
+      },
+      writeCookie: (value) => {
+        const secure = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = `${FIRST_TOUCH_KEY}=${value}; Max-Age=${FIRST_TOUCH_MAX_AGE_SECONDS}; Path=/; SameSite=Lax${secure}`;
+      },
+    });
+  } catch {
+    // Attribution is best effort; it must never break a page.
+  }
+</script>

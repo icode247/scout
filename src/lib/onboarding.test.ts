@@ -8,7 +8,7 @@ import { POST } from "../pages/api/app/onboarding";
 
 afterEach(() => setHumanAssistantsForTest(null));
 
-async function onboard(lane = "human", options: { phone?: string; savedName?: string; resumeError?: boolean } = {}) {
+async function onboard(lane = "human", options: { phone?: string; savedName?: string; resumeError?: boolean; fields?: Record<string, string> } = {}) {
   const writes: { table: string; value: any }[] = [];
   const supabase = { from(table: string) {
     const chain: any = {};
@@ -22,7 +22,7 @@ async function onboard(lane = "human", options: { phone?: string; savedName?: st
     return chain;
   } };
   const form = new FormData();
-  Object.entries({ assistant: lane, target_roles: "Engineer", locations: "Remote", resume_id: "resume-1", whatsapp_phone: options.phone ?? "+2348012345678" }).forEach(([key, value]) => form.set(key, value));
+  Object.entries({ assistant: lane, target_roles: "Engineer", locations: "Remote", resume_id: "resume-1", whatsapp_phone: options.phone ?? "+2348012345678", ...options.fields }).forEach(([key, value]) => form.set(key, value));
   const entitlement = { ...EMPTY_ENTITLEMENT };
   const response = await POST({
     request: new Request("https://applyscout.app/api/app/onboarding", { method: "POST", headers: { origin: "https://applyscout.app" }, body: form }),
@@ -64,5 +64,15 @@ describe("dashboard-first onboarding", () => {
     const { response, writes } = await onboard("human", { resumeError: true });
     expect(response.status).toBe(400);
     expect(writes).toEqual([]);
+  });
+  it("saves the optional heard_from answer separately from setup", async () => {
+    const { response, writes } = await onboard("ai", { phone: "", fields: { heard_from: "other", heard_from_other: "A podcast" } });
+    expect(response.status).toBe(200);
+    expect(writes.filter(write => write.table === "profiles").map(write => write.value)).toContainEqual({ heard_from: "other: A podcast" });
+    expect(writes.find(write => write.table === "profiles")?.value).not.toHaveProperty("heard_from");
+  });
+  it("writes nothing extra when heard_from is left blank", async () => {
+    const { writes } = await onboard("ai", { phone: "", fields: { heard_from: "" } });
+    expect(writes.some(write => write.table === "profiles" && "heard_from" in write.value)).toBe(false);
   });
 });
