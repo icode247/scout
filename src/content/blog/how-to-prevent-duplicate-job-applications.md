@@ -1,9 +1,12 @@
 ---
 title: "How to Prevent Duplicate Job Applications"
+seoTitle: "Prevent Duplicate Job Applications: One Shared Log"
 description: "Prevent duplicate applications across job boards, career sites, referrals, and assistants with a shared log, stable IDs, and a pre-submit check."
+seoDescription: "Keep one master log and check the requisition ID, employer, and job URL before every submission, including manual, referral, and assistant applications."
 coverImage: "/assets/blog/how-to-prevent-duplicate-job-applications-cover.webp"
 coverAlt: "Scout guide to preventing duplicate job applications"
 pubDate: 2026-08-18
+lastmod: 2026-11-12
 author: "Scout Editorial Team"
 pillar: "Application Accuracy & Safety"
 targetKeyword: "how to prevent duplicate job applications"

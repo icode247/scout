@@ -51,7 +51,7 @@ const breadcrumbLd = {
   ],
 };
 ---
-<Base title={d.seoTitle ?? d.title} description={d.description} image={d.coverImage} type="article">
+<Base title={d.seoTitle ?? d.title} description={d.seoDescription ?? d.description} image={d.coverImage} type="article">
   <Container>
     <article class="mx-auto max-w-prose py-16">
       <nav class="text-sm text-ink-muted"><a href="/blog" class="hover:text-ink">Blog</a> <span aria-hidden="true">/</span> {d.pillar ?? "Article"}</nav>
