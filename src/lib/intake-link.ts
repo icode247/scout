@@ -31,15 +31,33 @@ export function readIntakeToken(token: string, secret: string): string | null {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-/** What the client's link shows: their account email, the name and answers from their latest intake, and the WhatsApp number on their account if the intake has none. */
-export async function loadIntakePrefill(supabase: SupabaseClient, userId: string): Promise<{ email: string; name: string; answers: IntakePrefill } | null> {
+export type IntakeOnFile = {
+  email: string;
+  name: string;
+  answers: IntakePrefill;
+  /** The newest resume we already hold for them (from an earlier intake or their account), so they need not upload it again. Paths are in the `resumes` bucket. */
+  resume: { name: string; path: string } | null;
+};
+
+/** What the client's link shows: their account email, the name and answers from their latest intake, the WhatsApp number on their account if the intake has none, and their newest resume. */
+export async function loadIntakePrefill(supabase: SupabaseClient, userId: string): Promise<IntakeOnFile | null> {
   const profile = await supabase.from("profiles").select("full_name,email,whatsapp_phone").eq("user_id", userId).maybeSingle();
   if (profile.error) throw profile.error;
   const email = String(profile.data?.email || "").toLowerCase();
   if (!email) return null;
-  const intake = await supabase.from("assistant_intakes").select("full_name,answers").eq("email", email).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const [intake, accountResume] = await Promise.all([
+    supabase.from("assistant_intakes").select("full_name,answers,resume_path,resume_name,created_at").eq("email", email).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    // Tailored resumes are per-job rewrites, not the one the client sent.
+    supabase.from("resumes").select("name,storage_path,created_at").eq("user_id", userId).neq("kind", "tailored").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
   if (intake.error) throw intake.error;
+  if (accountResume.error) throw accountResume.error;
   const answers = pickIntakePrefill(intake.data?.answers || {});
   if (!answers.whatsappPhone && profile.data?.whatsapp_phone) answers.whatsappPhone = profile.data.whatsapp_phone;
-  return { email, name: intake.data?.full_name || profile.data?.full_name || "", answers };
+  const resumes = [
+    intake.data?.resume_path ? { name: intake.data.resume_name || "Resume", path: intake.data.resume_path, at: intake.data.created_at } : null,
+    accountResume.data?.storage_path ? { name: accountResume.data.name || "Resume", path: accountResume.data.storage_path, at: accountResume.data.created_at } : null,
+  ].filter((resume): resume is { name: string; path: string; at: string } => Boolean(resume)).sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0));
+  const resume = resumes[0] ? { name: resumes[0].name, path: resumes[0].path } : null;
+  return { email, name: intake.data?.full_name || profile.data?.full_name || "", answers, resume };
 }
