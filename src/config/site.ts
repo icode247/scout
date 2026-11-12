@@ -15,6 +15,25 @@ export const SITE = {
   twitter: "@getscout",
 } as const;
 
+/**
+ * Organization JSON-LD identity. `name` is the brand answer engines should resolve
+ * (ApplyScout at applyscout.app), not the lookalikes (scoutify.com, applyscout.com,
+ * applyscout.io, a GitHub "apply-scout" repo).
+ *
+ * `sameAs` lists only official profiles that the site already links. Never guess a URL,
+ * and never add a profile you have not confirmed is ours. The Chrome Web Store listing
+ * is the one /download links (PUBLIC_CHROME_EXTENSION_ID). The X handle above is left
+ * out until someone confirms it belongs to Scout.
+ */
+export const ORGANIZATION = {
+  id: `${SITE.url}/#organization`,
+  name: "ApplyScout",
+  alternateName: ["Scout", "Scout Job Application Service"],
+  description:
+    "ApplyScout is a done-for-you job application service where a dedicated Human Assistant or a lower-cost AI Assistant finds roles, tailors resumes, applies on the job seeker's behalf and tracks every submission.",
+  sameAs: ["https://chromewebstore.google.com/detail/fimngbojooohimghjpfjleilbcmbnoaj"],
+} as const;
+
 export type NavItem = { label: string; href: string };
 
 export const NAV: NavItem[] = [
