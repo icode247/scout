@@ -18,19 +18,21 @@ import { isNonIndexablePath } from "./src/config/seo.ts";
 const isBuild = process.argv.includes("build");
 
 const blogDirectory = new URL("./src/content/blog/", import.meta.url);
-const blogLastModified = new Map(
-  readdirSync(blogDirectory)
-    .filter((filename) => filename.endsWith(".md") || filename.endsWith(".mdx"))
-    .map((filename) => {
-      const source = readFileSync(join(blogDirectory.pathname, filename), "utf8");
-      const published = source.match(/^pubDate:\s*["']?([^\s"']+)/m)?.[1];
-      const updated = source.match(/^updatedDate:\s*["']?([^\s"']+)/m)?.[1];
-      const date = updated ?? published;
-      return [`/blog/${basename(filename).replace(/\.mdx?$/, "")}`, date];
-    })
-    .filter((entry) => entry[1]),
-);
-const latestBlogUpdate = [...blogLastModified.values()].sort().at(-1);
+const blogDates = readdirSync(blogDirectory)
+  .filter((filename) => filename.endsWith(".md") || filename.endsWith(".mdx"))
+  .map((filename) => {
+    const source = readFileSync(join(blogDirectory.pathname, filename), "utf8");
+    const published = source.match(/^pubDate:\s*["']?([^\s"']+)/m)?.[1];
+    const updated = source.match(/^updatedDate:\s*["']?([^\s"']+)/m)?.[1];
+    // `lastmod` records a change the page does not show, such as a new title or meta
+    // description. It moves the post's sitemap date without adding an "Updated" line.
+    const lastmod = source.match(/^lastmod:\s*["']?([^\s"']+)/m)?.[1];
+    return [`/blog/${basename(filename).replace(/\.mdx?$/, "")}`, updated ?? published, lastmod];
+  })
+  .filter((entry) => entry[1]);
+const blogLastModified = new Map(blogDates.map(([path, date, lastmod]) => [path, lastmod > date ? lastmod : date]));
+// `lastmod` changes nothing on the /blog index, so the index keeps the shown dates.
+const latestBlogUpdate = blogDates.map(([, date]) => date).sort().at(-1);
 // Real edit dates for everything that is not a blog post (`npm run seo:dates` writes this).
 // Dynamic routes share their template's date, keyed by the route's prefix.
 const pageDates = JSON.parse(readFileSync(new URL("./src/data/page-lastmod.json", import.meta.url), "utf8"));

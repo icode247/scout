@@ -10,8 +10,12 @@ const blog = defineCollection({
     coverAlt: z.string(),
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
+    /** Sitemap lastmod for a change the page does not show (title, meta). No "Updated" line. */
+    lastmod: z.coerce.date().optional(),
     /** Title tag, without the trailing "| Scout". The visible H1 stays `title`. */
     seoTitle: z.string().optional(),
+    /** Meta and OG description. Article schema, cards and RSS keep `description`. */
+    seoDescription: z.string().optional(),
     /** "Prices checked …" replaces the published/updated line when set. */
     bylineNote: z.string().optional(),
     author: z.string().default("The Scout Team"),
