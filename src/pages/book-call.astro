@@ -161,6 +161,8 @@ const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://cale
       confirmation.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
       sessionStorage.removeItem("scout_booking");
       track("Strategy Call Scheduled", { lead_id: leadId });
+      // GA4's recommended-style name for the key event; no lead id or contact details.
+      if (typeof window.gtag === "function") window.gtag("event", "book_call", { method: "calendly" });
       if (leadId) {
         fetch("/api/book-call", {
           method: "PATCH",

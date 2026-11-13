@@ -4,7 +4,9 @@ import { safeNext } from "../../lib/api";
 import { createSupabaseServerClient } from "../../lib/supabase";
 import { escapeHtml } from "../../lib/email";
 import { getPostHogServer } from "../../lib/posthog-server";
-import { sendGoogleAnalyticsEvent } from "../../lib/google-analytics";
+import { googleClientIdFromCookie, googleSessionCookieName, googleSessionIdFromCookie, sendGoogleAnalyticsEvent } from "../../lib/google-analytics";
+import { FIRST_TOUCH_KEY, attributionColumns, decodeFirstTouch, isNewSignup } from "../../lib/attribution";
+import { serverEnv } from "../../lib/server-env";
 
 export const prerender = false;
 
@@ -21,6 +23,49 @@ async function recordSignIn(user: User | null | undefined, method: string) {
   }
   await sendGoogleAnalyticsEvent({ userId: user.id, name: "login", params: { method } })
     .catch((analyticsError) => console.error("[google-analytics] login event failed", analyticsError));
+}
+
+/**
+ * A new account's first sign-in: copy the browser's first touch (src/lib/attribution.ts) onto
+ * the profile and send `sign_up`. The update only matches while attribution_captured_at is
+ * empty, so it happens once per member even if they open two sign-in links. Best effort: a
+ * failure here (for example the migration not applied yet) is logged and sign-in carries on.
+ */
+async function recordSignUp(context: APIContext, supabase: ReturnType<typeof createSupabaseServerClient>, user: User | null | undefined, method: string) {
+  if (!user || !isNewSignup(user.created_at)) return;
+  try {
+    const touch = decodeFirstTouch(context.cookies.get(FIRST_TOUCH_KEY)?.value);
+    const saved = await supabase.from("profiles")
+      .update({ ...attributionColumns(touch), attribution_captured_at: new Date().toISOString() })
+      .eq("user_id", user.id)
+      .is("attribution_captured_at", null)
+      .select("user_id")
+      .maybeSingle();
+    if (saved.error) {
+      console.error("[auth] signup attribution not saved", { code: saved.error.code, message: saved.error.message });
+      return;
+    }
+    if (!saved.data) return;
+
+    // Source fields only: no name, email or free text goes to analytics.
+    const source = { method, utm_source: touch?.utm_source ?? null, utm_medium: touch?.utm_medium ?? null, utm_campaign: touch?.utm_campaign ?? null, ai_source: touch?.ai_source ?? null };
+    const posthog = getPostHogServer();
+    if (posthog) {
+      posthog.capture({ distinctId: user.id, event: "user_signed_up", properties: source });
+      await posthog.flush();
+    }
+    // The browser's own GA client and session ids, so GA4 credits the visit that led here.
+    const sessionCookie = googleSessionCookieName(serverEnv("PUBLIC_GA_MEASUREMENT_ID"));
+    const sessionId = sessionCookie ? googleSessionIdFromCookie(context.cookies.get(sessionCookie)?.value) : null;
+    await sendGoogleAnalyticsEvent({
+      clientId: googleClientIdFromCookie(context.cookies.get("_ga")?.value),
+      userId: user.id,
+      name: "sign_up",
+      params: { method, ...(sessionId ? { session_id: sessionId } : {}) },
+    }).catch((analyticsError) => console.error("[google-analytics] sign_up event failed", analyticsError));
+  } catch (error) {
+    console.error("[auth] signup tracking failed", error);
+  }
 }
 
 function signIn(context: APIContext) {
@@ -66,7 +111,9 @@ export const GET: APIRoute = async (context) => {
     // Google sign-in (and older Supabase emails) return a PKCE code to the same browser.
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      await recordSignIn(data?.user, data?.user?.app_metadata?.provider || "google");
+      const method = data?.user?.app_metadata?.provider || "google";
+      await recordSignIn(data?.user, method);
+      await recordSignUp(context, supabase, data?.user, method);
       return finish(next);
     }
   }
@@ -89,5 +136,6 @@ export const POST: APIRoute = async (context) => {
     return failed(next);
   }
   await recordSignIn(result.data?.user, "magic_link");
+  await recordSignUp(context, supabase, result.data?.user, "magic_link");
   return finish(next);
 };

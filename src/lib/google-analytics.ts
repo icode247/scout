@@ -36,3 +36,20 @@ export function googleClientIdFromCookie(cookie: string | undefined) {
   const parts = cookie.split(".");
   return parts.length >= 4 ? `${parts.at(-2)}.${parts.at(-1)}` : null;
 }
+
+/** The `_ga_<stream>` cookie name gtag uses for a measurement id like G-ABC123. */
+export function googleSessionCookieName(measurementId: string | null | undefined) {
+  const id = String(measurementId || "").trim().replace(/^G-/i, "");
+  return id ? `_ga_${id}` : null;
+}
+
+/**
+ * The browser's current GA4 session id from its `_ga_<stream>` cookie, in the old
+ * (`GS1.1.<session>.…`) or current (`GS2.1.s<session>$o…`) format. Sent with a Measurement
+ * Protocol event, it puts the event in that session, so GA4 credits the session's source.
+ */
+export function googleSessionIdFromCookie(cookie: string | undefined) {
+  const part = cookie?.split(".")[2] || "";
+  const match = part.match(/^s?(\d{6,})/);
+  return match ? match[1] : null;
+}

@@ -5,6 +5,7 @@ import { assignedHumanAssistant, allHumanAssistants, savedHumanAssistant } from 
 import { fastApplyProfilePayload } from "../../../lib/fastapply-applicant";
 import { getPostHogServer } from "../../../lib/posthog-server";
 import { sendGoogleAnalyticsEvent } from "../../../lib/google-analytics";
+import { heardFromValue } from "../../../lib/attribution";
 
 export const prerender = false;
 
@@ -84,6 +85,14 @@ export const POST: APIRoute = async (context) => {
       updated_at: new Date().toISOString(),
     }).eq("user_id", user.id);
     if (profileUpdate.error) throw profileUpdate.error;
+
+    // Optional "How did you hear about Scout?". Saved on its own so a failure (for example the
+    // attribution migration not applied yet) never blocks setup.
+    const heardFrom = heardFromValue(form.get("heard_from"), form.get("heard_from_other"));
+    if (heardFrom) {
+      const heardUpdate = await supabase.from("profiles").update({ heard_from: heardFrom }).eq("user_id", user.id);
+      if (heardUpdate.error) console.error("[onboarding] heard_from not saved", { code: heardUpdate.error.code, message: heardUpdate.error.message });
+    }
 
     const posthog = getPostHogServer();
     if (posthog) {

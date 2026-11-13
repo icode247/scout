@@ -3,6 +3,7 @@ import { SEO } from "astro-seo";
 import { SITE } from "../config/site";
 import PostHog from "./posthog.astro";
 import GoogleAnalytics from "./GoogleAnalytics.astro";
+import FirstTouch from "./FirstTouch.astro";
 
 interface Props {
   title?: string;
@@ -118,3 +119,4 @@ const siteLd = {
 )}
 <PostHog />
 <GoogleAnalytics enabled={analytics} />
+<FirstTouch />
