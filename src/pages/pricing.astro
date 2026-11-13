@@ -7,7 +7,7 @@ import MarketingCTA from "../components/MarketingCTA.astro";
 import { COUNTRY_PAGES } from "../data/countries";
 
 import TermSwitcher from "../components/TermSwitcher.astro";
-import { REGIONS, formatRegionalAmount, plansForLane, regionalPriceLabel, savings, type Plan, type Term } from "../config/plans";
+import { REGIONS, formatRegionalAmount, plansForLane, regionalPriceLabel, savings, savingsLabel, type Plan, type Term } from "../config/plans";
 import { visitorRegion } from "../lib/region";
 import { approvedServiceLd } from "../config/offer-catalog";
 
@@ -27,6 +27,7 @@ const signedIn = Boolean(Astro.locals.sessionEmail);
 // it renders per request).
 const region = visitorRegion(Astro.request);
 const price = (plan: Plan) => (region ? regionalPriceLabel(plan, region) : plan.priceLabel);
+const saveBadge = (plan: Plan) => savingsLabel(plan, region);
 const standardOf = (plan: Plan) => plansForLane(plan.lane, "standard").find((p) => p.family === plan.family)!;
 const monthlyTotal = (plan: Plan) => {
   const sibling = standardOf(plan);
@@ -123,7 +124,7 @@ const faqs=[
               {aiPlans(term).map((plan,i)=><article class={`flex flex-col rounded-2xl p-7 ${i===1?"bg-brand-950 text-white":"bg-white"}`}>
                 <div class="flex flex-wrap items-center gap-2">
                   <h3 class={`text-2xl font-extrabold ${i===1?"text-white":""}`}>{plan.name}</h3>
-                  {saved(plan) && <span class="rounded-full bg-signal-500 px-2.5 py-1 text-[0.7rem] font-black text-white">{saved(plan)!.label}</span>}
+                  {saveBadge(plan) && <span class="rounded-full bg-signal-500 px-2.5 py-1 text-[0.7rem] font-black text-white">{saveBadge(plan)}</span>}
                 </div>
                 <p class={`mt-3 min-h-12 ${i===1?"text-white/65":"text-ink-soft"}`}>{plan.blurb}</p>
                 <p class="mt-7">
@@ -156,7 +157,7 @@ const faqs=[
           {humanPlans(term).map(plan => <article class={`relative flex flex-col rounded-2xl p-7 ${plan.featured?"bg-brand-200 ring-2 ring-brand-600":"bg-surface"}`}>
             <div class="flex flex-wrap items-center gap-2">
               {plan.featured && <span class="w-fit rounded-full bg-brand-950 px-3 py-1.5 text-xs font-bold text-white">Most useful for an active search</span>}
-              {saved(plan) && <span class="w-fit rounded-full bg-signal-500 px-3 py-1.5 text-xs font-black text-white">{saved(plan)!.label}</span>}
+              {saveBadge(plan) && <span class="w-fit rounded-full bg-signal-500 px-3 py-1.5 text-xs font-black text-white">{saveBadge(plan)}</span>}
             </div>
             <h3 class="mt-5 text-2xl font-extrabold">{plan.name}</h3>
             <p class="mt-3 min-h-12 text-ink-soft">{plan.blurb}</p>

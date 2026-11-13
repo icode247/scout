@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLANS, REGIONS, formatRegionalAmount, planByCode, plansForLane, recommendedPlan, regionCode, regionalPriceLabel, savings, standardSibling } from "./plans";
+import { PLANS, REGIONS, formatRegionalAmount, planByCode, plansForLane, recommendedPlan, regionCode, regionalPriceLabel, savings, savingsLabel, standardSibling } from "./plans";
 
 describe("plan catalog", () => {
   it("has a standard and quarterly version of every product", () => {
@@ -128,6 +128,30 @@ describe("regional pricing", () => {
     expect(regionalPriceLabel(planByCode("ai_essential")!, "NG")).toBe("₦16,000");
     expect(regionalPriceLabel(planByCode("human_campaign")!, "IN")).toBe("₹59,999");
     expect(formatRegionalAmount("NG", planByCode("ai_essential")!.regional.NG * 3)).toBe("₦48,000");
+  });
+
+  it("labels the Save badge in the visitor's currency (DEV-SEO-031)", () => {
+    const badge = (code: string, region: "IN" | "NG" | null) => savingsLabel(planByCode(code)!, region);
+    const quarterly = ["ai_essential_90", "ai_plus_90", "human_focused_90", "human_full_90", "human_campaign_90"];
+    // US / default view: unchanged USD badges.
+    expect(quarterly.map((code) => badge(code, null))).toEqual(["Save $12", "Save $24", "Save $90", "Save $150", "Save $300"]);
+    // Nigeria: 3 x monthly naira price minus the 90-day naira price.
+    expect(quarterly.map((code) => badge(code, "NG"))).toEqual(["Save ₦5,000", "Save ₦9,500", "Save ₦80,000", "Save ₦135,000", "Save ₦267,000"]);
+    // India, with en-IN digit grouping.
+    expect(quarterly.map((code) => badge(code, "IN"))).toEqual(["Save ₹298", "Save ₹698", "Save ₹5,398", "Save ₹8,998", "Save ₹17,998"]);
+    // Each regional badge equals the visible "billed monthly" total minus the 90-day price.
+    for (const plan of PLANS.filter((p) => p.term === "quarterly")) {
+      const sibling = standardSibling(plan)!;
+      for (const region of regions) {
+        expect(savingsLabel(plan, region), `${plan.code} ${region}`).toBe(
+          `Save ${formatRegionalAmount(region, sibling.regional[region] * 3 - plan.regional[region])}`,
+        );
+      }
+    }
+    // Standard plans carry no badge in any region.
+    expect(badge("ai_plus", null)).toBeNull();
+    expect(badge("ai_plus", "NG")).toBeNull();
+    expect(badge("ai_plus", "IN")).toBeNull();
   });
 
   it("maps only supported countries to a region", () => {

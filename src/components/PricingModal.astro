@@ -1,5 +1,5 @@
 ---
-import { PLANS, REGIONS, formatRegionalAmount, regionalPriceLabel, savings, standardSibling } from "../config/plans";
+import { PLANS, REGIONS, formatRegionalAmount, regionalPriceLabel, savings, savingsLabel, standardSibling } from "../config/plans";
 import { visitorRegion } from "../lib/region";
 
 interface Props { defaultLane?: "human" | "ai" }
@@ -19,7 +19,7 @@ const plans = PLANS.map((plan) => ({
   priceLabel: region ? regionalPriceLabel(plan, region) : plan.priceLabel, cadenceLabel: plan.cadenceLabel,
   applications: plan.applications, blurb: plan.blurb, features: plan.features,
   featured: Boolean(plan.featured),
-  savingsLabel: savings(plan)?.label ?? null,
+  savingsLabel: savingsLabel(plan, region),
   savingsPercent: savings(plan)?.percent ?? null,
   comparePrice: compareOf(plan),
 }));
