@@ -6,7 +6,7 @@ seoDescription: "Keep one master log and check the requisition ID, employer, and
 coverImage: "/assets/blog/how-to-prevent-duplicate-job-applications-cover.webp"
 coverAlt: "Scout guide to preventing duplicate job applications"
 pubDate: 2026-08-18
-lastmod: 2026-11-12
+lastmod: 2026-11-20
 author: "Scout Editorial Team"
 pillar: "Application Accuracy & Safety"
 targetKeyword: "how to prevent duplicate job applications"
