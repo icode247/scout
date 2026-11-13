@@ -2,7 +2,7 @@
 import { getCollection, render } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import Container from "../../components/Container.astro";
-import { SITE } from "../../config/site";
+import { ORGANIZATION, SITE } from "../../config/site";
 import { markdownFaq } from "../../lib/markdown-faq";
 
 export const prerender = true;
@@ -38,7 +38,7 @@ const articleLd = {
   datePublished: d.pubDate.toISOString(),
   dateModified: (d.updatedDate ?? d.pubDate).toISOString(),
   author: { "@type": "Organization", name: d.author },
-  publisher: { "@type": "Organization", name: SITE.name },
+  publisher: { "@id": ORGANIZATION.id },
   image: new URL(d.coverImage, SITE.url).href,
   mainEntityOfPage: new URL(`/blog/${post.id}`, SITE.url).href,
   isAccessibleForFree: true,

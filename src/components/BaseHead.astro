@@ -1,6 +1,6 @@
 ---
 import { SEO } from "astro-seo";
-import { SITE } from "../config/site";
+import { ORGANIZATION, SITE } from "../config/site";
 import PostHog from "./posthog.astro";
 import GoogleAnalytics from "./GoogleAnalytics.astro";
 import FirstTouch from "./FirstTouch.astro";
@@ -42,12 +42,13 @@ const plausibleDomain = analytics ? import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN?.tri
 const orgLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "@id": new URL("/#organization", SITE.url).href,
-  name: SITE.name,
-  alternateName: ["ApplyScout", "Scout Job Application Service"],
+  "@id": ORGANIZATION.id,
+  name: ORGANIZATION.name,
+  alternateName: ORGANIZATION.alternateName,
   url: SITE.url,
   logo: { "@type": "ImageObject", url: new URL("/scout-mark-512.png", SITE.url).href, width: 512, height: 512 },
-  description: SITE.description,
+  description: ORGANIZATION.description,
+  sameAs: ORGANIZATION.sameAs,
 };
 const siteLd = {
   "@context": "https://schema.org",
@@ -57,7 +58,7 @@ const siteLd = {
   alternateName: "Scout Job Application Assistant",
   url: SITE.url,
   inLanguage: "en-US",
-  publisher: { "@id": new URL("/#organization", SITE.url).href },
+  publisher: { "@id": ORGANIZATION.id },
 };
 ---
 

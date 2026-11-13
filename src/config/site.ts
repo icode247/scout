@@ -12,7 +12,31 @@ export const SITE = {
     "Scout is a done-for-you job application service. Choose a dedicated Human Assistant or a lower-cost AI Assistant to find roles, tailor resumes, apply on your behalf, and track every submission.",
   locale: "en_US",
   themeColor: "#7fc92b",
-  twitter: "@getscout",
+  twitter: "@applyscout_app",
+} as const;
+
+/**
+ * Organization JSON-LD identity. `name` is the brand answer engines should resolve
+ * (ApplyScout at applyscout.app), not the lookalikes (scoutify.com, applyscout.com,
+ * applyscout.io, a GitHub "apply-scout" repo).
+ *
+ * `sameAs` lists only official profiles that the site already links. Never guess a URL,
+ * and never add a profile you have not confirmed is ours. The Chrome Web Store listing
+ * is the one /download links (PUBLIC_CHROME_EXTENSION_ID). Instagram, X and LinkedIn
+ * were confirmed by the owner on 2026-11-13.
+ */
+export const ORGANIZATION = {
+  id: `${SITE.url}/#organization`,
+  name: "ApplyScout",
+  alternateName: ["Scout", "Scout Job Application Service"],
+  description:
+    "ApplyScout is a done-for-you job application service where a dedicated Human Assistant or a lower-cost AI Assistant finds roles, tailors resumes, applies on the job seeker's behalf and tracks every submission.",
+  sameAs: [
+    "https://www.linkedin.com/company/144615918/",
+    "https://www.instagram.com/applyscout_app/",
+    "https://x.com/applyscout_app",
+    "https://chromewebstore.google.com/detail/fimngbojooohimghjpfjleilbcmbnoaj",
+  ],
 } as const;
 
 export type NavItem = { label: string; href: string };
