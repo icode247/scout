@@ -4,7 +4,7 @@ description: "Compare reverse recruiters, career coaches, and job application se
 coverImage: "/assets/blog/reverse-recruiter-vs-career-coach-vs-job-application-service-cover.webp"
 coverAlt: "Scout comparison of a reverse recruiter, career coach, and job application service"
 pubDate: 2026-08-17
-updatedDate: 2026-11-12
+updatedDate: 2026-11-18
 author: "Scout Editorial Team"
 pillar: "Reverse Recruiting"
 targetKeyword: "reverse recruiter vs career coach vs job application service"
