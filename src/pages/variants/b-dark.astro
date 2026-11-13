@@ -3,7 +3,7 @@ import Shell from "../../layouts/Shell.astro";
 import Container from "../../components/Container.astro";
 import Button from "../../components/Button.astro";
 import SwipeHero from "../../components/islands/SwipeHero.tsx";
-import { SITE, TIERS, STATS } from "../../config/site";
+import { SITE, TIERS } from "../../config/site";
 
 const platforms = ["Workday", "Greenhouse", "Lever", "LinkedIn", "Indeed", "Glassdoor"];
 
@@ -52,7 +52,6 @@ const appLd = {
   applicationCategory: "BusinessApplication",
   description: SITE.description,
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-  aggregateRating: { "@type": "AggregateRating", ratingValue: STATS.rating, ratingCount: STATS.ratingCount.replace(/[^0-9]/g, "") },
 };
 ---
 <Shell title={`${SITE.name}: ${SITE.tagline}`} description={SITE.description}>

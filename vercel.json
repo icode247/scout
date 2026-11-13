@@ -26,6 +26,11 @@
       "permanent": true
     },
     {
+      "source": "/job-application-service/uk",
+      "destination": "/job-application-service/united-kingdom",
+      "permanent": true
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "/sitemap-index.xml",
       "permanent": true
