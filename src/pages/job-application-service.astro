@@ -24,6 +24,9 @@ const faqs = [
   { q: "How do I know a service actually submitted my applications?", a: proofAnswer },
   { q: "Do you take a percentage of my salary?", a: salaryAnswer },
   { q: "How do I start?", a: "Create an account, choose Human or AI, and import your resume. Your dashboard opens with your profile saved. Activate a plan from your dashboard to begin." },
+  { q: "How does a job application service work?", a: "You set target roles and rules, then the service finds matching openings, prepares your materials, submits the applications and records each one. You keep interviews and the decisions that matter. Ask what proof you will get of each submission before you pay." },
+  { q: "What is the difference between a job application service, auto-apply and a reverse recruiter?", a: "A job application service may use a person, software or both to find matching roles, prepare materials, submit applications and record the work. Auto-apply usually means software submits forms for you. A reverse recruiter usually adds positioning and outreach to hiring managers. Scout provides the application-operations part and does not claim to represent employers." },
+  { q: "What does a job application service not do?", a: "It does not interview for you, choose your career or decide who gets hired. It should not invent experience. It is application labor, not a recruiter pitching you to a hiring manager." },
 ];
 const serviceLd = approvedServiceLd();
 const breadcrumbLd = {
@@ -55,7 +58,8 @@ const breadcrumbLd = {
     <Container>
       <div class="mx-auto max-w-3xl">
         <h2 class="font-display text-4xl font-extrabold sm:text-6xl">What is a job application service?</h2>
-        <p class="mt-5 text-lg leading-relaxed text-ink-soft">A job application service is a paid service where a person, software or both find suitable openings, prepare your materials, submit applications on your behalf and record the work. ApplyScout (Scout, at applyscout.app) is a job application service with two versions: a dedicated Human Assistant from $299 a month for 250 applications, and a lower-cost AI Assistant from $39 a month for 75 applications. No service can promise interviews or offers, because employers make those decisions.</p>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft">A job application service is a paid service that finds matching openings, prepares your materials, submits applications on your behalf and records each one. You set the roles and rules; a person, software or both complete the forms. No service can promise interviews or offers, because employers make those decisions.</p>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft">ApplyScout (Scout, at applyscout.app) is a job application service with two versions: a dedicated Human Assistant from $299 a month for 250 applications, and a lower-cost AI Assistant from $39 a month for 75 applications.</p>
         <h3 class="mt-10 font-display text-2xl font-extrabold">What should a job application service include?</h3>
         <div class="mt-6 overflow-x-auto">
           <table class="w-full min-w-[560px] border-collapse text-left text-sm">
@@ -74,7 +78,35 @@ const breadcrumbLd = {
             </tbody>
           </table>
         </div>
+        <h3 class="mt-10 font-display text-2xl font-extrabold">How does a job application service work?</h3>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft">The work runs in four steps:</p>
+        <ol class="mt-4 list-decimal space-y-3 pl-5 text-lg leading-relaxed text-ink-soft">
+          <li><strong class="text-ink">Set your criteria.</strong> You share a resume and the roles, locations, salary range and exclusions you want the service to follow.</li>
+          <li><strong class="text-ink">Find and filter openings.</strong> The service looks for matching jobs and drops ones that break your rules.</li>
+          <li><strong class="text-ink">Prepare materials.</strong> It uses your approved experience to tailor a resume or cover note to the posting. Tailoring means rewording what is true, not adding skills you do not have.</li>
+          <li><strong class="text-ink">Submit and record.</strong> It completes the form, sends the application and logs the job, status and materials used, so you can inspect the work. A good service pauses and asks you when a form question cannot be answered from your approved facts.</li>
+        </ol>
+        <p class="mt-6 text-lg leading-relaxed text-ink-soft">At Scout, that flow is: you <a href="/how-it-works" class="font-extrabold text-brand-700">set the search once</a>, your Human or AI Assistant applies, and you inspect every job, status and resume used. Human Assistant plans also include screenshots of important form answers. For the longer guide, see <a href="/blog/what-is-a-job-application-service" class="font-extrabold text-brand-700">what a job application service is</a>.</p>
+        <h3 class="mt-10 font-display text-2xl font-extrabold">Types of job application help</h3>
+        <div class="mt-6 overflow-x-auto">
+          <table class="w-full min-w-[560px] border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b border-ink/10">
+                <th class="p-3 font-extrabold">Type</th>
+                <th class="p-3 font-extrabold">Who does the work</th>
+                <th class="p-3 font-extrabold">What it is for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-ink/10"><td class="p-3 font-bold">Human application service</td><td class="p-3">A dedicated person</td><td class="p-3">Handing off form work when your target roles are clear, with someone you can ask about unclear questions</td></tr>
+              <tr class="border-b border-ink/10"><td class="p-3 font-bold">AI or automated assistant</td><td class="p-3">Software</td><td class="p-3">Lower-cost, repeatable searches with a record of each job</td></tr>
+              <tr class="border-b border-ink/10"><td class="p-3 font-bold">Reverse recruiter</td><td class="p-3">A recruiter, who may add outreach</td><td class="p-3">A wider campaign that may add positioning and outreach to hiring managers</td></tr>
+              <tr class="border-b border-ink/10"><td class="p-3 font-bold">Career coach</td><td class="p-3">A coach</td><td class="p-3">Interview practice, strategy and negotiation, not submitting applications for you</td></tr>
+            </tbody>
+          </table>
+        </div>
         <p class="mt-6 text-lg leading-relaxed text-ink-soft">A service takes over the work you lack time for. It does not replace a clear target role or a resume that says what you want it to say.</p>
+        <p class="mt-5 text-lg leading-relaxed text-ink-soft">If the bottleneck is labor, not strategy, you can use Scout's <a href="/ai-job-application-assistant" class="font-extrabold text-brand-700">AI Assistant</a> from $39 a month for 75 applications, or a <a href="/human-job-application-service" class="font-extrabold text-brand-700">Human Assistant</a> from $299 a month for 250. Scout does not guarantee interviews. See <a href="/pricing" class="font-extrabold text-brand-700">pricing</a>.</p>
       </div>
       <div class="mx-auto mt-20 max-w-3xl text-center"><h2 class="font-display text-4xl font-extrabold sm:text-6xl">You keep the decisions. We handle the forms.</h2><p class="mt-5 text-lg leading-relaxed text-ink-soft">Scout is built for people who are too busy to apply consistently, have already tried doing it alone, or are exhausted by repeating the same information across job sites.</p></div>
       <div class="mt-12 grid gap-5 lg:grid-cols-3">
