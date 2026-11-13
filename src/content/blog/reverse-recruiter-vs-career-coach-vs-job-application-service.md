@@ -11,6 +11,7 @@ targetKeyword: "reverse recruiter vs career coach vs job application service"
 funnelStage: MOFU
 tags: ["reverse-recruiter","career-coach","job-application-service","comparison"]
 draft: false
+faqSchema: true
 ---
 
 _Disclosure: Scout publishes this guide and sells a done-for-you job application service. We describe what each option actually does, show where a coach or reverse recruiter is the better purchase, and use only our own list prices._

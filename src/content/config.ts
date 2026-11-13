@@ -19,6 +19,8 @@ const blog = defineCollection({
     targetKeyword: z.string().optional(),
     funnelStage: z.enum(["TOFU", "MOFU", "BOFU"]).optional(),
     tags: z.array(z.string()).default([]),
+    /** Markdown posts only: emit FAQPage JSON-LD from the visible "Frequently asked questions" section. */
+    faqSchema: z.boolean().default(false),
     draft: z.boolean().default(false),
   }),
 });
