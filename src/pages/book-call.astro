@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { BOOK_CALL_EVENT_SENDS } from "../lib/book-call-events";
 
 const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://calendly.com/hello-applyscout/scout-strategy-call";
 ---
@@ -61,7 +62,7 @@ const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://cale
     </div>
   </section>
 
-  <script define:vars={{ calendlyUrl }}>
+  <script define:vars={{ calendlyUrl, eventSends: BOOK_CALL_EVENT_SENDS }}>
     const form = document.getElementById("booking-details");
     const calendar = document.getElementById("booking-calendar");
     const confirmation = document.getElementById("booking-confirmation");
@@ -74,8 +75,11 @@ const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://cale
     let leadId = null;
     let bookingDetails = null;
 
+    // Cutover 2026-11-12: "Strategy Call ..." events became "Free Call ...". Each one is
+    // also sent under its old name, with the same properties, until the aliases are
+    // removed after ~8 weeks (see src/lib/book-call-events.ts, docs/analytics-events.md).
     function track(eventName, properties = {}) {
-      window.scoutTrack?.(eventName, properties);
+      for (const name of eventSends[eventName] || [eventName]) window.scoutTrack?.(name, properties);
     }
 
     function showError(message) {
@@ -116,7 +120,7 @@ const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://cale
       calendar.classList.remove("hidden");
       calendar.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
       sessionStorage.setItem("scout_booking", JSON.stringify({ id, full_name: details.full_name, email: details.email }));
-      track("Strategy Call Calendar Opened", { lead_id: id });
+      track("Free Call Calendar Opened", { lead_id: id });
     }
 
     form?.addEventListener("submit", async (event) => {
@@ -134,7 +138,7 @@ const calendlyUrl = import.meta.env.PUBLIC_CALENDLY_URL?.trim() || "https://cale
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "We could not save your details.");
         openCalendar(data, result.leadId);
-        track("Strategy Call Details Submitted", { lead_id: result.leadId, has_role: Boolean(data.primary_role) });
+        track("Free Call Details Submitted", { lead_id: result.leadId, has_role: Boolean(data.primary_role) });
       } catch (error) {
         showError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
       } finally {
