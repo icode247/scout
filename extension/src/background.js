@@ -1,5 +1,7 @@
 const DEFAULT_SITE_URL = "https://applyscout.app";
 const AUTH_KEY = "scoutAuth";
+// Set when the member presses Disconnect, so Scout does not sign them straight back in.
+const AUTO_CONNECT_OFF_KEY = "scoutAutoConnectOff";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
@@ -17,11 +19,11 @@ async function getSettings() {
   };
 }
 
-async function connect() {
+async function connect({ interactive = true } = {}) {
   const { siteUrl } = await getSettings();
   const redirectUri = chrome.identity.getRedirectURL("connected");
   const url = `${siteUrl}/extension/connect?redirect_uri=${encodeURIComponent(redirectUri)}`;
-  const resultUrl = await chrome.identity.launchWebAuthFlow({ url, interactive: true });
+  const resultUrl = await chrome.identity.launchWebAuthFlow({ url, interactive });
   if (!resultUrl) throw new Error("Scout connection was cancelled.");
   const hash = new URL(resultUrl).hash.slice(1);
   const params = new URLSearchParams(hash);
@@ -36,11 +38,28 @@ async function connect() {
     throw new Error("Scout returned an incomplete session. Please try again.");
   }
   await chrome.storage.local.set({ [AUTH_KEY]: auth });
+  await chrome.storage.local.remove(AUTO_CONNECT_OFF_KEY);
   return { connected: true };
+}
+
+/**
+ * Connects without opening a window when the member is already signed in to
+ * Scout in this browser. Chrome gives up as soon as the page needs any
+ * interaction (the login page), so a signed-out member just sees Connect.
+ */
+async function connectSilently() {
+  const stored = await chrome.storage.local.get(AUTO_CONNECT_OFF_KEY);
+  if (stored[AUTO_CONNECT_OFF_KEY]) return false;
+  try {
+    return (await connect({ interactive: false })).connected;
+  } catch {
+    return false;
+  }
 }
 
 async function disconnect() {
   await chrome.storage.local.remove(AUTH_KEY);
+  await chrome.storage.local.set({ [AUTO_CONNECT_OFF_KEY]: true });
   return { connected: false };
 }
 
@@ -87,7 +106,7 @@ async function api(path, init = {}) {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const run = async () => {
     switch (message?.type) {
-      case "SCOUT_AUTH_STATUS": return { connected: Boolean(await validAccessToken()) };
+      case "SCOUT_AUTH_STATUS": return { connected: Boolean(await validAccessToken()) || await connectSilently() };
       case "SCOUT_CONNECT": return connect();
       case "SCOUT_DISCONNECT": return disconnect();
       case "SCOUT_GET_PROFILES": return api("/api/extension/jobs");
