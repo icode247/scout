@@ -56,6 +56,12 @@ export interface Plan {
   validityDays: number | null;
   applications: string;
   applicationsQuota: number;
+  /**
+   * The allowance this plan carried before it was last raised at the same
+   * price. Only ever a figure the plan really sold at: it is shown to buyers
+   * as the "was" number, so an invented value would be a false claim.
+   */
+  previousApplicationsQuota?: number;
   profileLimit: number;
   blurb: string;
   features: string[];
@@ -150,7 +156,7 @@ export const PLANS: Plan[] = [
     code: "ai_essential", family: "ai_essential", lane: "ai", term: "standard",
     name: "AI Essential", billing: "recurring", billingMonths: 1, validityDays: null,
     priceCents: 3900, priceLabel: "$39", cadenceLabel: "/ month",
-    applications: "150 applications / month", applicationsQuota: 150, profileLimit: 1,
+    applications: "150 applications / month", applicationsQuota: 150, previousApplicationsQuota: 75, profileLimit: 1,
     blurb: "A lower-cost assistant for one focused search.",
     features: AI_FEATURES.essential,
     productEnvKey: "DODO_PRODUCT_AI_ESSENTIAL",
@@ -160,7 +166,7 @@ export const PLANS: Plan[] = [
     code: "ai_essential_90", family: "ai_essential", lane: "ai", term: "quarterly",
     name: "AI Essential", billing: "recurring", billingMonths: 3, validityDays: null,
     priceCents: 10500, priceLabel: "$105", cadenceLabel: "/ 90 days",
-    applications: "450 applications / 90 days", applicationsQuota: 450, profileLimit: 1,
+    applications: "450 applications / 90 days", applicationsQuota: 450, previousApplicationsQuota: 225, profileLimit: 1,
     blurb: "The same assistant, prepaid for 90 days at a lower rate.",
     features: AI_FEATURES.essential,
     productEnvKey: "DODO_PRODUCT_AI_ESSENTIAL_90",
@@ -170,7 +176,7 @@ export const PLANS: Plan[] = [
     code: "ai_plus", family: "ai_plus", lane: "ai", term: "standard",
     name: "AI Plus", billing: "recurring", billingMonths: 1, validityDays: null,
     priceCents: 7900, priceLabel: "$79", cadenceLabel: "/ month",
-    applications: "300 applications / month", applicationsQuota: 300, profileLimit: 3, featured: true,
+    applications: "300 applications / month", applicationsQuota: 300, previousApplicationsQuota: 200, profileLimit: 3, featured: true,
     blurb: "More profiles and volume for an active multi-role search.",
     features: AI_FEATURES.plus,
     productEnvKey: "DODO_PRODUCT_AI_PLUS",
@@ -180,7 +186,7 @@ export const PLANS: Plan[] = [
     code: "ai_plus_90", family: "ai_plus", lane: "ai", term: "quarterly",
     name: "AI Plus", billing: "recurring", billingMonths: 3, validityDays: null,
     priceCents: 21300, priceLabel: "$213", cadenceLabel: "/ 90 days",
-    applications: "900 applications / 90 days", applicationsQuota: 900, profileLimit: 3, featured: true,
+    applications: "900 applications / 90 days", applicationsQuota: 900, previousApplicationsQuota: 600, profileLimit: 3, featured: true,
     blurb: "Multi-role volume, prepaid for 90 days at a lower rate.",
     features: AI_FEATURES.plus,
     productEnvKey: "DODO_PRODUCT_AI_PLUS_90",
@@ -237,4 +243,27 @@ export function savingsLabel(plan: Plan, region: RegionCode | null): string | nu
   const comparable = sibling.billing === "recurring" ? sibling.regional[region] * 3 : sibling.regional[region];
   const amount = comparable - plan.regional[region];
   return amount > 0 ? `Save ${formatRegionalAmount(region, amount)}` : null;
+}
+
+/**
+ * How much more a plan includes since its allowance was raised at the same
+ * price: the old and new allowance, and the old and new cost of one
+ * application in the currency the visitor sees. Null for a plan whose
+ * allowance has not changed. Every figure is arithmetic on real prices.
+ */
+export function allowanceBoost(plan: Plan, region: RegionCode | null): {
+  previousQuota: number;
+  headline: string;
+  perApplication: string;
+  previousPerApplication: string;
+} | null {
+  const previous = plan.previousApplicationsQuota;
+  if (!previous || previous >= plan.applicationsQuota) return null;
+  const price = region ? plan.regional[region] : plan.priceCents;
+  const symbol = region ? REGIONS[region].symbol : "$";
+  const locale = region ? REGIONS[region].locale : "en-US";
+  const each = (quota: number) => symbol + (price / 100 / quota).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const ratio = plan.applicationsQuota / previous;
+  const headline = Number.isInteger(ratio) ? `${ratio}× the applications` : `${Math.round((ratio - 1) * 100)}% more applications`;
+  return { previousQuota: previous, headline, perApplication: each(plan.applicationsQuota), previousPerApplication: each(previous) };
 }
