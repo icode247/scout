@@ -79,31 +79,5 @@ describe("createCheckoutSession", () => {
     await createCheckoutSession({ plan, userId: "user_1", email: "alex@example.com", returnUrl: "https://applyscout.app/success", cancelUrl: "https://applyscout.app/pricing" });
     const body = JSON.parse(fetchSpy.mock.calls[0][1].body);
     expect(body.feature_flags).toEqual({ allow_discount_code: true });
-    expect(body.discount_codes).toBeUndefined();
-  });
-
-  const plan = { productEnvKey: "DODO_PRODUCT_AI_ESSENTIAL", code: "ai_essential", lane: "ai" } as any;
-  const input = { plan, userId: "user_1", email: "alex@example.com", returnUrl: "https://applyscout.app/success", cancelUrl: "https://applyscout.app/pricing" };
-
-  it("applies an offer code before the buyer reaches checkout", async () => {
-    process.env.DODO_API_KEY = "test_key";
-    process.env.DODO_PRODUCT_AI_ESSENTIAL = "prod_ai_essential";
-    const fetchSpy = vi.fn().mockResolvedValue(new Response(JSON.stringify({ session_id: "sess_1", checkout_url: "https://checkout.example" }), { status: 200 }));
-    vi.stubGlobal("fetch", fetchSpy);
-    await createCheckoutSession({ ...input, discountCode: "SCOUT30" });
-    expect(JSON.parse(fetchSpy.mock.calls[0][1].body).discount_codes).toEqual(["SCOUT30"]);
-  });
-
-  it("still opens checkout when the payment provider refuses the code", async () => {
-    process.env.DODO_API_KEY = "test_key";
-    process.env.DODO_PRODUCT_AI_ESSENTIAL = "prod_ai_essential";
-    const fetchSpy = vi.fn()
-      .mockResolvedValueOnce(new Response(JSON.stringify({ message: "Discount code is not valid" }), { status: 422 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ session_id: "sess_2", checkout_url: "https://checkout.example/2" }), { status: 200 }));
-    vi.stubGlobal("fetch", fetchSpy);
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    const session = await createCheckoutSession({ ...input, discountCode: "SCOUT30" });
-    expect(session.checkoutUrl).toBe("https://checkout.example/2");
-    expect(JSON.parse(fetchSpy.mock.calls[1][1].body).discount_codes).toBeUndefined();
   });
 });

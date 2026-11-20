@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLANS, REGIONS, formatRegionalAmount, planByCode, plansForLane, recommendedPlan, regionCode, regionalPriceLabel, savings, savingsLabel, standardSibling } from "./plans";
+import { PLANS, REGIONS, allowanceBoost, formatRegionalAmount, planByCode, plansForLane, recommendedPlan, regionCode, regionalPriceLabel, savings, savingsLabel, standardSibling } from "./plans";
 
 describe("plan catalog", () => {
   it("has a standard and quarterly version of every product", () => {
@@ -161,5 +161,21 @@ describe("regional pricing", () => {
     expect(regionCode("US")).toBeNull();
     expect(regionCode(null)).toBeNull();
     expect(regionCode(undefined)).toBeNull();
+  });
+});
+
+describe("allowance boost", () => {
+  it("reports the raised AI allowances and the real cost of one application before and after", () => {
+    expect(allowanceBoost(planByCode("ai_essential")!, null)).toEqual({ previousQuota: 75, headline: "2× the applications", perApplication: "$0.26", previousPerApplication: "$0.52" });
+    expect(allowanceBoost(planByCode("ai_plus")!, null)).toEqual({ previousQuota: 200, headline: "50% more applications", perApplication: "$0.26", previousPerApplication: "$0.40" });
+    expect(allowanceBoost(planByCode("ai_plus_90")!, null)?.headline).toBe("50% more applications");
+  });
+
+  it("uses the visitor's currency", () => {
+    expect(allowanceBoost(planByCode("ai_essential")!, "IN")).toMatchObject({ perApplication: "₹6.66", previousPerApplication: "₹13.32" });
+  });
+
+  it("claims nothing for a plan whose allowance has not changed", () => {
+    for (const plan of PLANS.filter((p) => p.lane === "human")) expect(allowanceBoost(plan, null)).toBeNull();
   });
 });
