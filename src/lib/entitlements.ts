@@ -107,7 +107,7 @@ export async function loadEntitlement(
   if (demoMode || !supabase) {
     return evaluateEntitlement({
       plan_code: "ai_plus", lane: "ai", status: "active",
-      applications_quota: 200, applications_used: 0, current_period_end: null,
+      applications_quota: 300, applications_used: 0, current_period_end: null,
     });
   }
   // past_due rows are fetched too, otherwise a member whose card failed is told

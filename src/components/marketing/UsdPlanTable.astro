@@ -1,7 +1,8 @@
 ---
 /**
- * Fixed USD plan table. Figures are the November 1, 2026 US pricing file:
- * AI Essential $39 / 75 / $105, AI Plus $79 / 200 / $213,
+ * Fixed USD plan table. Prices are the November 1, 2026 US pricing file; the AI
+ * allowances were raised on November 20, 2026 (75 to 150 and 200 to 300):
+ * AI Essential $39 / 150 / $105, AI Plus $79 / 300 / $213,
  * Focused Search $299 / 250 / $807, Full Search $499 / 500 / $1,347,
  * Career Campaign $999 / 1,000 / $2,697.
  * Cost per application and the 90-day savings are the draft's arithmetic.
@@ -12,8 +13,8 @@ interface Props {
 const { showSavings = false } = Astro.props;
 
 const rows = [
-  ["AI Essential", "AI Assistant", "$39", "75", "about $0.52", "$105", "$12 (3 × $39 = $117)"],
-  ["AI Plus", "AI Assistant", "$79", "200", "about $0.40", "$213", "$24 (3 × $79 = $237)"],
+  ["AI Essential", "AI Assistant", "$39", "150", "about $0.26", "$105", "$12 (3 × $39 = $117)"],
+  ["AI Plus", "AI Assistant", "$79", "300", "about $0.26", "$213", "$24 (3 × $79 = $237)"],
   ["Focused Search", "Human Assistant", "$299", "250", "about $1.20", "$807", "$90 (3 × $299 = $897)"],
   ["Full Search", "Human Assistant", "$499", "500", "about $1.00", "$1,347", "$150 (3 × $499 = $1,497)"],
   ["Career Campaign", "Human Assistant", "$999", "1,000", "about $1.00", "$2,697", "$300 (3 × $999 = $2,997)"],

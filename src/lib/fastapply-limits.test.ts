@@ -24,7 +24,7 @@ const inPast = new Date(Date.now() - 86400000).toISOString();
 function row(overrides: Record<string, any> = {}) {
   return {
     plan_code: "ai_plus", lane: "ai" as const, status: "active" as const,
-    applications_quota: 200, applications_used: 12,
+    applications_quota: 300, applications_used: 12,
     current_period_end: inFuture, current_period_start: "2026-10-01T09:30:00.000Z",
     ...overrides,
   };
@@ -51,15 +51,15 @@ beforeEach(() => { upsertApplicant.mockReset(); cancelAutomation.mockReset(); })
 
 describe("monthlyAllowance", () => {
   it("is the quota for a monthly plan and a third of it for a quarterly one", () => {
-    expect(monthlyAllowance(planByCode("ai_plus")!)).toBe(200);
-    expect(monthlyAllowance(planByCode("ai_plus_90")!)).toBe(200);
-    expect(monthlyAllowance(planByCode("ai_essential")!)).toBe(75);
-    expect(monthlyAllowance(planByCode("ai_essential_90")!)).toBe(75);
+    expect(monthlyAllowance(planByCode("ai_plus")!)).toBe(300);
+    expect(monthlyAllowance(planByCode("ai_plus_90")!)).toBe(300);
+    expect(monthlyAllowance(planByCode("ai_essential")!)).toBe(150);
+    expect(monthlyAllowance(planByCode("ai_essential_90")!)).toBe(150);
   });
 
   it("spreads a 90-day bundle over three months and leaves a never-expiring one as is", () => {
-    const quarterly = { ...planByCode("ai_plus")!, billing: "one_time" as const, billingMonths: 0, validityDays: 90, applicationsQuota: 600 };
-    expect(monthlyAllowance(quarterly)).toBe(200);
+    const quarterly = { ...planByCode("ai_plus")!, billing: "one_time" as const, billingMonths: 0, validityDays: 90, applicationsQuota: 900 };
+    expect(monthlyAllowance(quarterly)).toBe(300);
     const bundle = { ...quarterly, validityDays: null, applicationsQuota: 250 };
     expect(monthlyAllowance(bundle)).toBe(250);
   });
@@ -85,8 +85,8 @@ describe("periodStart", () => {
 
 describe("applicantPlanLimits", () => {
   it("gives an active plan its monthly rate, no daily cap, anchored to the period start", () => {
-    expect(applicantPlanLimits(row())).toEqual({ dailyApplicationLimit: null, monthlyApplicationLimit: 200, limitPeriodStartedAt: "2026-10-01T09:30:00.000Z" });
-    expect(applicantPlanLimits(row({ plan_code: "ai_essential_90", applications_quota: 225 })).monthlyApplicationLimit).toBe(75);
+    expect(applicantPlanLimits(row())).toEqual({ dailyApplicationLimit: null, monthlyApplicationLimit: 300, limitPeriodStartedAt: "2026-10-01T09:30:00.000Z" });
+    expect(applicantPlanLimits(row({ plan_code: "ai_essential_90", applications_quota: 450 })).monthlyApplicationLimit).toBe(150);
   });
 
   it("stops a customer whose plan is cancelled, expired, past due, unknown or missing", () => {
@@ -98,7 +98,7 @@ describe("applicantPlanLimits", () => {
   });
 
   it("keeps the plan rate even when Scout's own counter says the quota is spent: FastApply counts per applicant", () => {
-    expect(applicantPlanLimits(row({ applications_used: 200 })).monthlyApplicationLimit).toBe(200);
+    expect(applicantPlanLimits(row({ applications_used: 300 })).monthlyApplicationLimit).toBe(300);
   });
 });
 
@@ -135,7 +135,7 @@ describe("syncApplicantPlanLimits", () => {
       fastapply_applicant_sync: { data: [{ external_id: "u:p1" }] },
     });
     await syncApplicantPlanLimits(supabase, "u");
-    expect(upsertApplicant).toHaveBeenCalledWith("u:p1", { dailyApplicationLimit: null, monthlyApplicationLimit: 200, limitPeriodStartedAt: "2026-10-01T09:30:00.000Z" });
+    expect(upsertApplicant).toHaveBeenCalledWith("u:p1", { dailyApplicationLimit: null, monthlyApplicationLimit: 300, limitPeriodStartedAt: "2026-10-01T09:30:00.000Z" });
   });
 
   it("pushes zero when the user has no plan", async () => {
@@ -203,7 +203,7 @@ describe("settleAfterPlanChange", () => {
     upsertApplicant.mockResolvedValue({});
     const supabase = fakeSupabase({ ...sync, subscriptions: { data: [row({ plan_code: "ai_essential" })] }, ai_agent_configs: { data: [{ id: "c1", first_apply_id: "fa1" }] } });
     const result = await settleAfterPlanChange(supabase, "u", { pauseUnlessAgentPlan: true });
-    expect(upsertApplicant).toHaveBeenCalledWith("u:p1", expect.objectContaining({ monthlyApplicationLimit: 75, dailyApplicationLimit: null }));
+    expect(upsertApplicant).toHaveBeenCalledWith("u:p1", expect.objectContaining({ monthlyApplicationLimit: 150, dailyApplicationLimit: null }));
     expect(result.paused).toBeNull();
     expect(cancelAutomation).not.toHaveBeenCalled();
   });

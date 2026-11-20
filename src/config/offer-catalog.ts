@@ -26,8 +26,8 @@ function offer(name: string, description: string, price: string, billingDuration
 }
 
 export const fivePlanOffers = [
-  offer("AI Essential (AI Assistant), monthly", "AI Essential: 75 applications per month.", "39", "P1M", aiUrl),
-  offer("AI Plus (AI Assistant), monthly", "AI Plus: 200 applications per month.", "79", "P1M", aiUrl),
+  offer("AI Essential (AI Assistant), monthly", "AI Essential: 150 applications per month.", "39", "P1M", aiUrl),
+  offer("AI Plus (AI Assistant), monthly", "AI Plus: 300 applications per month.", "79", "P1M", aiUrl),
   offer("Focused Search (Human Assistant), monthly", "Focused Search: 250 applications per month.", "299", "P1M", humanUrl),
   offer("Full Search (Human Assistant), monthly", "Full Search: 500 applications per month.", "499", "P1M", humanUrl),
   offer("Career Campaign (Human Assistant), monthly", "Career Campaign: 1,000 applications per month.", "999", "P1M", humanUrl),
