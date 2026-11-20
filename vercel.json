@@ -28,7 +28,12 @@
     {
       "source": "/job-application-service/uk",
       "destination": "/job-application-service/united-kingdom",
-      "permanent": true
+      "statusCode": 301
+    },
+    {
+      "source": "/job-application-service/UK",
+      "destination": "/job-application-service/united-kingdom",
+      "statusCode": 301
     },
     {
       "source": "/sitemap.xml",
