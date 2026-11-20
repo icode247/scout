@@ -1,46 +1,115 @@
 ---
+/**
+ * Answer block 10 competitor table. Every outside figure is that provider's own
+ * published price for its own service, re-fetched on READ_ON. Re-fetch every URL
+ * on the monthly re-check and update READ_ON; if a number cannot be re-confirmed,
+ * delete the row or write "see their pricing page". LoopCV's prices are in euros
+ * on its page and are not converted.
+ */
+const READ_ON = "Nov 20, 2026";
 
+interface Row {
+  name: string;
+  price: string;
+  url: string;
+  note?: string;
+}
+
+const others: Row[] = [
+  {
+    name: "LoopCV",
+    price: "Free forever plan, no credit card required; paid plans from €9.99 a month",
+    url: "https://www.loopcv.pro/pricing/",
+  },
+  {
+    name: "Careerify, monthly human service",
+    price:
+      "$150, $280, $455 or $720 a month (Starter, Pro, Elite and Executive). The pricing page marks the application counts as estimates (~50, ~100, ~175 and ~300 a month).",
+    url: "https://www.careerify.io/pricing",
+  },
+  {
+    name: "Scale.jobs, one-time packages",
+    price: "$399 for 500 applications, $599 for 1,000, $999 for 1,500",
+    url: "https://scale.jobs/pricing/one-time",
+  },
+  {
+    name: "Scale.jobs, monthly plans",
+    price: "$99 a month for 100 applications, $149 for 250, $199 for 500, $499 for 750",
+    url: "https://scale.jobs/pricing/subscription",
+  },
+  {
+    name: "Candidates1st, one-time packs",
+    price: "$399 for 50 applications, $679 for 100",
+    url: "https://www.candidates1st.com/pricing",
+  },
+  {
+    name: "Apply Jobs For You, one-time packs",
+    price: "$149 for 15 applications, $279 for 30, $449 for 50",
+    url: "https://applyjobsforyou.com/pricing/",
+  },
+  {
+    name: "FlexApply",
+    price:
+      "$49 trial for 20 applications; $149 for 100; $249 for 250; or $200 a month with unlimited applications plus a placement fee set during onboarding and paid after you accept an offer",
+    url: "https://flexapply.org/pricing/",
+  },
+  {
+    name: "HireTrack, one-time credits",
+    price:
+      "The page says the first application is free, a paid trial application costs $1, and packs are $9 for 10 applications, $49 for 100, $99 for 250, $249 for 500 and $499 for 1,000. It also says there is no subscription.",
+    url: "https://hiretrack.co/pay-someone-to-apply-for-jobs",
+  },
+  {
+    name: "My Personal Recruiter",
+    price:
+      'The page says "our reverse recruiting plans start at $899/month" and, in the same section, refers to "Paying $899 to $2,499/month". Its pricing page, opened the same day, does not display dollar amounts.',
+    url: "https://mypersonalrecruiter.com/hire-someone-to-find-you-a-job/",
+    note: ", post dated April 9, 2026",
+  },
+];
+
+const scout = [
+  ["ApplyScout AI Essential", "$39 a month, 150 applications"],
+  ["ApplyScout AI Plus", "$79 a month, 300 applications"],
+  ["ApplyScout Focused Search", "$299 a month, 250 applications"],
+  ["ApplyScout Full Search", "$499 a month, 500 applications"],
+  ["ApplyScout Career Campaign", "$999 a month, 1,000 applications"],
+];
+
+const link = "font-semibold text-brand-700 underline break-all";
 ---
   <section>
-    <h2>What do other services publish? (re-fetched November 5, 2026)</h2>
-    <p>Prices change often. Each figure below is the provider's own published price. We re-fetched every page on November 5, 2026 and confirmed the figure on the page. Each page shows dollar signs but does not name the currency or say which country version it is, so we make no claim about which version we saw. These are vendor statements about their own services; Scout has not tested these services, and an "application" does not mean the same thing at every provider.</p>
+    <h2>What do other services publish? (fetched November 20, 2026)</h2>
+    <p>Prices change. Each figure below is that provider's own published price for its own service, quoted from the page in the source column, which we re-fetched on November 20, 2026. These are vendor statements about their own services. Scout has not tested these services. Table owner: AEO Specialist. Next monthly re-check: December 12, 2026.</p>
     <div class="not-prose my-8 overflow-x-auto">
-      <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+      <table class="w-full min-w-[820px] border-collapse text-left text-sm">
         <thead>
           <tr class="border-b border-ink/10">
-            <th class="p-3 font-extrabold">Provider and model</th>
+            <th class="p-3 font-extrabold">Type or provider</th>
             <th class="p-3 font-extrabold">Published price</th>
-            <th class="p-3 font-extrabold">Source and date</th>
+            <th class="p-3 font-extrabold">Source and what it says</th>
+            <th class="p-3 font-extrabold">Read on</th>
           </tr>
         </thead>
         <tbody>
-          <tr class="border-b border-ink/10">
-            <td class="p-3">Scale.jobs, one-time packages</td>
-            <td class="p-3">$399 for 500 applications, $599 for 1,000, $999 for 1,500</td>
-            <td class="p-3">scale.jobs/pricing/one-time, fetched November 5, 2026</td>
-          </tr>
-          <tr class="border-b border-ink/10">
-            <td class="p-3">Scale.jobs, monthly plans</td>
-            <td class="p-3">$99 a month for 100 applications, $149 for 250, $199 for 500, $499 for 750</td>
-            <td class="p-3">scale.jobs/pricing/subscription, fetched November 5, 2026</td>
-          </tr>
-          <tr class="border-b border-ink/10">
-            <td class="p-3">Careerify, monthly human service</td>
-            <td class="p-3">$150 to $720 a month for an estimated 50 to 300 applications (the page calls the counts estimates)</td>
-            <td class="p-3">careerify.io/apply-to-jobs-for-me, page marked "Updated 28 October 2026", fetched November 5, 2026</td>
-          </tr>
-          <tr class="border-b border-ink/10">
-            <td class="p-3">Career Agents, application services (market range as the page states it)</td>
-            <td class="p-3">$200 to $1,100 per pack, or $150 to $700 per month</td>
-            <td class="p-3">careeragents.org/blog/pay-someone-to-apply-for-jobs/, post dated August 3, 2026, fetched November 5, 2026</td>
-          </tr>
-          <tr class="border-b border-ink/10">
-            <td class="p-3">Career Agents, reverse recruiters (as the page states it)</td>
-            <td class="p-3">Roughly $1,500 to $4,500 a month; executive packages up to $15,000</td>
-            <td class="p-3">same page and dates</td>
-          </tr>
+          {others.map((row) => (
+            <tr class="border-b border-ink/10">
+              <td class="p-3 align-top">{row.name}</td>
+              <td class="p-3 align-top">{row.price}</td>
+              <td class="p-3 align-top"><a href={row.url} rel="nofollow noopener" class={link}>{row.url}</a>{row.note}</td>
+              <td class="p-3 align-top whitespace-nowrap">{READ_ON}</td>
+            </tr>
+          ))}
+          {scout.map(([name, price]) => (
+            <tr class="border-b border-ink/10">
+              <td class="p-3 align-top font-bold">{name}</td>
+              <td class="p-3 align-top font-bold">{price}</td>
+              <td class="p-3 align-top"><a href="/pricing" class={link}>https://applyscout.app/pricing</a></td>
+              <td class="p-3 align-top whitespace-nowrap">{READ_ON}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
-    <p>Two details to read before you compare. Scale.jobs' one-time page says "We don't do subscriptions" while its separate monthly page lists subscriptions, so both are shown. On the monthly page, We Find Jobs and AI Custom Resumes are optional paid add-ons on the $99, $149 and $199 plans ($49, $79 and $99 each), so those plan prices do not include job finding. The page does not say whether an add-on bills once or every month, so check what each plan includes on the live page.</p>
+    <p>Two details to read before you compare. Scale.jobs' one-time page still says "We don't do subscriptions," while a separate monthly page lists subscriptions, so both are shown. On the $199 monthly plan, "We Find Jobs" and "AI Custom Resumes" are listed at $99 each, so check what each monthly plan includes on the live page before you treat the headline price as all-in. LoopCV's software prices are in euros. FlexApply's monthly plan adds a placement fee; Scout does not charge a placement fee.</p>
   </section>
