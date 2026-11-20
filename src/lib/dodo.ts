@@ -63,12 +63,15 @@ export async function createCheckoutSession(input: {
   returnUrl: string;
   cancelUrl: string;
   metadata?: Record<string, string>;
+  /** A discount code to apply before the buyer sees checkout. */
+  discountCode?: string;
 }) {
-  const payload = await dodoFetch("/checkouts", {
+  const request = (discountCode?: string) => dodoFetch("/checkouts", {
     method: "POST",
     body: JSON.stringify({
       product_cart: [{ product_id: productIdForPlan(input.plan), quantity: 1 }],
       customer: { email: input.email, ...(input.name ? { name: input.name } : {}) },
+      ...(discountCode ? { discount_codes: [discountCode] } : {}),
       feature_flags: { allow_discount_code: true },
       return_url: input.returnUrl,
       cancel_url: input.cancelUrl,
@@ -80,6 +83,17 @@ export async function createCheckoutSession(input: {
       },
     }),
   });
+  let payload;
+  try {
+    payload = await request(input.discountCode);
+  } catch (error) {
+    // A code Dodo rejects (expired, mistyped, not valid for this product) must
+    // never stop someone paying: open checkout without it, where the buyer can
+    // still type a code by hand.
+    if (!input.discountCode) throw error;
+    console.error(`[dodo] checkout with discount ${input.discountCode} was refused; retrying without it`, error);
+    payload = await request();
+  }
   const checkoutUrl = payload?.checkout_url;
   if (!checkoutUrl) throw new DodoError("The payment provider did not return a checkout URL.");
   return { sessionId: String(payload.session_id || ""), checkoutUrl: String(checkoutUrl) };

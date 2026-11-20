@@ -7,6 +7,8 @@ import MarketingCTA from "../components/MarketingCTA.astro";
 import { COUNTRY_PAGES } from "../data/countries";
 
 import TermSwitcher from "../components/TermSwitcher.astro";
+import PlanFinder from "../components/PlanFinder.astro";
+import { activeOffer, offerEndsLabel, offerPrice } from "../config/offer";
 import { REGIONS, formatRegionalAmount, plansForLane, regionalPriceLabel, savings, savingsLabel, type Plan, type Term } from "../config/plans";
 import { visitorRegion } from "../lib/region";
 import { approvedServiceLd } from "../config/offer-catalog";
@@ -38,9 +40,15 @@ const lowestPrice = (lane: "ai" | "human") => plansForLane(lane, "standard")[0].
 const pricingTitle = `Job Application Service Pricing: Plans From ${lowestPrice("ai")}/mo`;
 const pricingDescription = `Job application service pricing: AI Assistant from ${lowestPrice("ai")}/mo, Human Assistant from ${lowestPrice("human")}/mo. Prepay 90 days to save about 10%. No cut of your salary.`;
 const checkoutState = Astro.url.searchParams.get("checkout");
+// The offer disappears from the page by itself once its end time passes.
+const offer = activeOffer();
+const firstMonth = (plan: Plan) => (offer ? offerPrice(plan, region, offer) : null);
+// AI allowances were raised on November 20, 2026; shown struck through beside the new figure.
+const previousAllowance: Record<string, string> = { ai_essential: "75", ai_plus: "200", ai_essential_90: "225", ai_plus_90: "600" };
 const regionNote = region ? `Prices for ${REGIONS[region].country} · billed in ${REGIONS[region].currency} at checkout` : null;
 
 const faqs=[
+ ...(offer ? [{q:`How does the ${offer.percent}% first-month offer work?`,a:`Until ${offerEndsLabel(offer)}, code ${offer.code} takes ${offer.percent}% off the first month of any monthly plan, AI or Human. It is applied for you at checkout. From the second month you pay the normal price, and you can cancel anytime. It does not apply to 90-day plans, which already cost about 10% less.`}] : []),
  {q:"Why are AI and Human priced differently?",a:"Both are monthly subscriptions. AI uses automated fulfillment, so it costs less. Human service includes labor, a dedicated WhatsApp relationship, judgment on application questions, and detailed evidence."},
  {q:"What is the 90-day option?",a:"It is the same plan, prepaid for 90 days at about 10% less. You pay once for three months and receive three months of applications up front instead of being billed monthly."},
  {q:"How does Human Assistant billing work?",a:"Human Assistant plans are monthly subscriptions. Each month you pay for that month's application allowance, and you can cancel anytime from Settings. The 90-day option bills every three months at a lower rate."},
@@ -102,11 +110,12 @@ const faqs=[
       else apply(initial);
     })();
   </script>
-  <section class="bg-brand-950 py-20 text-white sm:py-28">
-    <Container><div class="mx-auto max-w-4xl text-center"><p class="text-lg font-bold text-brand-300">Two services. Two honest pricing models.</p><h1 class="mt-4 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.035em] text-white sm:text-7xl">Pay monthly for AI throughput, or monthly for a person.</h1><p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">AI Assistant is a lower-cost subscription that starts immediately. Human Assistant costs more because a real person does the work. Prepay for 90 days on either and save around 10%.</p><div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row"><a href="#ai" class="rounded-full bg-brand-300 px-7 py-3.5 font-extrabold text-ink">AI Assistant plans</a><a href="#human" class="rounded-full bg-white/10 px-7 py-3.5 font-extrabold text-white">Human Assistant plans</a></div></div></Container>
-  </section>
+  {offer && <div class="bg-human-500 px-4 py-2.5 text-center text-sm font-extrabold text-white" role="status" data-offer-only>
+    {offer.name}: {offer.percent}% off your first month on any monthly plan. Ends {offerEndsLabel(offer)}, in <span class="tabular-nums" data-offer-countdown data-ends={offer.endsAt}>a few days</span>.
+  </div>}
+  <PlanFinder region={region} signedIn={signedIn} offer={offer} />
 
-  {(checkoutState === "error" || checkoutState === "cancelled") && <div class="bg-human-50 py-4 text-center text-sm font-bold text-human-700" role="status">{checkoutState === "error" ? "We could not open checkout just now. Please try again, or book a free call and we will help." : "Checkout was cancelled. Your plan is still here whenever you are ready."}</div>}
+  {(checkoutState === "error" || checkoutState === "cancelled") && <div class="bg-human-50 py-4 text-center text-sm font-bold text-human-700" role="status">{checkoutState === "error" ? "We could not open checkout just now. Please try again, or book a free call and we will help." : "Checkout was cancelled. Your plan is still here whenever you are ready."}{offer && checkoutState === "cancelled" ? ` The ${offer.percent}% first-month offer runs until ${offerEndsLabel(offer)}.` : ""}</div>}
   <section id="ai" class="bg-brand-100 py-20 sm:py-28">
     <Container>
       <div class="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
@@ -132,7 +141,8 @@ const faqs=[
                   <span class={i===1?"text-white/55":"text-ink-muted"}> {plan.cadenceLabel}</span>
                 </p>
                 {saved(plan) && <p class={`mt-1 text-sm ${i===1?"text-white/55":"text-ink-muted"}`}><s>{monthlyTotal(plan)}</s> billed monthly · {saved(plan)!.percent}% off</p>}
-                <p class={`mt-2 font-bold ${i===1?"text-brand-300":"text-brand-800"}`}>{plan.applications}</p>
+                {firstMonth(plan) && <p class="mt-2 w-fit rounded-full bg-human-500 px-3 py-1 text-xs font-black text-white" data-offer-only>First month {firstMonth(plan)!.firstPayment} · save {firstMonth(plan)!.saved}</p>}
+                <p class={`mt-2 font-bold ${i===1?"text-brand-300":"text-brand-800"}`}>{plan.applications} {previousAllowance[plan.code] && <span class={`ml-1 text-sm font-semibold ${i===1?"text-white/55":"text-ink-muted"}`}>(was <s>{previousAllowance[plan.code]}</s>)</span>}</p>
                 {signedIn
                   ? <button type="button" data-checkout-plan={plan.code} class={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 font-extrabold transition disabled:opacity-60 ${i===1?"bg-brand-300 text-brand-950 hover:bg-brand-200":"bg-ink text-white hover:bg-brand-950"}`}>Get {plan.name}</button>
                   : <a href={`/checkout/start?plan=${plan.code}`} class={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 font-extrabold transition ${i===1?"bg-brand-300 text-brand-950 hover:bg-brand-200":"bg-ink text-white hover:bg-brand-950"}`}>Get {plan.name}</a>}
@@ -166,6 +176,7 @@ const faqs=[
               <span class="text-ink-muted"> {plan.cadenceLabel}</span>
             </p>
             {saved(plan) && <p class="mt-1 text-sm text-ink-muted"><s>{monthlyTotal(plan)}</s> billed monthly · {saved(plan)!.percent}% off</p>}
+            {firstMonth(plan) && <p class="mt-2 w-fit rounded-full bg-human-500 px-3 py-1 text-xs font-black text-white" data-offer-only>First month {firstMonth(plan)!.firstPayment} · save {firstMonth(plan)!.saved}</p>}
             <p class="mt-2 font-bold text-brand-800">{plan.applications}</p>
             {signedIn ? <>
               <button type="button" data-checkout-plan={plan.code} class="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-ink px-6 font-extrabold text-white transition hover:bg-brand-950 disabled:opacity-60">Get {plan.name}</button>
@@ -214,6 +225,31 @@ const faqs=[
   <p id="pricing-page-error" class="fixed inset-x-4 bottom-6 z-50 mx-auto hidden max-w-md rounded-xl bg-red-700 px-5 py-3 text-center text-sm font-bold text-white shadow-lift" role="alert"></p>
 
 
+  <script is:inline>
+    // Counts down to the offer's real end time. When it reaches zero the page
+    // reloads, and the server renders it without the offer.
+    (function () {
+      var nodes = document.querySelectorAll("[data-offer-countdown]");
+      if (!nodes.length) return;
+      var end = new Date(nodes[0].getAttribute("data-ends")).getTime();
+      if (!isFinite(end)) return;
+      function pad(value) { return value < 10 ? "0" + value : String(value); }
+      function tick() {
+        var left = Math.floor((end - Date.now()) / 1000);
+        if (left <= 0) {
+          clearInterval(timer);
+          document.querySelectorAll("[data-offer-only]").forEach(function (node) { node.classList.add("hidden"); });
+          window.location.reload();
+          return;
+        }
+        var days = Math.floor(left / 86400), hours = Math.floor((left % 86400) / 3600), minutes = Math.floor((left % 3600) / 60), seconds = left % 60;
+        var text = (days ? days + "d " : "") + pad(hours) + "h " + pad(minutes) + "m " + pad(seconds) + "s";
+        nodes.forEach(function (node) { node.textContent = text; });
+      }
+      var timer = setInterval(tick, 1000);
+      tick();
+    })();
+  </script>
   <script is:inline>
     document.querySelectorAll("[data-checkout-plan]").forEach(function (button) {
       button.addEventListener("click", async function () {
