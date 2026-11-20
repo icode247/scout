@@ -4,7 +4,7 @@ description: "Compare human and AI job application services by judgment, speed, 
 coverImage: "/assets/blog/human-vs-ai-job-application-service-cover.webp"
 coverAlt: "Scout guide comparing human and AI job application services"
 pubDate: 2026-08-21
-updatedDate: 2026-11-22
+updatedDate: 2026-11-20
 author: "Scout Editorial Team"
 pillar: "Job Application Services"
 targetKeyword: "human vs AI job application service"
