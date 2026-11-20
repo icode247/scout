@@ -3,7 +3,9 @@ title: "What Job Should I Do Next? How to Pick a Target Role"
 description: "Not sure what job to do next? Use this one-week process to turn mixed skills into 3 candidate titles, test them against real postings, and pick a target role."
 coverImage: "/assets/blog/how-to-choose-target-role-before-applying-cover.webp"
 coverAlt: "Scout guide to choosing a target role before applying"
+seoDescription: "Not sure what job to do next? Spend one week testing three candidate titles against real postings, then pick a primary and a backup before you apply."
 pubDate: 2026-09-15
+lastmod: 2026-11-20
 author: "Scout Editorial Team"
 pillar: "Job Search Strategy"
 targetKeyword: "what job should I do next"
