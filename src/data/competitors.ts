@@ -45,7 +45,7 @@ export const competitors: Competitor[] = [
       "People do the applying, with a team chat and an outcome manager on chat or video call (scale.jobs/pricing, read November 5, 2026).",
     ],
     scoutDifferences: [
-      "An AI Assistant that applies for you at a lower price: AI Essential is $39 a month for 75 applications and AI Plus is $79 for 200. There are only two AI plans.",
+      "An AI Assistant that applies for you at a lower price: AI Essential is $39 a month for 150 applications and AI Plus is $79 for 300. There are only two AI plans.",
       "Finding suitable openings is part of every plan price, with no job-finding add-on to buy.",
       "Human plans include a dedicated WhatsApp group and screenshots of important form answers. AI plans do not include form-answer screenshots.",
       "Up to 4 active job profiles on Career Campaign, and the same dashboard for both lanes.",
@@ -56,8 +56,8 @@ export const competitors: Competitor[] = [
       ["Facts read on", "November 5, 2026: scale.jobs/pricing, /pricing/one-time, /pricing/subscription, /cancellation-policy, /faq, /ai-assistant", "November 5, 2026: Scout pricing page"],
       ["Who does the work", "Human assistants: 1 on the lowest plan of each price list, 2 on the others", "Your choice: a Human Assistant (2 on Career Campaign) or the AI Assistant"],
       ["Pay once", "$399 for 500 applications, $599 for 1,000, $999 for 1,500", "No one-time package. 90 days prepaid saves about 10%: $105, $213, $807, $1,347 or $2,697"],
-      ["Pay monthly", "$99 for 100 applications, $149 for 250, $199 for 500, $499 for 750", "AI: $39 for 75, $79 for 200. Human: $299 for 250, $499 for 500, $999 for 1,000"],
-      ["Price per application (our arithmetic)", "One-time: about $0.80, $0.60, $0.67. Monthly, before add-ons: $0.99, about $0.60, $0.40, $0.67", "AI: about $0.52, $0.40. Human: about $1.20, $1.00, $1.00"],
+      ["Pay monthly", "$99 for 100 applications, $149 for 250, $199 for 500, $499 for 750", "AI: $39 for 150, $79 for 300. Human: $299 for 250, $499 for 500, $999 for 1,000"],
+      ["Price per application (our arithmetic)", "One-time: about $0.80, $0.60, $0.67. Monthly, before add-ons: $0.99, about $0.60, $0.40, $0.67", "AI: about $0.26 on both plans. Human: about $1.20, $1.00, $1.00"],
       ["Job finding", "Included on one-time plans and the $499 monthly plan. Optional add-on on the lower monthly plans: $49, $79 or $99", "Included in every plan"],
       ["Tailored resumes", "AI custom resumes included on one-time plans and the $499 monthly plan. Optional add-on on the lower monthly plans: $49, $79 or $99", "Preparing your materials is part of every plan. The pricing page lists what each plan includes"],
       ["Proof of work", "A proof screenshot for every application", "Human: screenshots of important form answers. AI: no form-answer screenshots. Both: job, status and resume used"],
@@ -360,14 +360,14 @@ export const competitors: Competitor[] = [
     seoDescription: "ApplyAll costs $249 one time for 100 hand-reviewed applications or $299 for 200, with a 30-day interview guarantee. See how that compares with Scout's plans.",
     competitorStrengths: ["Finds, ranks, and submits jobs with human verification.", "One-time packages: $249 for 100 applications or $299 for 200.", "Publishes an interview guarantee with defined refund terms."],
     scoutDifferences: ["Human and AI execution are offered as separate lanes.", "Multiple job profiles and resume behavior support distinct searches.", "Human service provides a dedicated WhatsApp group and detailed evidence."],
-    rows: [["Core service","Human-reviewed application packages","Human or AI application service"],["Job matching","Outcome-informed ranking","Profile rules and fit controls"],["Price","$249 for 100 or $299 for 200 applications, one time","Human from $299/month for 250; AI from $39/month for 75"],["Buying model","One-time application allotment","Monthly plan, cancel anytime"],["Guarantee","Defined interview refund guarantee","No invented hiring guarantee"],["Human communication","Support team","Dedicated WhatsApp assistant on Human"]],
+    rows: [["Core service","Human-reviewed application packages","Human or AI application service"],["Job matching","Outcome-informed ranking","Profile rules and fit controls"],["Price","$249 for 100 or $299 for 200 applications, one time","Human from $299/month for 250; AI from $39/month for 150"],["Buying model","One-time application allotment","Monthly plan, cancel anytime"],["Guarantee","Defined interview refund guarantee","No invented hiring guarantee"],["Human communication","Support team","Dedicated WhatsApp assistant on Human"]],
     sourceUrl: "https://applyall.com/",
     sourceLabel: "ApplyAll official website and pricing",
     researchChecked: "October 2, 2026",
     buyingQuestions: [
       {
         question: "How much does ApplyAll cost?",
-        answer: "ApplyAll's website lists two one-time packages: Standard at $249 for 100 hand-reviewed applications (about $2.49 each) and Premium at $299 for 200 (about $1.50 each), both with no subscription and its 30-day interview guarantee. A VIP Career Coaching plan with unlimited applications and coaching is listed without a published price. For comparison, Scout's Human Assistant starts at $299 a month for 250 applications (about $1.20 each) with a dedicated assistant and WhatsApp, and the AI Assistant starts at $39 a month for 75. Scout does not offer an interview guarantee, so weigh that against price per application.",
+        answer: "ApplyAll's website lists two one-time packages: Standard at $249 for 100 hand-reviewed applications (about $2.49 each) and Premium at $299 for 200 (about $1.50 each), both with no subscription and its 30-day interview guarantee. A VIP Career Coaching plan with unlimited applications and coaching is listed without a published price. For comparison, Scout's Human Assistant starts at $299 a month for 250 applications (about $1.20 each) with a dedicated assistant and WhatsApp, and the AI Assistant starts at $39 a month for 150. Scout does not offer an interview guarantee, so weigh that against price per application.",
       },
       {
         question: "What exactly qualifies for ApplyAll's guarantee?",

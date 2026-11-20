@@ -84,7 +84,7 @@ Ask which team member performs each task. “Dedicated recruiter” might descri
 
 <h2 id="career-coach-vs-done-for-you">Career coach vs done-for-you application service: which do you need first?</h2>
 
-**A done-for-you job search (application) service executes the repetitive application work for you; a career coach advises you so you can run the search yourself.** If your target roles are clear and time is the bottleneck, Scout’s Human Assistant plans start at $299 a month for 250 applications, and the AI Assistant starts at $39 a month for 75. If your direction, story or interview performance is the problem, a coach is usually the better first purchase. Nobody can promise interviews or offers, because employers make those decisions.
+**A done-for-you job search (application) service executes the repetitive application work for you; a career coach advises you so you can run the search yourself.** If your target roles are clear and time is the bottleneck, Scout’s Human Assistant plans start at $299 a month for 250 applications, and the AI Assistant starts at $39 a month for 150. If your direction, story or interview performance is the problem, a coach is usually the better first purchase. Nobody can promise interviews or offers, because employers make those decisions.
 
 ### When a coach is the better call
 
@@ -104,8 +104,8 @@ Ask which team member performs each task. “Dedicated recruiter” might descri
 
 | Plan | Who does the work | Price per month | Applications per month | 90 days prepaid |
 |---|---|---|---|---|
-| AI Essential | AI Assistant | $39 | 75 | $105 |
-| AI Plus | AI Assistant | $79 | 200 | $213 |
+| AI Essential | AI Assistant | $39 | 150 | $105 |
+| AI Plus | AI Assistant | $79 | 300 | $213 |
 | Focused Search | Human Assistant | $299 | 250 | $807 |
 | Full Search | Human Assistant | $499 | 500 | $1,347 |
 | Career Campaign | Human Assistant | $999 | 1,000 | $2,697 |
@@ -223,7 +223,7 @@ No. Scout is a job application service. Human and AI assistants find suitable op
 
 ### How much does Scout cost?
 
-AI Assistant plans are $39 a month (75 applications) and $79 (200). Human Assistant plans are $299 (250), $499 (500) and $999 (1,000). Prepaying 90 days costs about 10% less. See [pricing](/pricing).
+AI Assistant plans are $39 a month (150 applications) and $79 (300). Human Assistant plans are $299 (250), $499 (500) and $999 (1,000). Prepaying 90 days costs about 10% less. See [pricing](/pricing).
 
 ### Do you take a percentage of my salary?
 

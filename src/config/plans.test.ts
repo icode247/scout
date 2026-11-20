@@ -22,7 +22,8 @@ describe("plan catalog", () => {
     expect(planByCode("human_full")?.priceCents).toBe(49900);
     expect(planByCode("human_full")?.applicationsQuota).toBe(500);
     expect(planByCode("ai_essential")?.priceCents).toBe(3900);
-    expect(planByCode("ai_essential")?.applicationsQuota).toBe(75);
+    expect(planByCode("ai_essential")?.applicationsQuota).toBe(150);
+    expect(planByCode("ai_plus")?.applicationsQuota).toBe(300);
   });
 
   it("returns null for an unknown code", () => {
