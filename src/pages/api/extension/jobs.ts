@@ -5,6 +5,7 @@ import { loadScoutData } from "../../../lib/scout-data";
 import { scoreAndPersistJob } from "../../../lib/job-match";
 import { savedHumanAssistant } from "../../../lib/human-assistants";
 import { assertCanApply } from "../../../lib/entitlements";
+import { duplicateMessage, findSentDuplicate } from "../../../lib/job-duplicate";
 
 export const prerender = false;
 const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type", "access-control-allow-methods": "GET, POST, OPTIONS" };
@@ -63,6 +64,8 @@ export const POST: APIRoute = async (context) => {
     if (employmentType.length > 120 || salary.length > 180) return json({ error: "Job type or salary is too long" }, { status: 400, headers: cors });
     const externalUrl = String(body.external_url || "").trim();
     if (externalUrl) { try { const parsed = new URL(externalUrl); if (!["http:","https:"].includes(parsed.protocol)) throw new Error(); } catch { return json({ error: "Enter a valid HTTP or HTTPS job URL" }, { status: 400, headers: cors }); } }
+    const incoming = { title, company, location: String(body.location || ""), external_url: externalUrl || null };
+    const duplicate = (sentAt?: string | null) => json({ error: duplicateMessage(sentAt), code: "duplicate_job" }, { status: 409, headers: cors });
     let assistant: "human" | "ai" = "ai";
     if (context.locals.demoMode) {
       const state = getDemoState(user.id, user.email);
@@ -70,6 +73,8 @@ export const POST: APIRoute = async (context) => {
       if (!profile) return json({ error: "Job profile not found" }, { status: 404, headers: cors });
       if (!profile.resume_ids[0]) return json({ error: "Add a resume to this profile before delegating jobs" }, { status: 409, headers: cors });
       assistant = profile.assistant_type;
+      const sentBefore = findSentDuplicate(incoming, state.jobs.filter(job => job.status !== "saved" && job.status !== "skipped"));
+      if (sentBefore) return duplicate(sentBefore.created_at);
       const job = { id: crypto.randomUUID(), title, company, location: String(body.location || ""), employment_type: employmentType, salary, description: String(body.description || ""), external_url: externalUrl || null, status: "delegated" as const, is_saved: false, fit_score: 0, fit_status: "complete" as const, fit_analysis: {}, assistant_type: assistant, job_profile_id: profileId, created_at: new Date().toISOString() };
       state.jobs.unshift(job);
       state.applications.unshift({ id: crypto.randomUUID(), job_id: job.id, job_profile_id: profileId, resume_id: state.jobProfiles.find((profile) => profile.id === profileId)?.resume_ids[0] || null, assistant_type: assistant, status: "preparing", submitted_at: null, notes: "Added from the Scout browser extension.", answer_evidence: [] });
@@ -83,6 +88,18 @@ export const POST: APIRoute = async (context) => {
     const primary = await supabase.from("job_profile_resumes").select("resume_id").eq("job_profile_id", profileId).eq("user_id", user.id).order("is_primary", { ascending: false }).limit(1).maybeSingle();
     if (primary.error) throw primary.error;
     if (!primary.data?.resume_id) return json({ error: "Add a resume to this profile before delegating jobs" }, { status: 409, headers: cors });
+    // The same job must not be delegated (and counted against the plan) twice.
+    // Checked by link for all time, and by title, company and location for 90 days.
+    const sentStatuses = ["delegated", "preparing", "applied", "interview"];
+    const sentColumns = "title,company,location,external_url,created_at";
+    const [byUrl, recent] = await Promise.all([
+      externalUrl ? supabase.from("jobs").select(sentColumns).eq("user_id", user.id).eq("external_url", externalUrl).in("status", sentStatuses).limit(5) : Promise.resolve({ data: [], error: null }),
+      supabase.from("jobs").select(sentColumns).eq("user_id", user.id).in("status", sentStatuses).gte("created_at", new Date(Date.now() - 90 * 86_400_000).toISOString()).order("created_at", { ascending: false }).limit(1000),
+    ]);
+    if (byUrl.error) throw byUrl.error;
+    if (recent.error) throw recent.error;
+    const sentBefore = findSentDuplicate(incoming, [...(byUrl.data || []), ...(recent.data || [])]);
+    if (sentBefore) return duplicate(sentBefore.created_at);
     const result = await supabase.from("jobs").insert({ user_id: user.id, job_profile_id: profileId, title, company, location: String(body.location || ""), employment_type: employmentType || null, salary: salary || null, description: String(body.description || ""), external_url: String(body.external_url || "") || null, source: "extension", status: "delegated", assistant_type: assistant }).select("*").single();
     if (result.error) throw result.error;
     const application = await supabase.from("applications").insert({ user_id: user.id, job_id: result.data.id, job_profile_id: profileId, resume_id: primary.data?.resume_id || null, assistant_type: assistant, status: "preparing", notes: "Added from the Scout browser extension." });
