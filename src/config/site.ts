@@ -138,7 +138,7 @@ export const TIERS: Tier[] = [
     cta: "Start AI",
     featured: true,
     features: [
-      "Up to 75 applications / month",
+      "Up to 150 applications / month",
       "Tailored resume + cover letter per job",
       "Daily application queue",
       "All job boards & ATS (Workday, Greenhouse, Lever...)",
